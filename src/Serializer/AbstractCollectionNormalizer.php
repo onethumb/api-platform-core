@@ -135,15 +135,24 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
 
         if ($object instanceof PartialPaginatorInterface) {
             $paginated = $paginator = true;
+            $currentPage = $object->getCurrentPage();
+            $itemsPerPage = $object->getItemsPerPage();
+
             if ($object instanceof PaginatorInterface) {
                 $paginated = 1. !== $lastPage = $object->getLastPage();
                 $totalItems = $object->getTotalItems();
             } else {
                 $pageTotalItems = (float) \count($object);
-            }
+                if ($pageTotalItems < $itemsPerPage) {
+                    // this is likely the last page, include it
+                    $lastPage = $object->getCurrentPage();
 
-            $currentPage = $object->getCurrentPage();
-            $itemsPerPage = $object->getItemsPerPage();
+                    // we can also infer the total items
+                    $maxPossibleItems = $object->getCurrentPage() * $itemsPerPage;
+                    $missingItems = $itemsPerPage - $pageTotalItems;
+                    $totalItems = $maxPossibleItems - $missingItems;
+                }
+            }
         } elseif (is_countable($object)) {
             $totalItems = \count($object);
         }
