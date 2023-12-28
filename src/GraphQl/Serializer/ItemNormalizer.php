@@ -106,6 +106,21 @@ final class ItemNormalizer extends BaseItemNormalizer
     }
 
     /**
+     * Denormalizes '_id' input to 'id' data.
+     *
+     * {@inheritdoc}
+     */
+    public function denormalize(mixed $data, string $class, string $format = null, array $context = []): mixed
+    {
+        if (isset($data['_id'])) {
+            $data['id'] = $data['_id'];
+            unset($data['_id']);
+        }
+
+        return parent::denormalize($data, $class, $format, $context);
+    }
+
+    /**
      * {@inheritdoc}
      */
     protected function normalizeCollectionOfRelations(ApiProperty $propertyMetadata, iterable $attributeValue, string $resourceClass, ?string $format, array $context): array
