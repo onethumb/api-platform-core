@@ -64,6 +64,17 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
         $data['@id'] = $this->iriConverter->getIriFromResource($resourceClass, UrlGeneratorInterface::ABS_PATH, $context['operation'] ?? null, $context);
         $data['@type'] = 'hydra:Collection';
 
+        if ($object instanceof PartialPaginatorInterface) {
+            // on the last page, we _might_ be able to infer total item count, which is useful info to share
+            $itemCount = $object->count();
+            $itemsPerPage = $object->getItemsPerPage();
+            if ($itemCount < $itemsPerPage) {
+                $maxPossibleItems = $object->getCurrentPage() * $itemsPerPage;
+                $missingItems = $itemsPerPage - $itemCount;
+                $data['hydra:totalItems'] = $maxPossibleItems - $missingItems;
+            }
+        }
+
         if ($object instanceof PaginatorInterface) {
             $data['hydra:totalItems'] = $object->getTotalItems();
         }
