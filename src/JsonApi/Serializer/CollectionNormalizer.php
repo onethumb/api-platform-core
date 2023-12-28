@@ -54,8 +54,9 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
         ];
 
         if ($paginated) {
+            $data['links']['first'] = IriHelper::createIri($parsed['parts'], $parsed['parameters'], $this->pageParameterName, 1., $urlGenerationStrategy);
+
             if (null !== $lastPage) {
-                $data['links']['first'] = IriHelper::createIri($parsed['parts'], $parsed['parameters'], $this->pageParameterName, 1., $urlGenerationStrategy);
                 $data['links']['last'] = IriHelper::createIri($parsed['parts'], $parsed['parameters'], $this->pageParameterName, $lastPage, $urlGenerationStrategy);
             }
 
