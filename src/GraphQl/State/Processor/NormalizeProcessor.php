@@ -163,6 +163,24 @@ final class NormalizeProcessor implements ProcessorInterface
             $end = $offset + $nbPageItems - 1;
             $data['pageInfo']['endCursor'] = base64_encode((string) ($end >= 0 ? $end : 0));
             $data['pageInfo']['hasPreviousPage'] = $offset > 0;
+
+            if ($collection instanceof PartialPaginatorInterface) {
+                // with partial pagination, it's possible to detect whether there _might_ be another page coming based
+                // on the number of items returned vs the max items per page, which is useful more often than not
+                $itemsPerPage = $collection->getItemsPerPage();
+                $data['pageInfo']['hasNextPage'] = $nbPageItems >= $itemsPerPage;
+
+                // if the last page has been reached, we can include the total item count... if not, it'd be nice to
+                // omit 'totalCount' since a value of 0 is both wrong and confusing.
+
+                // TODO: Investigate patching graphql-php to support NULL for totalCount, rather than just INT
+                // until then, indicate that it's "bottomless" another way if the last page hasn't been reached,
+                // otherwise include the true count.
+                $data['totalCount'] = $data['pageInfo']['hasNextPage']
+                    ? 3141592 // should be NULL if graphql-php is patched to support it, but currently requires INT
+                    : $offset + $nbPageItems;
+            }
+
             if ($collection instanceof PaginatorInterface) {
                 $data['totalCount'] = $totalItems;
                 $itemsPerPage = $collection->getItemsPerPage();
