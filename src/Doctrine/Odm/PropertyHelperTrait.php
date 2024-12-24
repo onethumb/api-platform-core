@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Doctrine\Odm;
 
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use Doctrine\ODM\MongoDB\Aggregation\Builder;
 use Doctrine\ODM\MongoDB\Mapping\ClassMetadata as MongoDbOdmClassMetadata;
 use Doctrine\ODM\MongoDB\Mapping\MappingException;
@@ -112,7 +112,7 @@ trait PropertyHelperTrait
         }
 
         if ('' === $alias) {
-            throw new InvalidArgumentException(sprintf('Cannot add lookups for property "%s" - property is not nested.', $property));
+            throw new InvalidArgumentException(\sprintf('Cannot add lookups for property "%s" - property is not nested.', $property));
         }
 
         return [$property, $propertyParts['field'], $propertyParts['associations']];

@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Doctrine\Odm\Extension;
 
 use ApiPlatform\Doctrine\Odm\Paginator;
-use ApiPlatform\Exception\RuntimeException;
+use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\Pagination\Pagination;
 use Doctrine\ODM\MongoDB\Aggregation\Builder;
@@ -40,7 +40,7 @@ final class PaginationExtension implements AggregationResultCollectionExtensionI
      *
      * @throws RuntimeException
      */
-    public function applyToCollection(Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void
+    public function applyToCollection(Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void
     {
         if (!$this->pagination->isEnabled($operation, $context)) {
             return;
@@ -56,7 +56,7 @@ final class PaginationExtension implements AggregationResultCollectionExtensionI
 
         $manager = $this->managerRegistry->getManagerForClass($resourceClass);
         if (!$manager instanceof DocumentManager) {
-            throw new RuntimeException(sprintf('The manager for "%s" must be an instance of "%s".', $resourceClass, DocumentManager::class));
+            throw new RuntimeException(\sprintf('The manager for "%s" must be an instance of "%s".', $resourceClass, DocumentManager::class));
         }
 
         /**
@@ -85,7 +85,7 @@ final class PaginationExtension implements AggregationResultCollectionExtensionI
     /**
      * {@inheritdoc}
      */
-    public function supportsResult(string $resourceClass, Operation $operation = null, array $context = []): bool
+    public function supportsResult(string $resourceClass, ?Operation $operation = null, array $context = []): bool
     {
         if ($context['graphql_operation_name'] ?? false) {
             return $this->pagination->isGraphQlEnabled($operation, $context);
@@ -99,11 +99,11 @@ final class PaginationExtension implements AggregationResultCollectionExtensionI
      *
      * @throws RuntimeException
      */
-    public function getResult(Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array $context = []): iterable
+    public function getResult(Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array $context = []): iterable
     {
         $manager = $this->managerRegistry->getManagerForClass($resourceClass);
         if (!$manager instanceof DocumentManager) {
-            throw new RuntimeException(sprintf('The manager for "%s" must be an instance of "%s".', $resourceClass, DocumentManager::class));
+            throw new RuntimeException(\sprintf('The manager for "%s" must be an instance of "%s".', $resourceClass, DocumentManager::class));
         }
 
         $attribute = $operation?->getExtraProperties()['doctrine_mongodb'] ?? [];

@@ -15,7 +15,7 @@ jobs:
   split:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
@@ -26,4 +26,4 @@ jobs:
           chmod +x splitsh-lite
           echo "$(pwd)" >> $GITHUB_PATH
       - name: 'Split to manyrepo'
-        run: find src -maxdepth 2 -name composer.json -exec bash subtree.sh {} ${{ github.ref }} \;
+        run: find src -maxdepth 3 -name composer.json -print0 | xargs -I '{}' -n 1 -0 bash subtree.sh {} ${{ github.ref }}

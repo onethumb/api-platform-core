@@ -20,6 +20,7 @@ use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
 use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
 use ApiPlatform\Symfony\Validator\Exception\ConstraintViolationListAwareExceptionInterface;
 use ApiPlatform\Util\ErrorFormatGuesser;
+use ApiPlatform\Validator\Exception\ConstraintViolationListAwareExceptionInterface as ApiPlatformConstraintViolationListAwareExceptionInterface;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -42,7 +43,7 @@ final class ExceptionAction
      * @param array $errorFormats      A list of enabled error formats
      * @param array $exceptionToStatus A list of exceptions mapped to their HTTP status code
      */
-    public function __construct(private readonly SerializerInterface $serializer, private readonly array $errorFormats, private readonly array $exceptionToStatus = [], ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null)
+    public function __construct(private readonly SerializerInterface $serializer, private readonly array $errorFormats, private readonly array $exceptionToStatus = [], ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null)
     {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }
@@ -71,13 +72,13 @@ final class ExceptionAction
 
         $headers = $exception->getHeaders();
         $format = ErrorFormatGuesser::guessErrorFormat($request, $this->errorFormats);
-        $headers['Content-Type'] = sprintf('%s; charset=utf-8', $format['value'][0]);
+        $headers['Content-Type'] = \sprintf('%s; charset=utf-8', $format['value'][0]);
         $headers['X-Content-Type-Options'] = 'nosniff';
         $headers['X-Frame-Options'] = 'deny';
 
         $context = ['statusCode' => $statusCode, 'rfc_7807_compliant_errors' => $operation?->getExtraProperties()['rfc_7807_compliant_errors'] ?? false];
         $error = $request->attributes->get('exception') ?? $exception;
-        if ($error instanceof ConstraintViolationListAwareExceptionInterface) {
+        if ($error instanceof ConstraintViolationListAwareExceptionInterface || $error instanceof ApiPlatformConstraintViolationListAwareExceptionInterface) {
             $error = $error->getConstraintViolationList();
         } elseif (method_exists($error, 'getViolations') && $error->getViolations() instanceof ConstraintViolationListInterface) {
             $error = $error->getViolations();

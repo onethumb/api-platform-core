@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Symfony\Routing;
 
-use ApiPlatform\Exception\RuntimeException;
+use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\Resource\Factory\ResourceNameCollectionFactoryInterface;
 use Symfony\Component\Config\FileLocator;
@@ -46,7 +46,7 @@ final class ApiLoader extends Loader
     /**
      * {@inheritdoc}
      */
-    public function load(mixed $data, string $type = null): RouteCollection
+    public function load(mixed $data, ?string $type = null): RouteCollection
     {
         $routeCollection = new RouteCollection();
         foreach ($this->resourceClassDirectories as $directory) {
@@ -71,7 +71,7 @@ final class ApiLoader extends Loader
                             continue;
                         }
 
-                        $path = str_replace(sprintf('{%s}', $parameterName), $expandedValue, $path);
+                        $path = str_replace(\sprintf('{%s}', $parameterName), $expandedValue, $path);
                     }
 
                     // Within Symfony .{_format} is a special parameter but the rfc6570 specifies label expansion with a dot operator
@@ -82,7 +82,7 @@ final class ApiLoader extends Loader
                     if ($controller = $operation->getController()) {
                         $controllerId = explode('::', $controller, 2)[0];
                         if (!$this->container->has($controllerId)) {
-                            throw new RuntimeException(sprintf('Operation "%s" is defining an unknown service as controller "%s". Make sure it is properly registered in the dependency injection container.', $operationName, $controllerId));
+                            throw new RuntimeException(\sprintf('Operation "%s" is defining an unknown service as controller "%s". Make sure it is properly registered in the dependency injection container.', $operationName, $controllerId));
                         }
                     }
 
@@ -114,7 +114,7 @@ final class ApiLoader extends Loader
     /**
      * {@inheritdoc}
      */
-    public function supports(mixed $resource, string $type = null): bool
+    public function supports(mixed $resource, ?string $type = null): bool
     {
         return 'api_platform' === $type;
     }
@@ -125,6 +125,7 @@ final class ApiLoader extends Loader
     private function loadExternalFiles(RouteCollection $routeCollection): void
     {
         $routeCollection->addCollection($this->fileLoader->load('genid.xml'));
+        $routeCollection->addCollection($this->fileLoader->load('errors.xml'));
 
         if ($this->entrypointEnabled) {
             $routeCollection->addCollection($this->fileLoader->load('api.xml'));

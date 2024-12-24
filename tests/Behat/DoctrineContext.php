@@ -66,7 +66,10 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Document\IriOnlyDummy as IriOnlyDummyD
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\LinkHandledDummy as LinkHandledDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\MaxDepthDummy as MaxDepthDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\MultiRelationsDummy as MultiRelationsDummyDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\Document\MultiRelationsNested as MultiRelationsNestedDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\Document\MultiRelationsNestedPaginated as MultiRelationsNestedPaginatedDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\MultiRelationsRelatedDummy as MultiRelationsRelatedDummyDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\Document\MultiRelationsResolveDummy as MultiRelationsResolveDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\MusicGroup as MusicGroupDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\NetworkPathDummy as NetworkPathDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\NetworkPathRelationDummy as NetworkPathRelationDummyDocument;
@@ -83,6 +86,7 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Document\PropertyCollectionIriOnlyRela
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\PropertyUriTemplateOneToOneRelation as PropertyUriTemplateOneToOneRelationDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\Question as QuestionDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\RelatedDummy as RelatedDummyDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\Document\RelatedLinkedDummy as RelatedLinkedDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\RelatedOwnedDummy as RelatedOwnedDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\RelatedOwningDummy as RelatedOwningDummyDocument;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\RelatedSecuredDummy as RelatedSecuredDummyDocument;
@@ -129,6 +133,7 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyDtoNoOutput;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyFriend;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyGroup;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyImmutableDate;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyMappedSubclass;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyMercure;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyOffer;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyPassenger;
@@ -154,10 +159,14 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Entity\IriOnlyDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5722\Event;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5722\ItemLog;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5735\Group;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue6039\Issue6039EntityUser;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\LinkHandledDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MaxDepthDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MultiRelationsDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MultiRelationsNested;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MultiRelationsNestedPaginated;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MultiRelationsRelatedDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MultiRelationsResolveDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\MusicGroup;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\NetworkPathDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\NetworkPathRelationDummy;
@@ -176,6 +185,7 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Entity\PropertyUriTemplateOneToOneRela
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Question;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RamseyUuidDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedLinkedDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedOwnedDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedOwningDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedSecuredDummy;
@@ -214,11 +224,8 @@ use Symfony\Component\Uid\Uuid as SymfonyUuid;
  */
 final class DoctrineContext implements Context
 {
-    // @noRector \Rector\Php81\Rector\Property\ReadOnlyPropertyRector
     private ObjectManager $manager;
-    // @noRector \Rector\Php81\Rector\Property\ReadOnlyPropertyRector
     private ?SchemaTool $schemaTool;
-    // @noRector \Rector\Php81\Rector\Property\ReadOnlyPropertyRector
     private ?SchemaManager $schemaManager;
 
     /**
@@ -801,17 +808,24 @@ final class DoctrineContext implements Context
     }
 
     /**
-     * @Given there are :nb multiRelationsDummy objects having each a manyToOneRelation, :nbmtmr manyToManyRelations and :nbotmr oneToManyRelations
+     * @Given there are :nb multiRelationsDummy objects having each :nbmtor manyToOneRelation, :nbmtmr manyToManyRelations, :nbotmr oneToManyRelations and :nber embeddedRelations
      */
-    public function thereAreMultiRelationsDummyObjectsHavingEachAManyToOneRelationManyToManyRelationsAndOneToManyRelations(int $nb, int $nbmtmr, int $nbotmr): void
+    public function thereAreMultiRelationsDummyObjectsHavingEachAManyToOneRelationManyToManyRelationsOneToManyRelationsAndEmbeddedRelations(int $nb, int $nbmtor, int $nbmtmr, int $nbotmr, int $nber): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
             $relatedDummy = $this->buildMultiRelationsRelatedDummy();
             $relatedDummy->name = 'RelatedManyToOneDummy #'.$i;
 
+            $resolveDummy = $this->buildMultiRelationsResolveDummy();
+            $resolveDummy->name = 'RelatedManyToOneResolveDummy #'.$i;
+
             $dummy = $this->buildMultiRelationsDummy();
             $dummy->name = 'Dummy #'.$i;
-            $dummy->setManyToOneRelation($relatedDummy);
+
+            if ($nbmtor) {
+                $dummy->setManyToOneRelation($relatedDummy);
+                $dummy->setManyToOneResolveRelation($resolveDummy);
+            }
 
             for ($j = 1; $j <= $nbmtmr; ++$j) {
                 $manyToManyItem = $this->buildMultiRelationsRelatedDummy();
@@ -830,7 +844,24 @@ final class DoctrineContext implements Context
                 $dummy->addOneToManyRelation($oneToManyItem);
             }
 
+            $nested = new ArrayCollection();
+            for ($j = 1; $j <= $nber; ++$j) {
+                $embeddedItem = $this->buildMultiRelationsNested();
+                $embeddedItem->name = 'NestedDummy'.$j;
+                $nested->add($embeddedItem);
+            }
+            $dummy->setNestedCollection($nested);
+
+            $nestedPaginated = new ArrayCollection();
+            for ($j = 1; $j <= $nber; ++$j) {
+                $embeddedItem = $this->buildMultiRelationsNestedPaginated();
+                $embeddedItem->name = 'NestedPaginatedDummy'.$j;
+                $nestedPaginated->add($embeddedItem);
+            }
+            $dummy->setNestedPaginatedCollection($nestedPaginated);
+
             $this->manager->persist($relatedDummy);
+            $this->manager->persist($resolveDummy);
             $this->manager->persist($dummy);
         }
         $this->manager->flush();
@@ -861,7 +892,7 @@ final class DoctrineContext implements Context
         $descriptions = ['Smart dummy.', 'Not so smart dummy.'];
 
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummy();
             $dummy->setName('Dummy #'.$i);
@@ -892,11 +923,11 @@ final class DoctrineContext implements Context
             $bool = false;
         } else {
             $expected = ['true', 'false', '1', '0'];
-            throw new \InvalidArgumentException(sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
+            throw new \InvalidArgumentException(\sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
         }
 
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummy();
             $dummy->setName('Dummy #'.$i);
@@ -921,7 +952,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyObjectsWithDummyDateAndRelatedDummy(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $relatedDummy = $this->buildRelatedDummy();
             $relatedDummy->setName('RelatedDummy #'.$i);
@@ -949,7 +980,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyObjectsWithDummyDateAndEmbeddedDummy(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $embeddableDummy = $this->buildEmbeddableDummy();
             $embeddableDummy->setDummyName('Embeddable #'.$i);
@@ -976,7 +1007,7 @@ final class DoctrineContext implements Context
     {
         for ($i = 1; $i <= $nb; ++$i) {
             $convertedDate = $this->buildConvertedDate();
-            $convertedDate->nameConverted = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $convertedDate->nameConverted = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $this->manager->persist($convertedDate);
         }
@@ -1062,7 +1093,7 @@ final class DoctrineContext implements Context
             $bool = false;
         } else {
             $expected = ['true', 'false', '1', '0'];
-            throw new \InvalidArgumentException(sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
+            throw new \InvalidArgumentException(\sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
         }
         $descriptions = ['Smart dummy.', 'Not so smart dummy.'];
 
@@ -1090,7 +1121,7 @@ final class DoctrineContext implements Context
             $bool = false;
         } else {
             $expected = ['true', 'false', '1', '0'];
-            throw new \InvalidArgumentException(sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
+            throw new \InvalidArgumentException(\sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
         }
 
         for ($i = 1; $i <= $nb; ++$i) {
@@ -1117,7 +1148,7 @@ final class DoctrineContext implements Context
             $bool = false;
         } else {
             $expected = ['true', 'false', '1', '0'];
-            throw new \InvalidArgumentException(sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
+            throw new \InvalidArgumentException(\sprintf('Invalid boolean value for "%s" property, expected one of ( "%s" )', $bool, implode('" | "', $expected)));
         }
 
         for ($i = 1; $i <= $nb; ++$i) {
@@ -1177,12 +1208,16 @@ final class DoctrineContext implements Context
             $publicRelatedSecuredDummy = $this->buildRelatedSecureDummy();
             $this->manager->persist($publicRelatedSecuredDummy);
 
+            $relatedLinkedDummy = $this->buildRelatedLinkedDummy();
+            $this->manager->persist($relatedLinkedDummy);
+
             $securedDummy->addRelatedDummy($relatedDummy);
             $securedDummy->setRelatedDummy($relatedDummy);
             $securedDummy->addRelatedSecuredDummy($relatedSecuredDummy);
             $securedDummy->setRelatedSecuredDummy($relatedSecuredDummy);
             $securedDummy->addPublicRelatedSecuredDummy($publicRelatedSecuredDummy);
             $securedDummy->setPublicRelatedSecuredDummy($publicRelatedSecuredDummy);
+            $relatedLinkedDummy->setSecuredDummy($securedDummy);
 
             $this->manager->persist($securedDummy);
         }
@@ -1432,10 +1467,10 @@ final class DoctrineContext implements Context
                 ->count()->getQuery()->execute();
         }
 
-        for ($i = $count + 1; $i <= $nb; ++$i) {
+        for ($i = (int) $count + 1; $i <= $nb; ++$i) {
             $program = $this->isOrm() ? new Program() : new ProgramDocument();
             $program->name = "Lorem ipsum $i";
-            $program->date = new \DateTimeImmutable(sprintf('2015-03-0%dT10:00:00+00:00', $i));
+            $program->date = new \DateTimeImmutable(\sprintf('2015-03-0%dT10:00:00+00:00', $i));
             $program->author = $author;
 
             $this->manager->persist($program);
@@ -1480,10 +1515,10 @@ final class DoctrineContext implements Context
                 ->count()->getQuery()->execute();
         }
 
-        for ($i = $count + 1; $i <= $nb; ++$i) {
+        for ($i = (int) $count + 1; $i <= $nb; ++$i) {
             $comment = $this->isOrm() ? new Comment() : new CommentDocument();
             $comment->comment = "Lorem ipsum dolor sit amet $i";
-            $comment->date = new \DateTimeImmutable(sprintf('2015-03-0%dT10:00:00+00:00', $i));
+            $comment->date = new \DateTimeImmutable(\sprintf('2015-03-0%dT10:00:00+00:00', $i));
             $comment->author = $author;
 
             $this->manager->persist($comment);
@@ -1569,7 +1604,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyDateObjectsWithDummyDate(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummyDate();
             $dummy->dummyDate = $date;
@@ -1587,7 +1622,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyDateObjectsWithNullableDateIncludeNullAfter(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummyDate();
             $dummy->dummyDate = $date;
@@ -1606,7 +1641,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyDateObjectsWithNullableDateIncludeNullBefore(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummyDate();
             $dummy->dummyDate = $date;
@@ -1625,7 +1660,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyDateObjectsWithNullableDateIncludeNullBeforeAndAfter(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTime(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTime(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
 
             $dummy = $this->buildDummyDate();
             $dummy->dummyDate = $date;
@@ -1643,7 +1678,7 @@ final class DoctrineContext implements Context
     public function thereAreDummyImmutableDateObjectsWithDummyDate(int $nb): void
     {
         for ($i = 1; $i <= $nb; ++$i) {
-            $date = new \DateTimeImmutable(sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
+            $date = new \DateTimeImmutable(\sprintf('2015-04-%d', $i), new \DateTimeZone('UTC'));
             $dummy = $this->buildDummyImmutableDate();
             $dummy->dummyDate = $date;
 
@@ -1981,18 +2016,23 @@ final class DoctrineContext implements Context
      */
     public function thereAreResourcesWithPropertyUriTemplates(): void
     {
-        $propertyCollectionIriOnlyRelation = $this->isOrm() ? new PropertyCollectionIriOnlyRelation() : new PropertyCollectionIriOnlyRelationDocument();
-        $propertyCollectionIriOnlyRelation->name = 'asb';
+        $propertyCollectionIriOnlyRelation1 = $this->isOrm() ? new PropertyCollectionIriOnlyRelation() : new PropertyCollectionIriOnlyRelationDocument();
+        $propertyCollectionIriOnlyRelation1->name = 'asb1';
+
+        $propertyCollectionIriOnlyRelation2 = $this->isOrm() ? new PropertyCollectionIriOnlyRelation() : new PropertyCollectionIriOnlyRelationDocument();
+        $propertyCollectionIriOnlyRelation2->name = 'asb2';
 
         $propertyToOneRelation = $this->isOrm() ? new PropertyUriTemplateOneToOneRelation() : new PropertyUriTemplateOneToOneRelationDocument();
         $propertyToOneRelation->name = 'xarguš';
 
         $propertyCollectionIriOnly = $this->isOrm() ? new PropertyCollectionIriOnly() : new PropertyCollectionIriOnlyDocument();
-        $propertyCollectionIriOnly->addPropertyCollectionIriOnlyRelation($propertyCollectionIriOnlyRelation);
+        $propertyCollectionIriOnly->addPropertyCollectionIriOnlyRelation($propertyCollectionIriOnlyRelation1);
+        $propertyCollectionIriOnly->addPropertyCollectionIriOnlyRelation($propertyCollectionIriOnlyRelation2);
         $propertyCollectionIriOnly->setToOneRelation($propertyToOneRelation);
 
         $this->manager->persist($propertyCollectionIriOnly);
-        $this->manager->persist($propertyCollectionIriOnlyRelation);
+        $this->manager->persist($propertyCollectionIriOnlyRelation1);
+        $this->manager->persist($propertyCollectionIriOnlyRelation2);
         $this->manager->persist($propertyToOneRelation);
         $this->manager->flush();
     }
@@ -2213,7 +2253,7 @@ final class DoctrineContext implements Context
     public function thereIsAGroupWithUuidAndNUsers(string $uuid, int $nbUsers): void
     {
         $group = new Group();
-        $group->setUuid(\Symfony\Component\Uid\Uuid::fromString($uuid));
+        $group->setUuid(SymfonyUuid::fromString($uuid));
 
         $this->manager->persist($group);
 
@@ -2256,6 +2296,32 @@ final class DoctrineContext implements Context
         $this->manager->persist($this->buildLinkHandledDummy('bar'));
         $this->manager->persist($this->buildLinkHandledDummy('baz'));
         $this->manager->persist($this->buildLinkHandledDummy('foz'));
+        $this->manager->flush();
+    }
+
+    /**
+     * @Given there is a dummy entity with a mapped superclass
+     */
+    public function thereIsADummyEntityWithAMappedSuperclass(): void
+    {
+        $entity = new DummyMappedSubclass();
+        $this->manager->persist($entity);
+        $this->manager->flush();
+    }
+
+    /**
+     * @Given there are issue6039 users
+     */
+    public function thereAreIssue6039Users(): void
+    {
+        $entity = new Issue6039EntityUser();
+        $entity->name = 'test';
+        $entity->bar = 'test';
+        $this->manager->persist($entity);
+        $entity = new Issue6039EntityUser();
+        $entity->name = 'test2';
+        $entity->bar = 'test';
+        $this->manager->persist($entity);
         $this->manager->flush();
     }
 
@@ -2479,6 +2545,11 @@ final class DoctrineContext implements Context
         return $this->isOrm() ? new RelatedToDummyFriend() : new RelatedToDummyFriendDocument();
     }
 
+    private function buildRelatedLinkedDummy(): RelatedLinkedDummy|RelatedLinkedDummyDocument
+    {
+        return $this->isOrm() ? new RelatedLinkedDummy() : new RelatedLinkedDummyDocument();
+    }
+
     private function buildRelationEmbedder(): RelationEmbedder|RelationEmbedderDocument
     {
         return $this->isOrm() ? new RelationEmbedder() : new RelationEmbedderDocument();
@@ -2597,6 +2668,21 @@ final class DoctrineContext implements Context
     private function buildMultiRelationsRelatedDummy(): MultiRelationsRelatedDummy|MultiRelationsRelatedDummyDocument
     {
         return $this->isOrm() ? new MultiRelationsRelatedDummy() : new MultiRelationsRelatedDummyDocument();
+    }
+
+    private function buildMultiRelationsNested(): MultiRelationsNested|MultiRelationsNestedDocument
+    {
+        return $this->isOrm() ? new MultiRelationsNested() : new MultiRelationsNestedDocument();
+    }
+
+    private function buildMultiRelationsNestedPaginated(): MultiRelationsNestedPaginated|MultiRelationsNestedPaginatedDocument
+    {
+        return $this->isOrm() ? new MultiRelationsNestedPaginated() : new MultiRelationsNestedPaginatedDocument();
+    }
+
+    private function buildMultiRelationsResolveDummy(): MultiRelationsResolveDummy|MultiRelationsResolveDummyDocument
+    {
+        return $this->isOrm() ? new MultiRelationsResolveDummy() : new MultiRelationsResolveDummyDocument();
     }
 
     private function buildMusicGroup(): MusicGroup|MusicGroupDocument

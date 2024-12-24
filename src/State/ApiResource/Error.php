@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace ApiPlatform\State\ApiResource;
 
-use ApiPlatform\JsonLd\ContextBuilderInterface;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\Error as Operation;
 use ApiPlatform\Metadata\ErrorResource;
@@ -26,13 +25,13 @@ use Symfony\Component\Serializer\Annotation\SerializedName;
 use Symfony\Component\WebLink\Link;
 
 #[ErrorResource(
-    types: ['hydra:Error'],
     openapi: false,
     uriVariables: ['status'],
     uriTemplate: '/errors/{status}',
     operations: [
         new Operation(
             name: '_api_errors_problem',
+            routeName: 'api_errors',
             outputFormats: ['json' => ['application/problem+json']],
             normalizationContext: [
                 'groups' => ['jsonproblem'],
@@ -42,22 +41,28 @@ use Symfony\Component\WebLink\Link;
         ),
         new Operation(
             name: '_api_errors_hydra',
+            routeName: 'api_errors',
             outputFormats: ['jsonld' => ['application/problem+json']],
             normalizationContext: [
                 'groups' => ['jsonld'],
                 'skip_null_values' => true,
                 'rfc_7807_compliant_errors' => true,
             ],
-            links: [new Link(rel: ContextBuilderInterface::JSONLD_NS.'error', href: 'http://www.w3.org/ns/hydra/error')],
+            links: [new Link(rel: 'http://www.w3.org/ns/json-ld#error', href: 'http://www.w3.org/ns/hydra/error')],
         ),
         new Operation(
             name: '_api_errors_jsonapi',
+            routeName: 'api_errors',
             outputFormats: ['jsonapi' => ['application/vnd.api+json']],
             normalizationContext: [
                 'groups' => ['jsonapi'],
                 'skip_null_values' => true,
                 'rfc_7807_compliant_errors' => true,
             ],
+        ),
+        new Operation(
+            name: '_api_errors',
+            routeName: 'api_errors'
         ),
     ],
     provider: 'api_platform.state.error_provider',
@@ -69,11 +74,11 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
         private string $title,
         private string $detail,
         #[ApiProperty(identifier: true)] private int $status,
-        array $originalTrace = null,
+        ?array $originalTrace = null,
         private ?string $instance = null,
         private string $type = 'about:blank',
         private array $headers = [],
-        \Throwable $previous = null
+        ?\Throwable $previous = null,
     ) {
         parent::__construct($title, $status, $previous);
 
@@ -92,21 +97,7 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
     #[Groups(['trace'])]
     public ?array $originalTrace = null;
 
-    #[SerializedName('hydra:title')]
     #[Groups(['jsonld'])]
-    public function getHydraTitle(): ?string
-    {
-        return $this->title;
-    }
-
-    #[SerializedName('hydra:description')]
-    #[Groups(['jsonld'])]
-    public function getHydraDescription(): ?string
-    {
-        return $this->detail;
-    }
-
-    #[SerializedName('description')]
     public function getDescription(): ?string
     {
         return $this->detail;
@@ -120,12 +111,14 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
     }
 
     #[Ignore]
+    #[ApiProperty(readable: false)]
     public function getHeaders(): array
     {
         return $this->headers;
     }
 
     #[Ignore]
+    #[ApiProperty(readable: false)]
     public function getStatusCode(): int
     {
         return $this->status;
@@ -156,7 +149,7 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
         return $this->title;
     }
 
-    public function setTitle(string $title = null): void
+    public function setTitle(?string $title = null): void
     {
         $this->title = $title;
     }
@@ -178,7 +171,7 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
         return $this->detail;
     }
 
-    public function setDetail(string $detail = null): void
+    public function setDetail(?string $detail = null): void
     {
         $this->detail = $detail;
     }
@@ -189,7 +182,7 @@ class Error extends \Exception implements ProblemExceptionInterface, HttpExcepti
         return $this->instance;
     }
 
-    public function setInstance(string $instance = null): void
+    public function setInstance(?string $instance = null): void
     {
         $this->instance = $instance;
     }

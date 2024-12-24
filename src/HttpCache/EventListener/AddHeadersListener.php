@@ -15,7 +15,7 @@ namespace ApiPlatform\HttpCache\EventListener;
 
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\State\Util\RequestAttributesExtractor;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
@@ -29,7 +29,7 @@ final class AddHeadersListener
 {
     use OperationRequestInitiatorTrait;
 
-    public function __construct(private readonly bool $etag = false, private readonly ?int $maxAge = null, private readonly ?int $sharedMaxAge = null, private readonly ?array $vary = null, private readonly ?bool $public = null, ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?int $staleWhileRevalidate = null, private readonly ?int $staleIfError = null)
+    public function __construct(private readonly bool $etag = false, private readonly ?int $maxAge = null, private readonly ?int $sharedMaxAge = null, private readonly ?array $vary = null, private readonly ?bool $public = null, ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?int $staleWhileRevalidate = null, private readonly ?int $staleIfError = null)
     {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

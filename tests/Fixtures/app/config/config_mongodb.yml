@@ -96,17 +96,22 @@ services:
         public: false
         arguments: ['@doctrine_mongodb']
         tags:
-            -  { name: 'api_platform.state_provider' }
+            - name: 'api_platform.state_provider'
 
     app.graphql.query_resolver.dummy_custom_not_retrieved_item_document:
         class: 'ApiPlatform\Tests\Fixtures\TestBundle\GraphQl\Resolver\DummyCustomQueryNotRetrievedItemDocumentResolver'
         public: false
         tags:
-            - { name: 'api_platform.graphql.resolver' }
+            - name: 'api_platform.graphql.resolver'
 
     app.graphql.query_resolver.dummy_custom_item_no_read_and_serialize_document:
         class: 'ApiPlatform\Tests\Fixtures\TestBundle\GraphQl\Resolver\DummyCustomQueryNoReadAndSerializeItemDocumentResolver'
         public: false
+        tags:
+            - name: 'api_platform.graphql.resolver'
+
+    app.graphql.query_resolver.multi_relations_custom_item_document:
+        class: 'ApiPlatform\Tests\Fixtures\TestBundle\GraphQl\Resolver\MultiRelationsResolveQueryItemResolver'
         tags:
             - { name: 'api_platform.graphql.resolver' }
 
@@ -114,13 +119,13 @@ services:
         class: 'ApiPlatform\Tests\Fixtures\TestBundle\GraphQl\Resolver\SumOnlyPersistDocumentMutationResolver'
         public: false
         tags:
-            - { name: 'api_platform.graphql.resolver' }
+            - name: 'api_platform.graphql.resolver'
 
     app.messenger_handler.messenger_with_inputs:
         class: 'ApiPlatform\Tests\Fixtures\TestBundle\MessengerHandler\Document\MessengerWithInputHandler'
         public: false
         tags:
-            -  { name: 'messenger.message_handler' }
+            - name: 'messenger.message_handler'
 
     ApiPlatform\Tests\Fixtures\TestBundle\State\DummyDtoInputOutputProvider: 
         arguments:
@@ -159,3 +164,13 @@ services:
             $decorated: '@ApiPlatform\Doctrine\Common\State\PersistProcessor'
         tags:
             - name: 'api_platform.state_processor'
+
+    app_odm_search_filter_via_parameter:
+        parent:    'api_platform.doctrine_mongodb.odm.search_filter'
+        arguments: [ { foo: 'exact' } ]
+        tags:      [ { name: 'api_platform.filter', id: 'app_odm_search_filter_via_parameter' } ]
+ 
+    app_odm_search_filter_via_parameter.order_filter:
+        parent: 'api_platform.doctrine_mongodb.odm.order_filter'
+        arguments: [ { id: 'ASC', foo: 'DESC' } ]
+        tags:  [ 'api_platform.filter' ]

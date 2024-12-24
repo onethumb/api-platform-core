@@ -40,7 +40,6 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
     /**
      * This constant must be overridden in the child class.
      */
-    // @noRector \Rector\Php81\Rector\ClassConst\FinalizePublicClassConstantRector
     public const FORMAT = 'to-override';
 
     public function __construct(protected ResourceClassResolverInterface|LegacyResourceClassResolverInterface $resourceClassResolver, protected string $pageParameterName, protected ?ResourceMetadataCollectionFactoryInterface $resourceMetadataFactory = null)
@@ -50,7 +49,7 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return static::FORMAT === $format && is_iterable($data);
     }
@@ -91,7 +90,7 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
      *
      * @param iterable $object
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
         if (!isset($context['resource_class']) || isset($context['api_sub_level'])) {
             return $this->normalizeRawCollection($object, $format, $context);
@@ -103,6 +102,10 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
         $paginationData = $this->getPaginationData($object, $collectionContext);
 
         $childContext = $this->createOperationContext($collectionContext, $resourceClass);
+        if (isset($collectionContext['force_resource_class'])) {
+            $childContext['force_resource_class'] = $collectionContext['force_resource_class'];
+        }
+
         $itemsData = $this->getItemsData($object, $format, $childContext);
 
         return array_merge_recursive($data, $paginationData, $itemsData);
@@ -111,7 +114,7 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
     /**
      * Normalizes a raw collection (not API resources).
      */
-    protected function normalizeRawCollection(iterable $object, string $format = null, array $context = []): array|\ArrayObject
+    protected function normalizeRawCollection(iterable $object, ?string $format = null, array $context = []): array|\ArrayObject
     {
         if (!$object && ($context[Serializer::EMPTY_ARRAY_AS_OBJECT] ?? false) && \is_array($object)) {
             return new \ArrayObject();
@@ -175,5 +178,5 @@ abstract class AbstractCollectionNormalizer implements NormalizerInterface, Norm
     /**
      * Gets items data.
      */
-    abstract protected function getItemsData(iterable $object, string $format = null, array $context = []): array;
+    abstract protected function getItemsData(iterable $object, ?string $format = null, array $context = []): array;
 }

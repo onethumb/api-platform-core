@@ -20,13 +20,15 @@ use ApiPlatform\Metadata\Exception\HttpExceptionInterface;
 use ApiPlatform\Metadata\Exception\ProblemExceptionInterface;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\IdentifiersExtractorInterface;
+use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\ResourceClassResolverInterface;
 use ApiPlatform\Metadata\Util\ContentNegotiationTrait;
 use ApiPlatform\State\ApiResource\Error;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
-use ApiPlatform\Validator\Exception\ValidationException;
+use ApiPlatform\State\Util\RequestAttributesExtractor;
+use ApiPlatform\Symfony\Validator\Exception\ConstraintViolationListAwareExceptionInterface as LegacyConstraintViolationListAwareExceptionInterface;
+use ApiPlatform\Validator\Exception\ConstraintViolationListAwareExceptionInterface;
 use Negotiation\Negotiator;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpFoundation\Exception\RequestExceptionInterface;
@@ -49,17 +51,17 @@ final class ErrorListener extends SymfonyErrorListener
 
     public function __construct(
         object|array|string|null $controller,
-        LoggerInterface $logger = null,
+        ?LoggerInterface $logger = null,
         bool $debug = false,
         array $exceptionsMapping = [],
-        ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
+        ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
         private readonly array $errorFormats = [],
         private readonly array $exceptionToStatus = [],
         /** @phpstan-ignore-next-line we're not using this anymore but keeping for bc layer */
-        private readonly null|IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface $identifiersExtractor = null,
-        private readonly null|ResourceClassResolverInterface|LegacyResourceClassResolverInterface $resourceClassResolver = null,
-        Negotiator $negotiator = null,
-        private readonly bool $problemCompliantErrors = true,
+        private readonly IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface|null $identifiersExtractor = null,
+        private readonly ResourceClassResolverInterface|LegacyResourceClassResolverInterface|null $resourceClassResolver = null,
+        ?Negotiator $negotiator = null,
+        private readonly ?bool $problemCompliantErrors = true,
     ) {
         parent::__construct($controller, $logger, $debug, $exceptionsMapping);
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
@@ -79,7 +81,7 @@ final class ErrorListener extends SymfonyErrorListener
         //   - use api platform to handle errors (the default behavior we handle firewall errors for example but they're out of our scope)
 
         // Let the error handler take this we don't handle HTML nor non-api platform requests
-        if ('html' === $format) {
+        if (false === ($apiOperation?->getExtraProperties()['_api_error_handler'] ?? true) || 'html' === $format) {
             $this->controller = 'error_controller';
 
             return parent::duplicateRequest($exception, $request);
@@ -88,7 +90,7 @@ final class ErrorListener extends SymfonyErrorListener
         $legacy = $apiOperation ? ($apiOperation->getExtraProperties()['rfc_7807_compliant_errors'] ?? false) : $this->problemCompliantErrors;
 
         if (!$this->problemCompliantErrors || !$legacy) {
-            // TODO: deprecate in API Platform 3.3
+            trigger_deprecation('api-platform/core', '3.4', "rfc_7807_compliant_errors flag will be removed in 4.0, to handle errors yourself use extraProperties: ['rfc_7807_compliant_errors' => false]");
             $this->controller = 'api_platform.action.exception';
             $dup = parent::duplicateRequest($exception, $request);
             $dup->attributes->set('_api_operation', $apiOperation);
@@ -102,53 +104,19 @@ final class ErrorListener extends SymfonyErrorListener
         }
 
         $dup = parent::duplicateRequest($exception, $request);
-        if ($this->resourceMetadataCollectionFactory) {
-            if ($this->resourceClassResolver?->isResourceClass($exception::class)) {
-                $resourceCollection = $this->resourceMetadataCollectionFactory->create($exception::class);
-
-                $operation = null;
-                foreach ($resourceCollection as $resource) {
-                    foreach ($resource->getOperations() as $op) {
-                        foreach ($op->getOutputFormats() as $key => $value) {
-                            if ($key === $format) {
-                                $operation = $op;
-                                break 3;
-                            }
-                        }
-                    }
-                }
-
-                // No operation found for the requested format, we take the first available
-                if (!$operation) {
-                    $operation = $resourceCollection->getOperation();
-                }
-                if ($exception instanceof ProblemExceptionInterface && $operation instanceof HttpOperation) {
-                    $statusCode = $this->getStatusCode($apiOperation, $request, $operation, $exception);
-                    $operation = $operation->withStatus($statusCode);
-                }
-            } else {
-                // Create a generic, rfc7807 compatible error according to the wanted format
-                $operation = $this->resourceMetadataCollectionFactory->create(Error::class)->getOperation($this->getFormatOperation($format));
-                // status code may be overriden by the exceptionToStatus option
-                $statusCode = 500;
-                if ($operation instanceof HttpOperation) {
-                    $statusCode = $this->getStatusCode($apiOperation, $request, $operation, $exception);
-                    $operation = $operation->withStatus($statusCode);
-                }
-            }
-        } else {
-            /** @var HttpOperation $operation */
-            $operation = new ErrorOperation(name: '_api_errors_problem', class: Error::class, outputFormats: ['jsonld' => ['application/problem+json']], normalizationContext: ['groups' => ['jsonld'], 'skip_null_values' => true]);
-            $operation = $operation->withStatus($this->getStatusCode($apiOperation, $request, $operation, $exception));
-        }
+        $operation = $this->initializeExceptionOperation($request, $exception, $format, $apiOperation);
 
         if (null === $operation->getProvider()) {
             $operation = $operation->withProvider('api_platform.state.error_provider');
         }
 
-        $normalizationContext = $operation->getNormalizationContext() ?? [];
-        if (!($normalizationContext['_api_error_resource'] ?? false)) {
+        $normalizationContext = ($operation->getNormalizationContext() ?? []) + ($apiOperation?->getNormalizationContext() ?? []);
+        if (!($normalizationContext['api_error_resource'] ?? false)) {
             $normalizationContext += ['api_error_resource' => true];
+        }
+
+        if (isset($normalizationContext['item_uri_template'])) {
+            unset($normalizationContext['item_uri_template']);
         }
 
         if (!isset($normalizationContext[AbstractObjectNormalizer::IGNORED_ATTRIBUTES])) {
@@ -171,6 +139,9 @@ final class ErrorListener extends SymfonyErrorListener
         return $dup;
     }
 
+    /**
+     * @return array<int, array<class-string, int>>
+     */
     private function getOperationExceptionToStatus(Request $request): array
     {
         $attributes = RequestAttributesExtractor::extractAttributes($request);
@@ -180,8 +151,12 @@ final class ErrorListener extends SymfonyErrorListener
         }
 
         $resourceMetadataCollection = $this->resourceMetadataCollectionFactory->create($attributes['resource_class']);
-        /** @var HttpOperation $operation */
         $operation = $resourceMetadataCollection->getOperation($attributes['operation_name'] ?? null);
+
+        if (!$operation instanceof HttpOperation) {
+            return [];
+        }
+
         $exceptionToStatus = [$operation->getExceptionToStatus() ?: []];
 
         foreach ($resourceMetadataCollection as $resourceMetadata) {
@@ -222,7 +197,7 @@ final class ErrorListener extends SymfonyErrorListener
             return 400;
         }
 
-        if ($exception instanceof ValidationException) {
+        if ($exception instanceof ConstraintViolationListAwareExceptionInterface || $exception instanceof LegacyConstraintViolationListAwareExceptionInterface) {
             return 422;
         }
 
@@ -241,7 +216,58 @@ final class ErrorListener extends SymfonyErrorListener
             'jsonld' => '_api_errors_hydra',
             'jsonapi' => '_api_errors_jsonapi',
             'html' => '_api_errors_problem', // This will be intercepted by the SwaggerUiProvider
-            default => '_api_errors_problem'
+            default => '_api_errors_problem',
         };
+    }
+
+    private function initializeExceptionOperation(?Request $request, \Throwable $exception, string $format, ?HttpOperation $apiOperation): Operation
+    {
+        if (!$this->resourceMetadataCollectionFactory) {
+            $operation = new ErrorOperation(
+                name: '_api_errors_problem',
+                class: Error::class,
+                outputFormats: ['jsonld' => ['application/problem+json']],
+                normalizationContext: ['groups' => ['jsonld'], 'skip_null_values' => true]
+            );
+
+            return $operation->withStatus($this->getStatusCode($apiOperation, $request, $operation, $exception));
+        }
+
+        if ($this->resourceClassResolver?->isResourceClass($exception::class)) {
+            $resourceCollection = $this->resourceMetadataCollectionFactory->create($exception::class);
+
+            $operation = null;
+            // TODO: move this to ResourceMetadataCollection?
+            foreach ($resourceCollection as $resource) {
+                foreach ($resource->getOperations() as $op) {
+                    foreach ($op->getOutputFormats() as $key => $value) {
+                        if ($key === $format) {
+                            $operation = $op;
+                            break 3;
+                        }
+                    }
+                }
+            }
+
+            // No operation found for the requested format, we take the first available
+            $operation ??= $resourceCollection->getOperation();
+
+            if ($exception instanceof ProblemExceptionInterface && $operation instanceof HttpOperation) {
+                return $operation->withStatus($this->getStatusCode($apiOperation, $request, $operation, $exception));
+            }
+
+            return $operation;
+        }
+
+        // Create a generic, rfc7807 compatible error according to the wanted format
+        $operation = $this->resourceMetadataCollectionFactory->create(Error::class)->getOperation($this->getFormatOperation($format));
+        // status code may be overriden by the exceptionToStatus option
+        $statusCode = 500;
+        if ($operation instanceof HttpOperation) {
+            $statusCode = $this->getStatusCode($apiOperation, $request, $operation, $exception);
+            $operation = $operation->withStatus($statusCode);
+        }
+
+        return $operation;
     }
 }

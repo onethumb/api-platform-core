@@ -75,6 +75,7 @@ final class PropertyMetadataCompatibilityTest extends TestCase
         'iris' => ['https://schema.org/totalPrice'],
         'genId' => true,
         'uriTemplate' => '/sub-resource-get-collection',
+        'property' => 'test',
     ];
 
     /**
@@ -118,7 +119,7 @@ final class PropertyMetadataCompatibilityTest extends TestCase
                 continue;
             }
 
-            throw new \RuntimeException(sprintf('Unknown ApiProperty parameter "%s".', $parameter));
+            throw new \RuntimeException(\sprintf('Unknown ApiProperty parameter "%s".', $parameter));
         }
 
         return $property;

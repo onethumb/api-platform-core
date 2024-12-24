@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Serializer;
 
 use Symfony\Component\Serializer\NameConverter\AdvancedNameConverterInterface;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Symfony\Component\Serializer\Serializer;
@@ -33,7 +34,7 @@ abstract class AbstractConstraintViolationListNormalizer implements NormalizerIn
 
     private readonly ?array $serializePayloadFields;
 
-    public function __construct(array $serializePayloadFields = null, private readonly ?NameConverterInterface $nameConverter = null)
+    public function __construct(?array $serializePayloadFields = null, private readonly ?NameConverterInterface $nameConverter = null)
     {
         $this->serializePayloadFields = null === $serializePayloadFields ? null : array_flip($serializePayloadFields);
     }
@@ -41,8 +42,12 @@ abstract class AbstractConstraintViolationListNormalizer implements NormalizerIn
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
+        if (!isset($context['rfc_7807_compliant_errors']) && !($context['api_error_resource'] ?? false)) {
+            return false;
+        }
+
         return static::FORMAT === $format && $data instanceof ConstraintViolationListInterface;
     }
 
@@ -72,7 +77,7 @@ abstract class AbstractConstraintViolationListNormalizer implements NormalizerIn
         foreach ($constraintViolationList as $violation) {
             $class = \is_object($root = $violation->getRoot()) ? $root::class : null;
 
-            if ($this->nameConverter instanceof AdvancedNameConverterInterface) {
+            if ($this->nameConverter instanceof AdvancedNameConverterInterface || $this->nameConverter instanceof MetadataAwareNameConverter) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath(), $class, static::FORMAT);
             } elseif ($this->nameConverter instanceof NameConverterInterface) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath());

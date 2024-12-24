@@ -30,7 +30,7 @@ final class ContentNegotiationProvider implements ProviderInterface
      * @param array<string, string[]> $formats
      * @param array<string, string[]> $errorFormats
      */
-    public function __construct(private readonly ProviderInterface $decorated, Negotiator $negotiator = null, private readonly array $formats = [], private readonly array $errorFormats = [])
+    public function __construct(private readonly ?ProviderInterface $decorated = null, ?Negotiator $negotiator = null, private readonly array $formats = [], private readonly array $errorFormats = [])
     {
         $this->negotiator = $negotiator ?? new Negotiator();
     }
@@ -38,7 +38,7 @@ final class ContentNegotiationProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
         if (!($request = $context['request'] ?? null) || !$operation instanceof HttpOperation) {
-            return $this->decorated->provide($operation, $uriVariables, $context);
+            return $this->decorated?->provide($operation, $uriVariables, $context);
         }
 
         $isErrorOperation = $operation instanceof ErrorOperation;
@@ -53,7 +53,7 @@ final class ContentNegotiationProvider implements ProviderInterface
             $request->setRequestFormat($this->getRequestFormat($request, $formats, false));
         }
 
-        return $this->decorated->provide($operation, $uriVariables, $context);
+        return $this->decorated?->provide($operation, $uriVariables, $context);
     }
 
     /**
@@ -97,7 +97,16 @@ final class ContentNegotiationProvider implements ProviderInterface
      */
     private function getInputFormat(HttpOperation $operation, Request $request): ?string
     {
-        if (null === ($contentType = $request->headers->get('CONTENT_TYPE'))) {
+        if (
+            false === ($input = $operation->getInput())
+            || (\is_array($input) && null === $input['class'])
+            || false === $operation->canDeserialize()
+        ) {
+            return null;
+        }
+
+        $contentType = $request->headers->get('CONTENT_TYPE');
+        if (null === $contentType || '' === $contentType) {
             return null;
         }
 
@@ -107,15 +116,15 @@ final class ContentNegotiationProvider implements ProviderInterface
             return $format;
         }
 
-        $supportedMimeTypes = [];
-        foreach ($formats as $mimeTypes) {
-            foreach ($mimeTypes as $mimeType) {
-                $supportedMimeTypes[] = $mimeType;
-            }
-        }
-
         if (!$request->isMethodSafe() && 'DELETE' !== $request->getMethod()) {
-            throw new UnsupportedMediaTypeHttpException(sprintf('The content-type "%s" is not supported. Supported MIME types are "%s".', $contentType, implode('", "', $supportedMimeTypes)));
+            $supportedMimeTypes = [];
+            foreach ($formats as $mimeTypes) {
+                foreach ($mimeTypes as $mimeType) {
+                    $supportedMimeTypes[] = $mimeType;
+                }
+            }
+
+            throw new UnsupportedMediaTypeHttpException(\sprintf('The content-type "%s" is not supported. Supported MIME types are "%s".', $contentType, implode('", "', $supportedMimeTypes)));
         }
 
         return null;

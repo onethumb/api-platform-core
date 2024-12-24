@@ -11,6 +11,9 @@
         <server name="KERNEL_DIR" value="tests/Fixtures/app/" />
         <server name="KERNEL_CLASS" value="AppKernel" />
         <env name="APP_ENV" value="test" />
+        <env name="SYMFONY_PHPUNIT_REQUIRE" value="nikic/php-parser:^4.16"/>
+        <!-- to remove behat extensions in the AppKernel -->
+        <env name="APP_PHPUNIT" value="true"/>
     </php>
 
     <testsuites>
@@ -28,6 +31,8 @@
             <directory>features</directory>
             <directory>tests</directory>
             <directory>vendor</directory>
+            <directory>src/**/Tests/</directory>
+            <directory>src/Doctrine/**/Tests/</directory>
             <file>.php-cs-fixer.dist.php</file>
         </exclude>
     </coverage>

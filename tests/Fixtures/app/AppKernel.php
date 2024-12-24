@@ -20,8 +20,6 @@ use Doctrine\Bundle\DoctrineBundle\ConnectionFactory;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MongoDBBundle\Command\TailCursorDoctrineODMCommand;
 use Doctrine\Bundle\MongoDBBundle\DoctrineMongoDBBundle;
-use Doctrine\Common\Inflector\Inflector;
-use Doctrine\Inflector\InflectorFactory;
 use FriendsOfBehat\SymfonyExtension\Bundle\FriendsOfBehatSymfonyExtensionBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -57,12 +55,6 @@ class AppKernel extends Kernel
 
         // patch for behat/symfony2-extension not supporting %env(APP_ENV)%
         $this->environment = $_SERVER['APP_ENV'] ?? $environment;
-
-        // patch for old versions of Doctrine Inflector, to delete when we'll drop support for v1
-        // see https://github.com/doctrine/inflector/issues/147#issuecomment-628807276
-        if (!class_exists(InflectorFactory::class)) { // @phpstan-ignore-next-line
-            Inflector::rules('plural', ['/taxon/i' => 'taxa']);
-        }
     }
 
     public function registerBundles(): array
@@ -74,10 +66,13 @@ class AppKernel extends Kernel
             new MercureBundle(),
             new SecurityBundle(),
             new WebProfilerBundle(),
-            new FriendsOfBehatSymfonyExtensionBundle(),
             new FrameworkBundle(),
             new MakerBundle(),
         ];
+
+        if (null === ($_ENV['APP_PHPUNIT'] ?? null)) {
+            $bundles[] = new FriendsOfBehatSymfonyExtensionBundle();
+        }
 
         if (class_exists(DoctrineMongoDBBundle::class)) {
             $bundles[] = new DoctrineMongoDBBundle();
@@ -237,18 +232,24 @@ class AppKernel extends Kernel
         $c->prependExtensionConfig('twig', $twigConfig);
 
         $metadataBackwardCompatibilityLayer = (bool) ($_SERVER['EVENT_LISTENERS_BACKWARD_COMPATIBILITY_LAYER'] ?? false);
+        $useSymfonyListeners = (bool) ($_SERVER['USE_SYMFONY_LISTENERS'] ?? false);
         $rfc7807CompliantErrors = (bool) ($_SERVER['RFC_7807_COMPLIANT_ERRORS'] ?? true);
+        $useQueryParameterValidator = (bool) ($_SERVER['QUERY_PARAMETER_VALIDATOR'] ?? false);
 
-        extra_properties:
+        $legacyConfig = [];
+        if ($metadataBackwardCompatibilityLayer) {
+            $legacyConfig = ['event_listeners_backward_compatibility_layer' => $metadataBackwardCompatibilityLayer];
+        }
 
-        $c->prependExtensionConfig('api_platform', [
+        $c->prependExtensionConfig('api_platform', $legacyConfig + [
             'mapping' => [
                 'paths' => ['%kernel.project_dir%/../TestBundle/Resources/config/api_resources'],
             ],
             'graphql' => [
                 'graphql_playground' => false,
             ],
-            'event_listeners_backward_compatibility_layer' => $metadataBackwardCompatibilityLayer,
+            'use_deprecated_json_schema_type_factory' => true,
+            'use_symfony_listeners' => $useSymfonyListeners,
             'defaults' => [
                 'pagination_client_enabled' => true,
                 'pagination_client_items_per_page' => true,
@@ -264,7 +265,11 @@ class AppKernel extends Kernel
                 'extra_properties' => [
                     'rfc_7807_compliant_errors' => $rfc7807CompliantErrors,
                     'standard_put' => true,
+                    'use_legacy_parameter_validator' => $useQueryParameterValidator,
                 ],
+            ],
+            'serializer' => [
+                'hydra_prefix' => true,
             ],
         ]);
 
@@ -273,6 +278,7 @@ class AppKernel extends Kernel
             $c->prependExtensionConfig('doctrine', [
                 'orm' => [
                     'report_fields_where_declared' => true,
+                    'controller_resolver' => ['auto_mapping' => false],
                     'enable_lazy_ghost_objects' => true,
                 ],
             ]);
@@ -299,7 +305,7 @@ class AppKernel extends Kernel
 
     protected function build(ContainerBuilder $container): void
     {
-        $container->addCompilerPass(new class() implements CompilerPassInterface {
+        $container->addCompilerPass(new class implements CompilerPassInterface {
             public function process(ContainerBuilder $container): void
             {
                 if ($container->hasDefinition(TailCursorDoctrineODMCommand::class)) { // @phpstan-ignore-line

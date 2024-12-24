@@ -15,7 +15,7 @@ namespace ApiPlatform\Doctrine\Odm\Filter;
 
 use ApiPlatform\Doctrine\Common\Filter\DateFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\DateFilterTrait;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ODM\MongoDB\Aggregation\Builder;
 use Doctrine\ODM\MongoDB\Types\Type as MongoDbType;
@@ -129,7 +129,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $values, Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void
+    protected function filterProperty(string $property, $values, Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void
     {
         // Expect $values to be an array having the period as keys and the date value as values
         if (
@@ -197,7 +197,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * Adds the match stage according to the chosen null management.
      */
-    private function addMatch(Builder $aggregationBuilder, string $field, string $operator, $value, string $nullManagement = null): void
+    private function addMatch(Builder $aggregationBuilder, string $field, string $operator, $value, ?string $nullManagement = null): void
     {
         $value = $this->normalizeValue($value, $operator);
 
@@ -210,7 +210,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         } catch (\Exception) {
             // Silently ignore this filter if it can not be transformed to a \DateTime
             $this->logger->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
+                'exception' => new InvalidArgumentException(\sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
             ]);
 
             return;

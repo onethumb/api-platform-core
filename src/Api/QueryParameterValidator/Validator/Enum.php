@@ -13,6 +13,12 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Api\QueryParameterValidator\Validator;
 
+use ApiPlatform\ParameterValidator\Validator\CheckFilterDeprecationsTrait;
+use ApiPlatform\ParameterValidator\Validator\ValidatorInterface;
+
+/**
+ * @deprecated use \ApiPlatform\ParameterValidator\Validator\Enum instead
+ */
 final class Enum implements ValidatorInterface
 {
     use CheckFilterDeprecationsTrait;
@@ -33,7 +39,7 @@ final class Enum implements ValidatorInterface
 
         if (null !== $enum && !\in_array($value, $enum, true)) {
             return [
-                sprintf('Query parameter "%s" must be one of "%s"', $name, implode(', ', $enum)),
+                \sprintf('Query parameter "%s" must be one of "%s"', $name, implode(', ', $enum)),
             ];
         }
 

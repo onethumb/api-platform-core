@@ -13,15 +13,52 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Metadata;
 
+use ApiPlatform\OpenApi;
+
 #[\Attribute(\Attribute::TARGET_PROPERTY | \Attribute::TARGET_METHOD | \Attribute::TARGET_PARAMETER)]
-final class Link
+final class Link extends Parameter
 {
-    public function __construct(private ?string $parameterName = null, private ?string $fromProperty = null, private ?string $toProperty = null, private ?string $fromClass = null, private ?string $toClass = null, private ?array $identifiers = null, private ?bool $compositeIdentifier = null, private ?string $expandedValue = null)
-    {
+    public function __construct(
+        private ?string $parameterName = null,
+        private ?string $fromProperty = null,
+        private ?string $toProperty = null,
+        private ?string $fromClass = null,
+        private ?string $toClass = null,
+        private ?array $identifiers = null,
+        private ?bool $compositeIdentifier = null,
+        private ?string $expandedValue = null,
+        ?string $security = null,
+        ?string $securityMessage = null,
+        private ?string $securityObjectName = null,
+
+        ?string $key = null,
+        ?array $schema = null,
+        ?OpenApi\Model\Parameter $openApi = null,
+        mixed $provider = null,
+        mixed $filter = null,
+        ?string $property = null,
+        ?string $description = null,
+        ?bool $required = null,
+        array $extraProperties = [],
+    ) {
         // For the inverse property shortcut
         if ($this->parameterName && class_exists($this->parameterName)) {
             $this->fromClass = $this->parameterName;
         }
+
+        parent::__construct(
+            key: $key,
+            schema: $schema,
+            openApi: $openApi,
+            provider: $provider,
+            filter: $filter,
+            property: $property,
+            description: $description,
+            required: $required,
+            security: $security,
+            securityMessage: $securityMessage,
+            extraProperties: $extraProperties
+        );
     }
 
     public function getParameterName(): ?string
@@ -128,6 +165,24 @@ final class Link
         return $self;
     }
 
+    public function getSecurity(): ?string
+    {
+        return $this->security;
+    }
+
+    public function getSecurityObjectName(): ?string
+    {
+        return $this->securityObjectName;
+    }
+
+    public function withSecurityObjectName(?string $securityObjectName): self
+    {
+        $self = clone $this;
+        $self->securityObjectName = $securityObjectName;
+
+        return $self;
+    }
+
     public function withLink(self $link): self
     {
         $self = clone $this;
@@ -162,6 +217,18 @@ final class Link
 
         if (!$self->getExpandedValue() && ($expandedValue = $link->getExpandedValue())) {
             $self->expandedValue = $expandedValue;
+        }
+
+        if (!$self->getSecurity() && ($security = $link->getSecurity())) {
+            $self->security = $security;
+        }
+
+        if (!$self->getSecurityMessage() && ($securityMessage = $link->getSecurityMessage())) {
+            $self->securityMessage = $securityMessage;
+        }
+
+        if (!$self->getSecurityObjectName() && ($securityObjectName = $link->getSecurityObjectName())) {
+            $self->securityObjectName = $securityObjectName;
         }
 
         return $self;

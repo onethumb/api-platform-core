@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Metadata;
 
-use ApiPlatform\Api\FilterInterface as LegacyFilterInterface;
 use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 
 /**
@@ -25,7 +24,8 @@ use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 final class ApiFilter
 {
     /**
-     * @param string|class-string<FilterInterface>|class-string<LegacyFilterInterface> $filterClass
+     * @param string|class-string<FilterInterface> $filterClass
+     * @param string                               $alias       a filter tag alias to be referenced in a Parameter
      */
     public function __construct(
         public string $filterClass,
@@ -33,9 +33,10 @@ final class ApiFilter
         public ?string $strategy = null,
         public array $properties = [],
         public array $arguments = [],
+        public ?string $alias = null,
     ) {
-        if (!is_a($this->filterClass, FilterInterface::class, true) && !is_a($this->filterClass, LegacyFilterInterface::class, true)) {
-            throw new InvalidArgumentException(sprintf('The filter class "%s" does not implement "%s". Did you forget a use statement?', $this->filterClass, FilterInterface::class));
+        if (!is_a($this->filterClass, FilterInterface::class, true)) {
+            throw new InvalidArgumentException(\sprintf('The filter class "%s" does not implement "%s". Did you forget a use statement?', $this->filterClass, FilterInterface::class));
         }
     }
 }

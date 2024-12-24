@@ -17,6 +17,7 @@ use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Extractor\YamlResourceExtractor;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\FlexConfig;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\Program;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\SingleFileConfigDummy;
@@ -101,6 +102,8 @@ class YamlExtractorTest extends TestCase
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => null,
+                    'parameters' => null,
                 ],
             ],
             Program::class => [
@@ -172,6 +175,8 @@ class YamlExtractorTest extends TestCase
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => null,
+                    'parameters' => null,
                 ],
                 [
                     'uriTemplate' => '/users/{author}/programs{._format}',
@@ -314,6 +319,8 @@ class YamlExtractorTest extends TestCase
                             'itemUriTemplate' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => null,
                         ],
                         [
                             'name' => null,
@@ -397,6 +404,8 @@ class YamlExtractorTest extends TestCase
                             'provider' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => ['author' => new QueryParameter(schema: ['type' => 'string'], required: true, key: 'author', description: 'hello')],
                         ],
                     ],
                     'graphQlOperations' => null,
@@ -406,6 +415,8 @@ class YamlExtractorTest extends TestCase
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => ['hello' => 'world'],
+                    'parameters' => null,
                 ],
             ],
             SingleFileConfigDummy::class => [
@@ -477,6 +488,8 @@ class YamlExtractorTest extends TestCase
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => null,
+                    'parameters' => null,
                 ],
             ],
         ], $extractor->getResources());

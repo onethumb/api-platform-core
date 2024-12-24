@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace ApiPlatform\JsonLd\Serializer;
 
 use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
 use ApiPlatform\JsonLd\AnonymousContextBuilderInterface;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Serializer\CacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface as BaseCacheableSupportsMethodInterface;
@@ -39,7 +39,7 @@ final class ObjectNormalizer implements NormalizerInterface, CacheableSupportsMe
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return self::FORMAT === $format && $this->decorated->supportsNormalization($data, $format, $context);
     }
@@ -73,7 +73,7 @@ final class ObjectNormalizer implements NormalizerInterface, CacheableSupportsMe
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
         if (isset($context['api_resource'])) {
             $originalResource = $context['api_resource'];

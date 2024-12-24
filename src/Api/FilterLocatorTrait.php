@@ -14,7 +14,6 @@ declare(strict_types=1);
 namespace ApiPlatform\Api;
 
 use ApiPlatform\Exception\InvalidArgumentException;
-use ApiPlatform\Metadata\FilterInterface as MetadataFilterInterface;
 use Psr\Container\ContainerInterface;
 
 /**
@@ -38,14 +37,14 @@ trait FilterLocatorTrait
         if ($filterLocator instanceof ContainerInterface || (null === $filterLocator && $allowNull)) {
             $this->filterLocator = $filterLocator;
         } else {
-            throw new InvalidArgumentException(sprintf('The "$filterLocator" argument is expected to be an implementation of the "%s" interface%s.', ContainerInterface::class, $allowNull ? ' or null' : ''));
+            throw new InvalidArgumentException(\sprintf('The "$filterLocator" argument is expected to be an implementation of the "%s" interface%s.', ContainerInterface::class, $allowNull ? ' or null' : ''));
         }
     }
 
     /**
      * Gets a filter with a backward compatibility.
      */
-    private function getFilter(string $filterId): null|FilterInterface|MetadataFilterInterface
+    private function getFilter(string $filterId): ?FilterInterface
     {
         if ($this->filterLocator && $this->filterLocator->has($filterId)) {
             return $this->filterLocator->get($filterId);

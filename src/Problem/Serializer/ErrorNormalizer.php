@@ -23,6 +23,7 @@ use Symfony\Component\Serializer\Serializer;
  * Normalizes errors according to the API Problem spec (RFC 7807).
  *
  * @see https://tools.ietf.org/html/rfc7807
+ * @deprecated
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
@@ -45,7 +46,7 @@ final class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMet
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $data = [
             'type' => $context[self::TYPE] ?? $this->defaultContext[self::TYPE],
@@ -63,7 +64,7 @@ final class ErrorNormalizer implements NormalizerInterface, CacheableSupportsMet
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         if ($context['api_error_resource'] ?? false) {
             return false;

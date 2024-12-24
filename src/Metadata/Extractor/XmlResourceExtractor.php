@@ -13,13 +13,15 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Metadata\Extractor;
 
+use ApiPlatform\Elasticsearch\State\Options;
 use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\HeaderParameter;
 use ApiPlatform\Metadata\Post;
-use ApiPlatform\Metadata\Tests\Fixtures\StateOptions;
+use ApiPlatform\Metadata\QueryParameter;
 use ApiPlatform\OpenApi\Model\ExternalDocumentation;
 use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
-use ApiPlatform\OpenApi\Model\Parameter;
+use ApiPlatform\OpenApi\Model\Parameter as OpenApiParameter;
 use ApiPlatform\OpenApi\Model\RequestBody;
 use ApiPlatform\State\OptionsInterface;
 use Symfony\Component\Config\Util\XmlUtils;
@@ -49,7 +51,7 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
             try {
                 simplexml_import_dom(XmlUtils::loadFile($path, XmlPropertyExtractor::SCHEMA));
             } catch (\InvalidArgumentException) {
-                throw new InvalidArgumentException(sprintf('Error while parsing %s: %s', $path, $e->getMessage()), $e->getCode(), $e);
+                throw new InvalidArgumentException(\sprintf('Error while parsing %s: %s', $path, $e->getMessage()), $e->getCode(), $e);
             }
 
             // It's a property: ignore error
@@ -59,7 +61,6 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
         foreach ($xml->resource as $resource) {
             $base = $this->buildExtendedBase($resource);
             $this->resources[$this->resolve((string) $resource['class'])][] = array_merge($base, [
-                'class' => $this->phpize($resource, 'class', 'string'),
                 'operations' => $this->buildOperations($resource, $base),
                 'graphQlOperations' => $this->buildGraphQlOperations($resource, $base),
             ]);
@@ -96,6 +97,8 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
             'queryParameterValidationEnabled' => $this->phpize($resource, 'queryParameterValidationEnabled', 'bool'),
             'stateOptions' => $this->buildStateOptions($resource),
             'links' => $this->buildLinks($resource),
+            'headers' => $this->buildHeaders($resource),
+            'parameters' => $this->buildParameters($resource),
         ]);
     }
 
@@ -199,7 +202,7 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
 
         if (isset($openapi->parameters->parameter)) {
             foreach ($openapi->parameters->parameter as $parameter) {
-                $data['parameters'][(string) $parameter->attributes()->name] = new Parameter(
+                $data['parameters'][(string) $parameter->attributes()->name] = new OpenApiParameter(
                     name: $this->phpize($parameter, 'name', 'string'),
                     in: $this->phpize($parameter, 'in', 'string'),
                     description: $this->phpize($parameter, 'description', 'string'),
@@ -267,10 +270,10 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
             if ($toProperty = $this->phpize($data, 'toProperty', 'string')) {
                 $uriVariables[$parameterName]['to_property'] = $toProperty;
             }
-            if ($fromClass = $this->phpize($data, 'fromClass', 'string')) {
+            if ($fromClass = $this->resolve($this->phpize($data, 'fromClass', 'string'))) {
                 $uriVariables[$parameterName]['from_class'] = $fromClass;
             }
-            if ($toClass = $this->phpize($data, 'toClass', 'string')) {
+            if ($toClass = $this->resolve($this->phpize($data, 'toClass', 'string'))) {
                 $uriVariables[$parameterName]['to_class'] = $toClass;
             }
             if (isset($data->identifiers->values)) {
@@ -358,7 +361,7 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
         return $data;
     }
 
-    private function buildExtraProperties(\SimpleXMLElement $resource, string $key = null): ?array
+    private function buildExtraProperties(\SimpleXMLElement $resource, ?string $key = null): ?array
     {
         if (null !== $key) {
             if (!isset($resource->{$key})) {
@@ -389,7 +392,7 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
             if (\in_array((string) $operation['class'], [GetCollection::class, Post::class], true)) {
                 $datum['itemUriTemplate'] = $this->phpize($operation, 'itemUriTemplate', 'string');
             } elseif (isset($operation['itemUriTemplate'])) {
-                throw new InvalidArgumentException(sprintf('"itemUriTemplate" option is not allowed on a %s operation.', $operation['class']));
+                throw new InvalidArgumentException(\sprintf('"itemUriTemplate" option is not allowed on a %s operation.', $operation['class']));
             }
 
             $data[] = array_merge($datum, [
@@ -404,6 +407,7 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
                 'queryParameterValidate' => $this->phpize($operation, 'queryParameterValidate', 'bool'),
                 'priority' => $this->phpize($operation, 'priority', 'integer'),
                 'name' => $this->phpize($operation, 'name', 'string'),
+                'routeName' => $this->phpize($operation, 'routeName', 'string'),
             ]);
         }
 
@@ -451,10 +455,12 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
         }
         $elasticsearchOptions = $stateOptions->elasticsearchOptions ?? null;
         if ($elasticsearchOptions) {
-            return new StateOptions(
-                isset($elasticsearchOptions['index']) ? (string) $elasticsearchOptions['index'] : null,
-                isset($elasticsearchOptions['type']) ? (string) $elasticsearchOptions['type'] : null,
-            );
+            if (class_exists(Options::class)) {
+                return new Options(
+                    isset($elasticsearchOptions['index']) ? (string) $elasticsearchOptions['index'] : null,
+                    isset($elasticsearchOptions['type']) ? (string) $elasticsearchOptions['type'] : null,
+                );
+            }
         }
 
         return null;
@@ -465,7 +471,6 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
      */
     private function buildLinks(\SimpleXMLElement $resource): ?array
     {
-        $links = $resource->links ?? null;
         if (!$resource->links) {
             return null;
         }
@@ -476,5 +481,66 @@ final class XmlResourceExtractor extends AbstractResourceExtractor
         }
 
         return $links;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function buildHeaders(\SimpleXMLElement $resource): ?array
+    {
+        if (!$resource->headers) {
+            return null;
+        }
+
+        $headers = [];
+        foreach ($resource->headers as $header) {
+            $headers[(string) $header->header->attributes()->key] = (string) $header->header->attributes()->value;
+        }
+
+        return $headers;
+    }
+
+    /**
+     * @return array<string, \ApiPlatform\Metadata\Parameter>
+     */
+    private function buildParameters(\SimpleXMLElement $resource): ?array
+    {
+        if (!$resource->parameters) {
+            return null;
+        }
+
+        $parameters = [];
+        foreach ($resource->parameters->parameter as $parameter) {
+            $key = (string) $parameter->attributes()->key;
+            $cl = ('header' === (string) $parameter->attributes()->in) ? HeaderParameter::class : QueryParameter::class;
+            $parameters[$key] = new $cl(
+                key: $key,
+                required: $this->phpize($parameter, 'required', 'bool'),
+                schema: isset($parameter->schema->values) ? $this->buildValues($parameter->schema->values) : null,
+                openApi: isset($parameter->openapi) ? new OpenApiParameter(
+                    name: $this->phpize($parameter->openapi, 'name', 'string'),
+                    in: $this->phpize($parameter->openapi, 'in', 'string'),
+                    description: $this->phpize($parameter->openapi, 'description', 'string'),
+                    required: $this->phpize($parameter->openapi, 'required', 'bool'),
+                    deprecated: $this->phpize($parameter->openapi, 'deprecated', 'bool'),
+                    allowEmptyValue: $this->phpize($parameter->openapi, 'allowEmptyValue', 'bool'),
+                    schema: isset($parameter->openapi->schema->values) ? $this->buildValues($parameter->openapi->schema->values) : null,
+                    style: $this->phpize($parameter->openapi, 'style', 'string'),
+                    explode: $this->phpize($parameter->openapi, 'explode', 'bool'),
+                    allowReserved: $this->phpize($parameter->openapi, 'allowReserved', 'bool'),
+                    example: $this->phpize($parameter->openapi, 'example', 'string'),
+                    examples: isset($parameter->openapi->examples->values) ? new \ArrayObject($this->buildValues($parameter->openapi->examples->values)) : null,
+                    content: isset($parameter->openapi->content->values) ? new \ArrayObject($this->buildValues($parameter->openapi->content->values)) : null,
+                ) : null,
+                provider: $this->phpize($parameter, 'provider', 'string'),
+                filter: $this->phpize($parameter, 'filter', 'string'),
+                property: $this->phpize($parameter, 'property', 'string'),
+                description: $this->phpize($parameter, 'description', 'string'),
+                priority: $this->phpize($parameter, 'priority', 'integer'),
+                extraProperties: $this->buildExtraProperties($parameter, 'extraProperties') ?? [],
+            );
+        }
+
+        return $parameters;
     }
 }

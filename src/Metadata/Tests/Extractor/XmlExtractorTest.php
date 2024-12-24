@@ -17,6 +17,7 @@ use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Extractor\XmlResourceExtractor;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\Comment;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\User;
 use PHPUnit\Framework\TestCase;
@@ -94,13 +95,14 @@ class XmlExtractorTest extends TestCase
                     'extraProperties' => null,
                     'operations' => null,
                     'graphQlOperations' => null,
-                    'class' => Comment::class,
                     'processor' => null,
                     'provider' => null,
                     'read' => null,
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => null,
+                    'parameters' => null,
                 ],
                 [
                     'uriTemplate' => '/users/{author}/comments{._format}',
@@ -273,6 +275,9 @@ class XmlExtractorTest extends TestCase
                             'itemUriTemplate' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => null,
+                            'routeName' => 'custom_route_name',
                         ],
                         [
                             'name' => null,
@@ -373,16 +378,29 @@ class XmlExtractorTest extends TestCase
                             'provider' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => [
+                                'author' => new QueryParameter(
+                                    key: 'author',
+                                    required: true,
+                                    schema: [
+                                        'type' => 'string',
+                                    ],
+                                    extraProperties: ['foo' => 'bar']
+                                ),
+                            ],
+                            'routeName' => null,
                         ],
                     ],
                     'graphQlOperations' => null,
-                    'class' => Comment::class,
                     'processor' => null,
                     'provider' => null,
                     'read' => null,
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => ['hello' => 'world'],
+                    'parameters' => null,
                 ],
             ],
         ], $extractor->getResources());

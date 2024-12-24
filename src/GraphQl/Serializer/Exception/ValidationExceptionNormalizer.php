@@ -13,12 +13,13 @@ declare(strict_types=1);
 
 namespace ApiPlatform\GraphQl\Serializer\Exception;
 
-use ApiPlatform\Symfony\Validator\Exception\ValidationException;
+use ApiPlatform\Metadata\Exception\RuntimeException;
+use ApiPlatform\Symfony\Validator\Exception\ConstraintViolationListAwareExceptionInterface as LegacyConstraintViolationListAwareExceptionInterface;
+use ApiPlatform\Validator\Exception\ConstraintViolationListAwareExceptionInterface;
 use GraphQL\Error\Error;
 use GraphQL\Error\FormattedError;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Validator\ConstraintViolation;
 
 /**
  * Normalize validation exceptions.
@@ -35,10 +36,13 @@ final class ValidationExceptionNormalizer implements NormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
-        /** @var ValidationException */
         $validationException = $object->getPrevious();
+        if (!($validationException instanceof ConstraintViolationListAwareExceptionInterface || $validationException instanceof LegacyConstraintViolationListAwareExceptionInterface)) {
+            throw new RuntimeException(\sprintf('Object is not a "%s".', ConstraintViolationListAwareExceptionInterface::class));
+        }
+
         $error = FormattedError::createFromException($object);
         $error['message'] = $validationException->getMessage();
 
@@ -59,7 +63,6 @@ final class ValidationExceptionNormalizer implements NormalizerInterface
         }
         $error['extensions']['violations'] = [];
 
-        /** @var ConstraintViolation $violation */
         foreach ($validationException->getConstraintViolationList() as $violation) {
             $error['extensions']['violations'][] = [
                 'path' => $violation->getPropertyPath(),
@@ -73,9 +76,9 @@ final class ValidationExceptionNormalizer implements NormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
-        return $data instanceof Error && $data->getPrevious() instanceof ValidationException;
+        return $data instanceof Error && ($data->getPrevious() instanceof ConstraintViolationListAwareExceptionInterface);
     }
 
     public function getSupportedTypes($format): array

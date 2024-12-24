@@ -15,6 +15,7 @@ namespace ApiPlatform\Tests\Symfony\Messenger;
 
 use ApiPlatform\Symfony\Messenger\ContextStamp;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Messenger\Stamp\StampInterface;
 
 /**
@@ -31,5 +32,13 @@ class ContextStampTest extends TestCase
     {
         $contextStamp = new ContextStamp();
         $this->assertIsArray($contextStamp->getContext());
+    }
+
+    public function testRequestIsUnset(): void
+    {
+        $request = new Request();
+        $stamp = new ContextStamp(['request' => $request]);
+
+        self::assertArrayNotHasKey('request', $stamp->getContext());
     }
 }

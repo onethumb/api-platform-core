@@ -53,7 +53,7 @@ final class UploadType extends ScalarType implements TypeInterface
     public function parseValue(mixed $value): UploadedFile
     {
         if (!$value instanceof UploadedFile) {
-            throw new Error(sprintf('Could not get uploaded file, be sure to conform to GraphQL multipart request specification. Instead got: %s', Utils::printSafe($value)));
+            throw new Error(\sprintf('Could not get uploaded file, be sure to conform to GraphQL multipart request specification. Instead got: %s', Utils::printSafe($value)));
         }
 
         return $value;
@@ -62,7 +62,7 @@ final class UploadType extends ScalarType implements TypeInterface
     /**
      * {@inheritdoc}
      */
-    public function parseLiteral(Node $valueNode, array $variables = null): void
+    public function parseLiteral(Node $valueNode, ?array $variables = null): void
     {
         throw new Error('`Upload` cannot be hardcoded in query, be sure to conform to GraphQL multipart request specification.', $valueNode);
     }

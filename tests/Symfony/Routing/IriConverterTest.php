@@ -112,7 +112,7 @@ class IriConverterTest extends TestCase
 
     public function testGetIriFromItemWithNoOperations(): void
     {
-        $this->expectExceptionMessage(sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
+        $this->expectExceptionMessage(\sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
 
         $item = new Dummy();
         $item->setId(1);
@@ -131,7 +131,7 @@ class IriConverterTest extends TestCase
 
     public function testGetIriFromItemWithBadIdentifiers(): void
     {
-        $this->expectExceptionMessage(sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
+        $this->expectExceptionMessage(\sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
 
         $item = new Dummy();
         $item->setId(1);
@@ -323,7 +323,7 @@ class IriConverterTest extends TestCase
         return $resourceClassResolver->reveal();
     }
 
-    private function getIriConverter(ObjectProphecy $stateProviderProphecy = null, ObjectProphecy $routerProphecy = null, ObjectProphecy $identifiersExtractorProphecy = null, $resourceMetadataCollectionFactoryProphecy = null, $uriVariablesConverter = null, $decorated = null, ObjectProphecy $operationMetadataFactory = null): IriConverter
+    private function getIriConverter(?ObjectProphecy $stateProviderProphecy = null, ?ObjectProphecy $routerProphecy = null, ?ObjectProphecy $identifiersExtractorProphecy = null, $resourceMetadataCollectionFactoryProphecy = null, $uriVariablesConverter = null, $decorated = null, ?ObjectProphecy $operationMetadataFactory = null): IriConverter
     {
         if (!$stateProviderProphecy) {
             $stateProviderProphecy = $this->prophesize(ProviderInterface::class);

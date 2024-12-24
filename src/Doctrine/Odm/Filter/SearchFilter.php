@@ -17,7 +17,7 @@ use ApiPlatform\Api\IdentifiersExtractorInterface as LegacyIdentifiersExtractorI
 use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
 use ApiPlatform\Doctrine\Common\Filter\SearchFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\SearchFilterTrait;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\IdentifiersExtractorInterface;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\Operation;
@@ -142,7 +142,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
     public const DOCTRINE_INTEGER_TYPE = [MongoDbType::INTEGER, MongoDbType::INT];
 
-    public function __construct(ManagerRegistry $managerRegistry, IriConverterInterface|LegacyIriConverterInterface $iriConverter, null|IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface $identifiersExtractor, PropertyAccessorInterface $propertyAccessor = null, LoggerInterface $logger = null, array $properties = null, NameConverterInterface $nameConverter = null)
+    public function __construct(ManagerRegistry $managerRegistry, IriConverterInterface|LegacyIriConverterInterface $iriConverter, IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface|null $identifiersExtractor, ?PropertyAccessorInterface $propertyAccessor = null, ?LoggerInterface $logger = null, ?array $properties = null, ?NameConverterInterface $nameConverter = null)
     {
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
 
@@ -164,7 +164,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void
+    protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void
     {
         if (
             null === $value
@@ -205,7 +205,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
             if (!$this->hasValidValues($values, $this->getDoctrineFieldType($property, $resourceClass))) {
                 $this->logger->notice('Invalid filter ignored', [
-                    'exception' => new InvalidArgumentException(sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
+                    'exception' => new InvalidArgumentException(\sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
                 ]);
 
                 return;
@@ -229,7 +229,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
         if (!$this->hasValidValues($values, $doctrineTypeField)) {
             $this->logger->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('Values for field "%s" are not valid according to the doctrine type.', $property)),
+                'exception' => new InvalidArgumentException(\sprintf('Values for field "%s" are not valid according to the doctrine type.', $property)),
             ]);
 
             return;
@@ -278,7 +278,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
             self::STRATEGY_START => new Regex("^$quotedValue", $caseSensitive ? '' : 'i'),
             self::STRATEGY_END => new Regex("$quotedValue$", $caseSensitive ? '' : 'i'),
             self::STRATEGY_WORD_START => new Regex("(^$quotedValue.*|.*\s$quotedValue.*)", $caseSensitive ? '' : 'i'),
-            default => throw new InvalidArgumentException(sprintf('strategy %s does not exist.', $strategy)),
+            default => throw new InvalidArgumentException(\sprintf('strategy %s does not exist.', $strategy)),
         };
     }
 

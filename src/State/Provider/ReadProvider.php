@@ -17,12 +17,14 @@ use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Put;
 use ApiPlatform\Metadata\Util\CloneTrait;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
+use ApiPlatform\Serializer\SerializerContextBuilderInterface as LegacySerializerContextBuilderInterface;
 use ApiPlatform\State\Exception\ProviderNotFoundException;
 use ApiPlatform\State\ProviderInterface;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use ApiPlatform\State\UriVariablesResolverTrait;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
 use ApiPlatform\State\Util\RequestParser;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
@@ -38,7 +40,8 @@ final class ReadProvider implements ProviderInterface
 
     public function __construct(
         private readonly ProviderInterface $provider,
-        private readonly ?SerializerContextBuilderInterface $serializerContextBuilder = null,
+        private readonly LegacySerializerContextBuilderInterface|SerializerContextBuilderInterface|null $serializerContextBuilder = null,
+        private readonly ?LoggerInterface $logger = null,
     ) {
     }
 
@@ -49,12 +52,11 @@ final class ReadProvider implements ProviderInterface
         }
 
         $request = ($context['request'] ?? null);
-
         if (!$operation->canRead()) {
             return null;
         }
 
-        if (null === $filters = $request?->attributes->get('_api_filters')) {
+        if (null === ($filters = $request?->attributes->get('_api_filters')) && $request) {
             $queryString = RequestParser::getQueryString($request);
             $filters = $queryString ? RequestParser::parseRequestParams($queryString) : null;
         }
@@ -63,17 +65,22 @@ final class ReadProvider implements ProviderInterface
             $context['filters'] = $filters;
         }
 
+        $resourceClass = $operation->getClass();
+
         if ($this->serializerContextBuilder && $request) {
             // Builtin data providers are able to use the serialization context to automatically add join clauses
-            $context += $this->serializerContextBuilder->createFromRequest($request, true, [
-                'resource_class' => $operation->getClass(),
+            $context += $normalizationContext = $this->serializerContextBuilder->createFromRequest($request, true, [
+                'resource_class' => $resourceClass,
                 'operation' => $operation,
             ]);
+            $request->attributes->set('_api_normalization_context', $normalizationContext);
         }
 
         try {
             $data = $this->provider->provide($operation, $uriVariables, $context);
         } catch (ProviderNotFoundException $e) {
+            // In case the dev just forgot to implement it
+            $this->logger?->debug('No provider registered for {resource_class}', ['resource_class' => $resourceClass]);
             $data = null;
         }
 
@@ -84,7 +91,7 @@ final class ReadProvider implements ProviderInterface
                 || ($operation instanceof Put && !($operation->getAllowCreate() ?? false))
             )
         ) {
-            throw new NotFoundHttpException('Not Found');
+            throw new NotFoundHttpException('Not Found', $e ?? null);
         }
 
         $request?->attributes->set('data', $data);

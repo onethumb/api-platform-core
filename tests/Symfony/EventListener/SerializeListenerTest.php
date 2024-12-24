@@ -17,8 +17,8 @@ use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
-use ApiPlatform\Serializer\ResourceList;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
+use ApiPlatform\State\ResourceList;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use ApiPlatform\Symfony\EventListener\SerializeListener;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Dummy;
 use PHPUnit\Framework\TestCase;
@@ -32,6 +32,8 @@ use Symfony\Component\Serializer\SerializerInterface;
 
 /**
  * @author Kévin Dunglas <dunglas@gmail.com>
+ *
+ * @group legacy
  */
 class SerializeListenerTest extends TestCase
 {
@@ -48,7 +50,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             new Request(),
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             null
         );
 
@@ -73,7 +75,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $dummy
         );
 
@@ -104,7 +106,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $dummy
         );
 
@@ -141,7 +143,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             new \stdClass()
         );
 
@@ -165,7 +167,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             new \stdClass()
         );
 
@@ -201,7 +203,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             new \stdClass()
         );
 
@@ -226,7 +228,7 @@ class SerializeListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             []
         );
 

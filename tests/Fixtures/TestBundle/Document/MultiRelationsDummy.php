@@ -38,6 +38,9 @@ class MultiRelationsDummy
     #[ODM\ReferenceOne(targetDocument: MultiRelationsRelatedDummy::class, storeAs: 'id', nullable: true)]
     public ?MultiRelationsRelatedDummy $manyToOneRelation = null;
 
+    #[ODM\ReferenceOne(targetDocument: MultiRelationsResolveDummy::class, storeAs: 'id', nullable: true)]
+    public ?MultiRelationsResolveDummy $manyToOneResolveRelation = null;
+
     /** @var Collection<int, MultiRelationsRelatedDummy> */
     #[ODM\ReferenceMany(targetDocument: MultiRelationsRelatedDummy::class, storeAs: 'id', nullable: true)]
     public Collection $manyToManyRelations;
@@ -46,10 +49,20 @@ class MultiRelationsDummy
     #[ODM\ReferenceMany(targetDocument: MultiRelationsRelatedDummy::class, mappedBy: 'oneToManyRelation', storeAs: 'id')]
     public Collection $oneToManyRelations;
 
+    /** @var Collection<MultiRelationsNested> */
+    #[ODM\EmbedMany]
+    private Collection $nestedCollection;
+
+    /** @var Collection<MultiRelationsNestedPaginated> */
+    #[ODM\EmbedMany]
+    private Collection $nestedPaginatedCollection;
+
     public function __construct()
     {
         $this->manyToManyRelations = new ArrayCollection();
         $this->oneToManyRelations = new ArrayCollection();
+        $this->nestedCollection = new ArrayCollection();
+        $this->nestedPaginatedCollection = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -67,6 +80,18 @@ class MultiRelationsDummy
         $this->manyToOneRelation = $relatedMultiUsedDummy;
     }
 
+    public function getManyToOneResolveRelation(): ?MultiRelationsResolveDummy
+    {
+        return $this->manyToOneResolveRelation;
+    }
+
+    public function setManyToOneResolveRelation(?MultiRelationsResolveDummy $manyToOneResolveRelation): self
+    {
+        $this->manyToOneResolveRelation = $manyToOneResolveRelation;
+
+        return $this;
+    }
+
     public function addManyToManyRelation(MultiRelationsRelatedDummy $relatedMultiUsedDummy): void
     {
         $this->manyToManyRelations->add($relatedMultiUsedDummy);
@@ -75,5 +100,29 @@ class MultiRelationsDummy
     public function addOneToManyRelation(MultiRelationsRelatedDummy $relatedMultiUsedDummy): void
     {
         $this->oneToManyRelations->add($relatedMultiUsedDummy);
+    }
+
+    public function getNestedCollection(): Collection
+    {
+        return $this->nestedCollection->map(fn ($entry) => ['name' => $entry->name]);
+    }
+
+    public function setNestedCollection(Collection $nestedCollection): self
+    {
+        $this->nestedCollection = $nestedCollection;
+
+        return $this;
+    }
+
+    public function getNestedPaginatedCollection(): Collection
+    {
+        return $this->nestedPaginatedCollection->map(fn ($entry) => ['name' => $entry->name]);
+    }
+
+    public function setNestedPaginatedCollection(Collection $nestedPaginatedCollection): self
+    {
+        $this->nestedPaginatedCollection = $nestedPaginatedCollection;
+
+        return $this;
     }
 }

@@ -20,8 +20,10 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\GraphQl\Mutation;
 use ApiPlatform\Metadata\GraphQl\Query;
 use ApiPlatform\Metadata\GraphQl\QueryCollection;
+use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\Post;
 use ApiPlatform\Metadata\Put;
+use ApiPlatform\Tests\Fixtures\TestBundle\Security\SecuredDummyAttributeBasedVoter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ODM\MongoDB\Mapping\Annotations as ODM;
@@ -34,6 +36,13 @@ use Symfony\Component\Validator\Constraints as Assert;
  * @author Alan Poulain <contact@alanpoulain.eu>
  */
 #[ApiResource(operations: [new Get(security: 'is_granted(\'ROLE_USER\') and object.getOwner() == user'), new Put(securityPostDenormalize: 'is_granted(\'ROLE_USER\') and previous_object.getOwner() == user', extraProperties: ['standard_put' => false]), new GetCollection(security: 'is_granted(\'ROLE_USER\') or is_granted(\'ROLE_ADMIN\')'), new GetCollection(uriTemplate: 'custom_data_provider_generator', security: 'is_granted(\'ROLE_USER\')'), new Post(security: 'is_granted(\'ROLE_ADMIN\')')], graphQlOperations: [new Query(name: 'item_query', security: 'is_granted(\'ROLE_ADMIN\') or (is_granted(\'ROLE_USER\') and object.getOwner() == user)'), new QueryCollection(name: 'collection_query', security: 'is_granted(\'ROLE_ADMIN\')'), new Mutation(name: 'delete'), new Mutation(name: 'update', securityPostDenormalize: 'is_granted(\'ROLE_USER\') and previous_object.getOwner() ==  user'), new Mutation(name: 'create', security: 'is_granted(\'ROLE_ADMIN\')', securityMessage: 'Only admins can create a secured dummy.')], security: 'is_granted(\'ROLE_USER\')')]
+#[ApiResource(
+    uriTemplate: '/related_linked_dummies/{relatedDummyId}/from_from',
+    operations: [new GetCollection()],
+    uriVariables: [
+        'relatedDummyId' => new Link(fromProperty: 'securedDummy', fromClass: RelatedLinkedDummy::class, security: "is_granted('ROLE_USER') and relatedDummy.getSecuredDummy().getOwner() == user", securityObjectName: 'relatedDummy'),
+    ]
+)]
 #[ODM\Document]
 class SecuredDummy
 {
@@ -66,6 +75,13 @@ class SecuredDummy
     #[ApiProperty(security: 'object == null or object.getOwner() == user', securityPostDenormalize: 'object.getOwner() == user')]
     #[ODM\Field]
     private ?string $ownerOnlyProperty = '';
+
+    /**
+     * @var string Secret property, only readable/writable through voters using "property" attribute
+     */
+    #[ApiProperty(security: 'is_granted("'.SecuredDummyAttributeBasedVoter::ROLE.'", property)', securityPostDenormalize: 'is_granted("'.SecuredDummyAttributeBasedVoter::ROLE.'", property)')]
+    #[ODM\Field]
+    private string $attributeBasedProperty = '';
 
     /**
      * @var string|null The owner
@@ -163,6 +179,16 @@ class SecuredDummy
     public function setOwnerOnlyProperty(?string $ownerOnlyProperty): void
     {
         $this->ownerOnlyProperty = $ownerOnlyProperty;
+    }
+
+    public function getAttributeBasedProperty(): string
+    {
+        return $this->attributeBasedProperty;
+    }
+
+    public function setAttributeBasedProperty(string $attributeBasedProperty): void
+    {
+        $this->attributeBasedProperty = $attributeBasedProperty;
     }
 
     public function getOwner(): ?string

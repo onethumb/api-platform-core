@@ -35,6 +35,7 @@ class RespondProcessorTest extends TestCase
     {
         $canonicalUriTemplateRedirectingOperation = new Get(
             status: 302,
+            class: Employee::class,
             extraProperties: [
                 'canonical_uri_template' => '/canonical',
             ]
@@ -42,12 +43,14 @@ class RespondProcessorTest extends TestCase
 
         $alternateRedirectingResourceOperation = new Get(
             status: 308,
+            class: Employee::class,
             extraProperties: [
                 'is_alternate_resource_metadata' => true,
             ]
         );
 
         $alternateResourceOperation = new Get(
+            class: Employee::class,
             extraProperties: [
                 'is_alternate_resource_metadata' => true,
             ]
@@ -67,11 +70,11 @@ class RespondProcessorTest extends TestCase
         $iriConverter = $this->prophesize(IriConverterInterface::class);
         $iriConverter
             ->getIriFromResource(Argument::cetera())
-            ->will(static function (array $args): ?string {
+            ->will(static function (array $args): string {
                 return ($args[2] ?? null)?->getUriTemplate() ?? '/default';
             });
 
-        /** @var ProcessorInterface<Response> $respondProcessor */
+        /** @var ProcessorInterface<string, Response> $respondProcessor */
         $respondProcessor = new RespondProcessor($iriConverter->reveal(), $resourceClassResolver->reveal(), $operationMetadataFactory->reveal());
 
         $response = $respondProcessor->process('content', $canonicalUriTemplateRedirectingOperation, context: [
@@ -103,7 +106,7 @@ class RespondProcessorTest extends TestCase
     {
         $operation = new Get();
 
-        /** @var ProcessorInterface<Response> $respondProcessor */
+        /** @var ProcessorInterface<string, Response> $respondProcessor */
         $respondProcessor = new RespondProcessor();
         $req = new Request();
         $req->attributes->set('exception', new TooManyRequestsHttpException(32));
@@ -112,5 +115,19 @@ class RespondProcessorTest extends TestCase
         ]);
 
         $this->assertSame('32', $response->headers->get('retry-after'));
+    }
+
+    public function testAddsHeaders(): void
+    {
+        $operation = new Get(headers: ['foo' => 'bar']);
+
+        /** @var ProcessorInterface<string, Response> $respondProcessor */
+        $respondProcessor = new RespondProcessor();
+        $req = new Request();
+        $response = $respondProcessor->process('content', $operation, context: [
+            'request' => $req,
+        ]);
+
+        $this->assertSame('bar', $response->headers->get('foo'));
     }
 }

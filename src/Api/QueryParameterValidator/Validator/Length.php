@@ -13,6 +13,12 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Api\QueryParameterValidator\Validator;
 
+use ApiPlatform\ParameterValidator\Validator\CheckFilterDeprecationsTrait;
+use ApiPlatform\ParameterValidator\Validator\ValidatorInterface;
+
+/**
+ * @deprecated use \ApiPlatform\ParameterValidator\Validator\Length instead
+ */
 final class Length implements ValidatorInterface
 {
     use CheckFilterDeprecationsTrait;
@@ -35,11 +41,11 @@ final class Length implements ValidatorInterface
         $errorList = [];
 
         if (null !== $maxLength && mb_strlen($value) > $maxLength) {
-            $errorList[] = sprintf('Query parameter "%s" length must be lower than or equal to %s', $name, $maxLength);
+            $errorList[] = \sprintf('Query parameter "%s" length must be lower than or equal to %s', $name, $maxLength);
         }
 
         if (null !== $minLength && mb_strlen($value) < $minLength) {
-            $errorList[] = sprintf('Query parameter "%s" length must be greater than or equal to %s', $name, $minLength);
+            $errorList[] = \sprintf('Query parameter "%s" length must be greater than or equal to %s', $name, $minLength);
         }
 
         return $errorList;

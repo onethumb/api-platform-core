@@ -13,23 +13,22 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Doctrine\Common\State;
 
-use ApiPlatform\Exception\OperationNotFoundException;
+use ApiPlatform\Metadata\Exception\OperationNotFoundException;
 use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\GraphQl\Operation as GraphQlOperation;
 use ApiPlatform\Metadata\GraphQl\Query;
 use ApiPlatform\Metadata\HttpOperation;
-use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use Psr\Container\ContainerInterface;
 
 trait LinksHandlerTrait
 {
     private ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory;
-    private ?ContainerInterface $handleLinksLocator;
 
     /**
-     * @return Link[]
+     * @param array{linkClass?: string, linkProperty?: string}&array<string, mixed> $context
+     *
+     * @return \ApiPlatform\Metadata\Link[]
      */
     private function getLinks(string $resourceClass, Operation $operation, array $context): array
     {
@@ -84,15 +83,18 @@ trait LinksHandlerTrait
         }
 
         if (!$newLink) {
-            throw new RuntimeException(sprintf('The class "%s" cannot be retrieved from "%s".', $resourceClass, $linkClass));
+            throw new RuntimeException(\sprintf('The class "%s" cannot be retrieved from "%s".', $resourceClass, $linkClass));
         }
 
         return [$newLink];
     }
 
-    private function getIdentifierValue(array &$identifiers, string $name = null): mixed
+    /**
+     * @param array<int|string,mixed> $identifiers
+     */
+    private function getIdentifierValue(array &$identifiers, ?string $name = null): mixed
     {
-        if (isset($identifiers[$name])) {
+        if (null !== $name && isset($identifiers[$name])) {
             $value = $identifiers[$name];
             unset($identifiers[$name]);
 
@@ -102,7 +104,10 @@ trait LinksHandlerTrait
         return array_shift($identifiers);
     }
 
-    private function getOperationLinks(Operation $operation = null): array
+    /**
+     * @return \ApiPlatform\Metadata\Link[]|array
+     */
+    private function getOperationLinks(?Operation $operation = null): array
     {
         if ($operation instanceof GraphQlOperation) {
             return $operation->getLinks() ?? [];
@@ -113,23 +118,5 @@ trait LinksHandlerTrait
         }
 
         return [];
-    }
-
-    private function getLinksHandler(Operation $operation): ?callable
-    {
-        if (!($options = $operation->getStateOptions()) || !method_exists($options, 'getHandleLinks') || null === $options->getHandleLinks()) {
-            return null;
-        }
-
-        $handleLinks = $options->getHandleLinks(); // @phpstan-ignore-line method_exists called above
-        if (\is_callable($handleLinks)) {
-            return $handleLinks;
-        }
-
-        if ($this->handleLinksLocator && \is_string($handleLinks) && $this->handleLinksLocator->has($handleLinks)) {
-            return [$this->handleLinksLocator->get($handleLinks), 'handleLinks'];
-        }
-
-        throw new RuntimeException(sprintf('Could not find handleLinks service "%s"', $handleLinks));
     }
 }

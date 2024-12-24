@@ -21,6 +21,11 @@ use Symfony\Component\HttpFoundation\Response;
 /**
  * Bridges persistence and the API system.
  *
+ * @template T1
+ * @template T2
+ *
+ * @implements ProcessorInterface<T1, T2>
+ *
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Baptiste Meyer <baptiste.meyer@gmail.com>
  */
@@ -28,7 +33,11 @@ final class WriteProcessor implements ProcessorInterface
 {
     use ClassInfoTrait;
 
-    public function __construct(private readonly ProcessorInterface $processor, private readonly ProcessorInterface $callableProcessor)
+    /**
+     * @param ProcessorInterface<mixed, mixed> $processor
+     * @param ProcessorInterface<mixed, mixed> $callableProcessor
+     */
+    public function __construct(private readonly ?ProcessorInterface $processor, private readonly ProcessorInterface $callableProcessor)
     {
     }
 
@@ -39,9 +48,11 @@ final class WriteProcessor implements ProcessorInterface
             || !($operation->canWrite() ?? true)
             || !$operation->getProcessor()
         ) {
-            return $this->processor->process($data, $operation, $uriVariables, $context);
+            return $this->processor ? $this->processor->process($data, $operation, $uriVariables, $context) : $data;
         }
 
-        return $this->processor->process($this->callableProcessor->process($data, $operation, $uriVariables, $context), $operation, $uriVariables, $context);
+        $data = $this->callableProcessor->process($data, $operation, $uriVariables, $context);
+
+        return $this->processor ? $this->processor->process($data, $operation, $uriVariables, $context) : $data;
     }
 }

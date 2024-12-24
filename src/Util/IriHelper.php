@@ -22,6 +22,8 @@ use ApiPlatform\State\Util\RequestParser;
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  *
+ * @deprecated use ApiPlatform\Metadata\Util\IriHelper instead
+ *
  * @internal
  */
 final class IriHelper
@@ -39,7 +41,7 @@ final class IriHelper
     {
         $parts = parse_url($iri);
         if (false === $parts) {
-            throw new InvalidArgumentException(sprintf('The request URI "%s" is malformed.', $iri));
+            throw new InvalidArgumentException(\sprintf('The request URI "%s" is malformed.', $iri));
         }
 
         $parameters = [];
@@ -56,7 +58,7 @@ final class IriHelper
     /**
      * Gets a collection IRI for the given parameters.
      */
-    public static function createIri(array $parts, array $parameters, string $pageParameterName = null, float $page = null, $urlGenerationStrategy = UrlGeneratorInterface::ABS_PATH): string
+    public static function createIri(array $parts, array $parameters, ?string $pageParameterName = null, ?float $page = null, $urlGenerationStrategy = UrlGeneratorInterface::ABS_PATH): string
     {
         if (null !== $page && null !== $pageParameterName) {
             $parameters[$pageParameterName] = $page;

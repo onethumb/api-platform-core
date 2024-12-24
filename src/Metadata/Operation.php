@@ -47,18 +47,19 @@ abstract class Operation extends Metadata
      *     class?: string|null,
      *     name?: string,
      * }|string|false|null $output {@see https://api-platform.com/docs/core/dto/#specifying-an-input-or-an-output-data-representation}
-     * @param string|array|bool|null $mercure       {@see https://api-platform.com/docs/core/mercure}
-     * @param string|bool|null       $messenger     {@see https://api-platform.com/docs/core/messenger/#dispatching-a-resource-through-the-message-bus}
-     * @param bool|null              $elasticsearch {@see https://api-platform.com/docs/core/elasticsearch/}
-     * @param bool|null              $read          {@see https://api-platform.com/docs/core/events/#the-event-system}
-     * @param bool|null              $deserialize   {@see https://api-platform.com/docs/core/events/#the-event-system}
-     * @param bool|null              $validate      {@see https://api-platform.com/docs/core/events/#the-event-system}
-     * @param bool|null              $write         {@see https://api-platform.com/docs/core/events/#the-event-system}
-     * @param bool|null              $serialize     {@see https://api-platform.com/docs/core/events/#the-event-system}
-     * @param bool|null              $fetchPartial  {@see https://api-platform.com/docs/core/performance/#fetch-partial}
-     * @param bool|null              $forceEager    {@see https://api-platform.com/docs/core/performance/#force-eager}
-     * @param string|callable|null   $provider      {@see https://api-platform.com/docs/core/state-providers/#state-providers}
-     * @param string|callable|null   $processor     {@see https://api-platform.com/docs/core/state-processors/#state-processors}
+     * @param string|array|bool|null   $mercure       {@see https://api-platform.com/docs/core/mercure}
+     * @param string|bool|null         $messenger     {@see https://api-platform.com/docs/core/messenger/#dispatching-a-resource-through-the-message-bus}
+     * @param bool|null                $elasticsearch {@see https://api-platform.com/docs/core/elasticsearch/}
+     * @param bool|null                $read          {@see https://api-platform.com/docs/core/events/#the-event-system}
+     * @param bool|null                $deserialize   {@see https://api-platform.com/docs/core/events/#the-event-system}
+     * @param bool|null                $validate      {@see https://api-platform.com/docs/core/events/#the-event-system}
+     * @param bool|null                $write         {@see https://api-platform.com/docs/core/events/#the-event-system}
+     * @param bool|null                $serialize     {@see https://api-platform.com/docs/core/events/#the-event-system}
+     * @param bool|null                $fetchPartial  {@see https://api-platform.com/docs/core/performance/#fetch-partial}
+     * @param bool|null                $forceEager    {@see https://api-platform.com/docs/core/performance/#force-eager}
+     * @param string|callable|null     $provider      {@see https://api-platform.com/docs/core/state-providers/#state-providers}
+     * @param string|callable|null     $processor     {@see https://api-platform.com/docs/core/state-processors/#state-processors}
+     * @param array<string, Parameter> $parameters
      */
     public function __construct(
         protected ?string $shortName = null,
@@ -611,11 +612,11 @@ abstract class Operation extends Metadata
         protected ?array $normalizationContext = null,
         protected ?array $denormalizationContext = null,
         protected ?bool $collectDenormalizationErrors = null,
-        protected ?string $security = null,
+        protected string|\Stringable|null $security = null,
         protected ?string $securityMessage = null,
-        protected ?string $securityPostDenormalize = null,
+        protected string|\Stringable|null $securityPostDenormalize = null,
         protected ?string $securityPostDenormalizeMessage = null,
-        protected ?string $securityPostValidation = null,
+        protected string|\Stringable|null $securityPostValidation = null,
         protected ?string $securityPostValidationMessage = null,
         /**
          * The `deprecationReason` option deprecates the current operation with a deprecation message.
@@ -794,11 +795,19 @@ abstract class Operation extends Metadata
         protected ?bool $serialize = null,
         protected ?bool $fetchPartial = null,
         protected ?bool $forceEager = null,
+        /**
+         * The priority helps with the order of operations when looping over a resource's operations.
+         * It can be usefull when we loop over operations to find a matching IRI, although most of the use cases
+         * should be covered by the HttpOperation::itemUriTemplate or the ApiProperty::uriTemplate functionalities.
+         * Sort is ascendant: a lower priority comes first in the list.
+         */
         protected ?int $priority = null,
         protected ?string $name = null,
         protected $provider = null,
         protected $processor = null,
         protected ?OptionsInterface $stateOptions = null,
+        array|Parameters|null $parameters = null,
+        ?bool $queryParameterValidationEnabled = null,
         protected array $extraProperties = [],
     ) {
         parent::__construct(
@@ -839,6 +848,8 @@ abstract class Operation extends Metadata
             provider: $provider,
             processor: $processor,
             stateOptions: $stateOptions,
+            parameters: $parameters,
+            queryParameterValidationEnabled: $queryParameterValidationEnabled,
             extraProperties: $extraProperties,
         );
     }

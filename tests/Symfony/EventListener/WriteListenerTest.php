@@ -40,6 +40,9 @@ use Symfony\Component\HttpKernel\Event\ViewEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
+/**
+ * @group legacy
+ */
 class WriteListenerTest extends TestCase
 {
     use ProphecyTrait;
@@ -83,13 +86,13 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
         foreach (['PATCH', 'PUT', 'POST'] as $httpMethod) {
             $request->setMethod($httpMethod);
-            $request->attributes->set('_api_operation_name', sprintf('_api_%s_%s%s', 'OperationResource', strtolower($httpMethod), 'POST' === $httpMethod ? '_collection' : ''));
+            $request->attributes->set('_api_operation_name', \sprintf('_api_%s_%s%s', 'OperationResource', strtolower($httpMethod), 'POST' === $httpMethod ? '_collection' : ''));
 
             (new WriteListener($this->processorProphecy->reveal(), $this->iriConverterProphecy->reveal(), $this->resourceClassResolver->reveal(), $this->resourceMetadataCollectionFactory->reveal()))->onKernelView($event);
             $this->assertSame($operationResource, $event->getControllerResult());
@@ -118,7 +121,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
@@ -144,7 +147,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
@@ -172,7 +175,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
@@ -190,7 +193,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $response
         );
 
@@ -215,7 +218,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
@@ -237,7 +240,7 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $operationResource
         );
 
@@ -268,10 +271,39 @@ class WriteListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $attributeResource
         );
 
         (new WriteListener($this->processorProphecy->reveal(), $this->iriConverterProphecy->reveal(), $this->resourceClassResolver->reveal(), $this->resourceMetadataCollectionFactory->reveal()))->onKernelView($event);
+    }
+
+    public function testHasOriginalData(): void
+    {
+        $operationResource = new OperationResource(1, 'foo');
+
+        $this->resourceClassResolver->isResourceClass(Argument::type('string'))->willReturn(true);
+        $this->processorProphecy->process($operationResource, Argument::type(Operation::class), [], Argument::type('array'))->willReturn($operationResource)->shouldBeCalled();
+
+        $operationResourceMetadata = new ResourceMetadataCollection(OperationResource::class, [(new ApiResource())->withOperations(new Operations([
+            '_api_OperationResource_post_collection' => (new Post())->withName('_api_OperationResource_post_collection'),
+        ]))]);
+
+        $this->resourceMetadataCollectionFactory->create(OperationResource::class)->willReturn($operationResourceMetadata);
+
+        $request = new Request([], [], ['_api_resource_class' => OperationResource::class]);
+
+        $event = new ViewEvent(
+            $this->prophesize(HttpKernelInterface::class)->reveal(),
+            $request,
+            HttpKernelInterface::MAIN_REQUEST,
+            $operationResource
+        );
+
+        $request->setMethod('POST');
+        $request->attributes->set('_api_operation_name', \sprintf('_api_%s_%s%s', 'OperationResource', 'post', '_collection'));
+
+        (new WriteListener($this->processorProphecy->reveal(), null, $this->resourceClassResolver->reveal(), $this->resourceMetadataCollectionFactory->reveal()))->onKernelView($event);
+        $this->assertEquals($operationResource, $request->attributes->get('original_data'));
     }
 }

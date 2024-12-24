@@ -40,6 +40,9 @@ class MultiRelationsDummy
     #[ORM\ManyToOne(targetEntity: MultiRelationsRelatedDummy::class)]
     public ?MultiRelationsRelatedDummy $manyToOneRelation = null;
 
+    #[ORM\ManyToOne(targetEntity: MultiRelationsResolveDummy::class)]
+    public ?MultiRelationsResolveDummy $manyToOneResolveRelation = null;
+
     /** @var Collection<int, MultiRelationsRelatedDummy> */
     #[ORM\ManyToMany(targetEntity: MultiRelationsRelatedDummy::class)]
     public Collection $manyToManyRelations;
@@ -48,10 +51,20 @@ class MultiRelationsDummy
     #[ORM\OneToMany(targetEntity: MultiRelationsRelatedDummy::class, mappedBy: 'oneToManyRelation')]
     public Collection $oneToManyRelations;
 
+    /** @var array<MultiRelationsNested> */
+    #[ORM\Column(type: 'json')]
+    private array $nestedCollection;
+
+    /** @var array<MultiRelationsNestedPaginated> */
+    #[ORM\Column(type: 'json')]
+    private array $nestedPaginatedCollection;
+
     public function __construct()
     {
         $this->manyToManyRelations = new ArrayCollection();
         $this->oneToManyRelations = new ArrayCollection();
+        $this->nestedCollection = [];
+        $this->nestedPaginatedCollection = [];
     }
 
     public function getId(): ?int
@@ -69,6 +82,18 @@ class MultiRelationsDummy
         $this->manyToOneRelation = $relatedMultiUsedDummy;
     }
 
+    public function getManyToOneResolveRelation(): ?MultiRelationsResolveDummy
+    {
+        return $this->manyToOneResolveRelation;
+    }
+
+    public function setManyToOneResolveRelation(?MultiRelationsResolveDummy $manyToOneResolveRelation): self
+    {
+        $this->manyToOneResolveRelation = $manyToOneResolveRelation;
+
+        return $this;
+    }
+
     public function addManyToManyRelation(MultiRelationsRelatedDummy $relatedMultiUsedDummy): void
     {
         $this->manyToManyRelations->add($relatedMultiUsedDummy);
@@ -77,5 +102,29 @@ class MultiRelationsDummy
     public function addOneToManyRelation(MultiRelationsRelatedDummy $relatedMultiUsedDummy): void
     {
         $this->oneToManyRelations->add($relatedMultiUsedDummy);
+    }
+
+    public function getNestedCollection(): Collection
+    {
+        return new ArrayCollection($this->nestedCollection);
+    }
+
+    public function setNestedCollection(Collection $nestedCollection): self
+    {
+        $this->nestedCollection = $nestedCollection->toArray();
+
+        return $this;
+    }
+
+    public function getNestedPaginatedCollection(): Collection
+    {
+        return new ArrayCollection($this->nestedPaginatedCollection);
+    }
+
+    public function setNestedPaginatedCollection(Collection $nestedPaginatedCollection): self
+    {
+        $this->nestedPaginatedCollection = $nestedPaginatedCollection->toArray();
+
+        return $this;
     }
 }

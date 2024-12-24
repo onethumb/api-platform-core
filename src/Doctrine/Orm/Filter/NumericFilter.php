@@ -126,7 +126,7 @@ final class NumericFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if (
             !$this->isPropertyEnabled($property, $resourceClass)
@@ -152,11 +152,11 @@ final class NumericFilter extends AbstractFilter
 
         if (1 === \count($values)) {
             $queryBuilder
-                ->andWhere(sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
+                ->andWhere(\sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
                 ->setParameter($valueParameter, $values[0], (string) $this->getDoctrineFieldType($property, $resourceClass));
         } else {
             $queryBuilder
-                ->andWhere(sprintf('%s.%s IN (:%s)', $alias, $field, $valueParameter))
+                ->andWhere(\sprintf('%s.%s IN (:%s)', $alias, $field, $valueParameter))
                 ->setParameter($valueParameter, $values);
         }
     }
@@ -164,7 +164,7 @@ final class NumericFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    protected function getType(string $doctrineType = null): string
+    protected function getType(?string $doctrineType = null): string
     {
         if (null === $doctrineType || Types::DECIMAL === $doctrineType) {
             return 'string';

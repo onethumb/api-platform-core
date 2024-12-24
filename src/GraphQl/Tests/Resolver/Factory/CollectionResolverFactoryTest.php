@@ -18,6 +18,7 @@ use ApiPlatform\GraphQl\Resolver\Stage\ReadStageInterface;
 use ApiPlatform\GraphQl\Resolver\Stage\SecurityPostDenormalizeStageInterface;
 use ApiPlatform\GraphQl\Resolver\Stage\SecurityStageInterface;
 use ApiPlatform\GraphQl\Resolver\Stage\SerializeStageInterface;
+use ApiPlatform\GraphQl\Tests\Fixtures\Enum\GenderTypeEnum;
 use ApiPlatform\Metadata\GraphQl\QueryCollection;
 use GraphQL\Type\Definition\ResolveInfo;
 use PHPUnit\Framework\TestCase;
@@ -68,7 +69,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = ['testField' => 0];
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn(['testField' => true]);
+        $info = $infoProphecy->reveal();
         $info->fieldName = 'testField';
         $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
 
@@ -93,6 +96,20 @@ class CollectionResolverFactoryTest extends TestCase
         $this->assertSame($serializeStageData, ($this->collectionResolverFactory)($resourceClass, $rootClass, $operation)($source, $args, null, $info));
     }
 
+    public function testResolveEnumFieldFromSource(): void
+    {
+        $resourceClass = GenderTypeEnum::class;
+        $rootClass = 'rootClass';
+        $operationName = 'collection_query';
+        $operation = (new QueryCollection())->withName($operationName);
+        $source = ['genders' => [GenderTypeEnum::MALE, GenderTypeEnum::FEMALE]];
+        $args = ['args'];
+        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $info->fieldName = 'genders';
+
+        $this->assertSame([GenderTypeEnum::MALE, GenderTypeEnum::FEMALE], ($this->collectionResolverFactory)($resourceClass, $rootClass, $operation)($source, $args, null, $info));
+    }
+
     public function testResolveFieldNotInSource(): void
     {
         $resourceClass = \stdClass::class;
@@ -101,7 +118,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = ['source'];
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn(['testField' => true]);
+        $info = $infoProphecy->reveal();
         $info->fieldName = 'testField';
         $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
 
@@ -132,7 +151,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = null;
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn([]);
+        $info = $infoProphecy->reveal();
         $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
 
         $readStageCollection = [new \stdClass()];
@@ -164,7 +185,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = ['source'];
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn([]);
+        $info = $infoProphecy->reveal();
 
         $this->assertNull(($this->collectionResolverFactory)($resourceClass, $rootClass, $operation)($source, $args, null, $info));
     }
@@ -177,7 +200,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = ['source'];
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn([]);
+        $info = $infoProphecy->reveal();
 
         $this->assertNull(($this->collectionResolverFactory)($resourceClass, $rootClass, $operation)($source, $args, null, $info));
     }
@@ -190,7 +215,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withName($operationName);
         $source = null;
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn([]);
+        $info = $infoProphecy->reveal();
         $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
 
         $readStageCollection = new \stdClass();
@@ -210,7 +237,9 @@ class CollectionResolverFactoryTest extends TestCase
         $operation = (new QueryCollection())->withResolver('query_resolver_id')->withName($operationName);
         $source = null;
         $args = ['args'];
-        $info = $this->prophesize(ResolveInfo::class)->reveal();
+        $infoProphecy = $this->prophesize(ResolveInfo::class);
+        $infoProphecy->getFieldSelection()->willReturn([]);
+        $info = $infoProphecy->reveal();
         $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
 
         $readStageCollection = [new \stdClass()];

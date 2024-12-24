@@ -13,6 +13,12 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Api\QueryParameterValidator\Validator;
 
+use ApiPlatform\ParameterValidator\Validator\CheckFilterDeprecationsTrait;
+use ApiPlatform\ParameterValidator\Validator\ValidatorInterface;
+
+/**
+ * @deprecated use \ApiPlatform\ParameterValidator\Validator\MultipleOf instead
+ */
 final class MultipleOf implements ValidatorInterface
 {
     use CheckFilterDeprecationsTrait;
@@ -33,7 +39,7 @@ final class MultipleOf implements ValidatorInterface
 
         if (null !== $multipleOf && 0 !== ($value % $multipleOf)) {
             return [
-                sprintf('Query parameter "%s" must multiple of %s', $name, $multipleOf),
+                \sprintf('Query parameter "%s" must multiple of %s', $name, $multipleOf),
             ];
         }
 

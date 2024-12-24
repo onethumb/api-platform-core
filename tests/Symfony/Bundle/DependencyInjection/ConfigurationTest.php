@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Tests\Symfony\Bundle\DependencyInjection;
 
-use ApiPlatform\Exception\FilterValidationException;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\ParameterValidator\Exception\ValidationExceptionInterface;
 use ApiPlatform\Symfony\Bundle\DependencyInjection\Configuration;
 use Doctrine\ORM\OptimisticLockException;
 use PHPUnit\Framework\TestCase;
@@ -98,16 +98,19 @@ class ConfigurationTest extends TestCase
                 'jsonld' => ['mime_types' => ['application/ld+json']],
                 'json' => ['mime_types' => ['application/problem+json', 'application/json']],
             ],
+            'jsonschema_formats' => [],
             'exception_to_status' => [
                 ExceptionInterface::class => Response::HTTP_BAD_REQUEST,
                 InvalidArgumentException::class => Response::HTTP_BAD_REQUEST,
-                FilterValidationException::class => Response::HTTP_BAD_REQUEST,
+                ValidationExceptionInterface::class => Response::HTTP_BAD_REQUEST,
                 OptimisticLockException::class => Response::HTTP_CONFLICT,
             ],
             'path_segment_name_generator' => 'api_platform.metadata.path_segment_name_generator.underscore',
+            'inflector' => 'api_platform.metadata.inflector',
             'validator' => [
                 'serialize_payload_fields' => [],
                 'query_parameter_validation' => true,
+                'legacy_validation_exception' => true,
             ],
             'name_converter' => null,
             'enable_swagger' => true,
@@ -220,12 +223,20 @@ class ConfigurationTest extends TestCase
                     'url' => null,
                 ],
                 'swagger_ui_extra_configuration' => [],
+                'overrideResponses' => true,
             ],
             'maker' => [
                 'enabled' => true,
             ],
             'keep_legacy_inflector' => true,
-            'event_listeners_backward_compatibility_layer' => true,
+            'event_listeners_backward_compatibility_layer' => null,
+            'use_symfony_listeners' => false,
+            'use_deprecated_json_schema_type_factory' => null,
+            'handle_symfony_errors' => false,
+            'enable_link_security' => false,
+            'serializer' => [
+                'hydra_prefix' => null,
+            ],
         ], $config);
     }
 

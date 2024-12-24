@@ -69,11 +69,12 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
 
     public function testCreateWithPropertyWithRequiredConstraints(): void
     {
-        $propertyMetadata = (new ApiProperty())->withDescription('A dummy')->withReadable(true)->withWritable(true);
-        $expectedPropertyMetadata = $propertyMetadata->withRequired(true);
+        $dummyPropertyMetadata = (new ApiProperty())->withDescription('A dummy')->withReadable(true)->withWritable(true);
+        $emailPropertyMetadata = (new ApiProperty())->withTypes(['https://schema.org/email'])->withReadable(true)->withWritable(true);
 
         $decoratedPropertyMetadataFactory = $this->prophesize(PropertyMetadataFactoryInterface::class);
-        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy', [])->willReturn($propertyMetadata)->shouldBeCalled();
+        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy', [])->willReturn($dummyPropertyMetadata)->shouldBeCalled();
+        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummyEmail', [])->willReturn($emailPropertyMetadata)->shouldBeCalled();
 
         $validatorMetadataFactory = $this->prophesize(MetadataFactoryInterface::class);
         $validatorMetadataFactory->getMetadataFor(DummyValidatedEntity::class)->willReturn($this->validatorClassMetadata)->shouldBeCalled();
@@ -83,9 +84,16 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
             $decoratedPropertyMetadataFactory->reveal(),
             []
         );
-        $resultedPropertyMetadata = $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy');
 
-        $this->assertEquals($expectedPropertyMetadata, $resultedPropertyMetadata);
+        $this->assertEquals(
+            $dummyPropertyMetadata->withRequired(true),
+            $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy'),
+        );
+
+        $this->assertEquals(
+            $emailPropertyMetadata->withRequired(false),
+            $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummyEmail'),
+        );
     }
 
     public function testCreateWithPropertyWithNotRequiredConstraints(): void
@@ -622,7 +630,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
 
         $this->assertEquals([
             'type' => 'object',
-            'properties' => [
+            'properties' => new \ArrayObject([
                 'name' => new \ArrayObject(),
                 'email' => ['format' => 'email', 'minLength' => 2, 'maxLength' => 255],
                 'phone' => ['pattern' => '^([+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*)$'],
@@ -631,13 +639,13 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
                 ],
                 'social' => [
                     'type' => 'object',
-                    'properties' => [
+                    'properties' => new \ArrayObject([
                         'githubUsername' => new \ArrayObject(),
-                    ],
+                    ]),
                     'additionalProperties' => false,
                     'required' => ['githubUsername'],
                 ],
-            ],
+            ]),
             'additionalProperties' => true,
             'required' => ['name', 'email', 'social'],
         ], $schema);

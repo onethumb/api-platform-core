@@ -117,7 +117,7 @@ final class PropertyFilter implements FilterInterface
 {
     private ?array $whitelist;
 
-    public function __construct(private readonly string $parameterName = 'properties', private readonly bool $overrideDefaultProperties = false, array $whitelist = null, private readonly ?NameConverterInterface $nameConverter = null)
+    public function __construct(private readonly string $parameterName = 'properties', private readonly bool $overrideDefaultProperties = false, ?array $whitelist = null, private readonly ?NameConverterInterface $nameConverter = null)
     {
         $this->whitelist = null === $whitelist ? null : $this->formatWhitelist($whitelist);
     }
@@ -157,13 +157,12 @@ final class PropertyFilter implements FilterInterface
      */
     public function getDescription(string $resourceClass): array
     {
-        $example = sprintf('%1$s[]={propertyName}&%1$s[]={anotherPropertyName}&%1$s[{nestedPropertyParent}][]={nestedProperty}',
+        $example = \sprintf('%1$s[]={propertyName}&%1$s[]={anotherPropertyName}&%1$s[{nestedPropertyParent}][]={nestedProperty}',
             $this->parameterName
         );
 
         return [
             "$this->parameterName[]" => [
-                'property' => null,
                 'type' => 'string',
                 'is_collection' => true,
                 'required' => false,
@@ -213,7 +212,7 @@ final class PropertyFilter implements FilterInterface
         return $whitelist;
     }
 
-    private function getProperties(array $properties, array $whitelist = null): array
+    private function getProperties(array $properties, ?array $whitelist = null): array
     {
         $whitelist ??= $this->whitelist;
         $result = [];

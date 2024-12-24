@@ -20,7 +20,7 @@ use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInter
 use ApiPlatform\Metadata\UrlGeneratorInterface;
 use ApiPlatform\State\UriVariablesResolverTrait;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\State\Util\RequestAttributesExtractor;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 
 /**
@@ -35,14 +35,14 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  *
- *  @deprecated use \Symfony\EventListener\AddTagsListener.php instead
+ * @deprecated use \Symfony\EventListener\AddTagsListener.php instead
  */
 final class AddTagsListener
 {
     use OperationRequestInitiatorTrait;
     use UriVariablesResolverTrait;
 
-    public function __construct(private readonly IriConverterInterface $iriConverter, ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?PurgerInterface $purger = null)
+    public function __construct(private readonly IriConverterInterface $iriConverter, ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?PurgerInterface $purger = null)
     {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

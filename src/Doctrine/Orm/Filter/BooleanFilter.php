@@ -117,7 +117,7 @@ final class BooleanFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if (
             !$this->isPropertyEnabled($property, $resourceClass)
@@ -142,7 +142,7 @@ final class BooleanFilter extends AbstractFilter
         $valueParameter = $queryNameGenerator->generateParameterName($field);
 
         $queryBuilder
-            ->andWhere(sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
+            ->andWhere(\sprintf('%s.%s = :%s', $alias, $field, $valueParameter))
             ->setParameter($valueParameter, $value);
     }
 }

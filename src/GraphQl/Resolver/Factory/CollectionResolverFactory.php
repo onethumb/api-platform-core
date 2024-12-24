@@ -19,7 +19,10 @@ use ApiPlatform\GraphQl\Resolver\Stage\SecurityPostDenormalizeStageInterface;
 use ApiPlatform\GraphQl\Resolver\Stage\SecurityStageInterface;
 use ApiPlatform\GraphQl\Resolver\Stage\SerializeStageInterface;
 use ApiPlatform\Metadata\GraphQl\Operation;
+use ApiPlatform\Metadata\GraphQl\Query;
+use ApiPlatform\Metadata\Property\Factory\PropertyMetadataFactoryInterface;
 use ApiPlatform\Metadata\Util\CloneTrait;
+use ApiPlatform\State\Pagination\ArrayPaginator;
 use GraphQL\Type\Definition\ResolveInfo;
 use Psr\Container\ContainerInterface;
 
@@ -29,6 +32,8 @@ use Psr\Container\ContainerInterface;
  * @author Alan Poulain <contact@alanpoulain.eu>
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Vincent Chalamon <vincentchalamon@gmail.com>
+ *
+ * @deprecated
  */
 final class CollectionResolverFactory implements ResolverFactoryInterface
 {
@@ -38,7 +43,7 @@ final class CollectionResolverFactory implements ResolverFactoryInterface
     {
     }
 
-    public function __invoke(string $resourceClass = null, string $rootClass = null, Operation $operation = null): callable
+    public function __invoke(?string $resourceClass = null, ?string $rootClass = null, ?Operation $operation = null, ?PropertyMetadataFactoryInterface $propertyMetadataFactory = null): callable
     {
         return function (?array $source, array $args, $context, ResolveInfo $info) use ($resourceClass, $rootClass, $operation): ?array {
             // If authorization has failed for a relation field (e.g. via ApiProperty security), the field is not present in the source: null can be returned directly to ensure the collection isn't in the response.
@@ -46,7 +51,15 @@ final class CollectionResolverFactory implements ResolverFactoryInterface
                 return null;
             }
 
+            if (is_a($resourceClass, \BackedEnum::class, true) && $source && \array_key_exists($info->fieldName, $source)) {
+                return $source[$info->fieldName];
+            }
+
             $resolverContext = ['source' => $source, 'args' => $args, 'info' => $info, 'is_collection' => true, 'is_mutation' => false, 'is_subscription' => false];
+
+            if ($operation instanceof Query && $operation->getNested() && !$operation->getResolver() && !$operation->getProvider() && $source && \array_key_exists($info->fieldName, $source)) {
+                return ($this->serializeStage)(new ArrayPaginator($source[$info->fieldName], 0, \count($source[$info->fieldName])), $resourceClass, $operation, $resolverContext);
+            }
 
             $collection = ($this->readStage)($resourceClass, $rootClass, $operation, $resolverContext);
             if (!is_iterable($collection)) {

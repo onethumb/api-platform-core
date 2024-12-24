@@ -15,19 +15,19 @@ namespace ApiPlatform\Doctrine\EventListener;
 
 use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
 use ApiPlatform\Api\ResourceClassResolverInterface as LegacyResourceClassResolverInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
-use ApiPlatform\Exception\OperationNotFoundException;
-use ApiPlatform\Exception\RuntimeException;
 use ApiPlatform\HttpCache\PurgerInterface;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\OperationNotFoundException;
+use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\ResourceClassResolverInterface;
 use ApiPlatform\Metadata\UrlGeneratorInterface;
 use ApiPlatform\Metadata\Util\ClassInfoTrait;
-use Doctrine\Common\Util\ClassUtils;
 use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\ORM\Event\OnFlushEventArgs;
 use Doctrine\ORM\Event\PreUpdateEventArgs;
+use Doctrine\ORM\Mapping\AssociationMapping;
 use Doctrine\ORM\PersistentCollection;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
@@ -36,6 +36,8 @@ use Symfony\Component\PropertyAccess\PropertyAccessorInterface;
  * Purges responses containing modified entities from the proxy cache.
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
+ *
+ * @deprecated moved to \ApiPlatform\Doctrine\Common\EventListener\PurgeHttpCacheListener
  */
 final class PurgeHttpCacheListener
 {
@@ -43,7 +45,7 @@ final class PurgeHttpCacheListener
     private readonly PropertyAccessorInterface $propertyAccessor;
     private array $tags = [];
 
-    public function __construct(private readonly PurgerInterface $purger, private readonly IriConverterInterface|LegacyIriConverterInterface $iriConverter, private readonly ResourceClassResolverInterface|LegacyResourceClassResolverInterface $resourceClassResolver, PropertyAccessorInterface $propertyAccessor = null)
+    public function __construct(private readonly PurgerInterface $purger, private readonly IriConverterInterface|LegacyIriConverterInterface $iriConverter, private readonly ResourceClassResolverInterface|LegacyResourceClassResolverInterface $resourceClassResolver, ?PropertyAccessorInterface $propertyAccessor = null)
     {
         $this->propertyAccessor = $propertyAccessor ?? PropertyAccess::createPropertyAccessor();
     }
@@ -57,8 +59,9 @@ final class PurgeHttpCacheListener
         $this->gatherResourceAndItemTags($object, true);
 
         $changeSet = $eventArgs->getEntityChangeSet();
+        // @phpstan-ignore-next-line
         $objectManager = method_exists($eventArgs, 'getObjectManager') ? $eventArgs->getObjectManager() : $eventArgs->getEntityManager();
-        $associationMappings = $objectManager->getClassMetadata(ClassUtils::getClass($eventArgs->getObject()))->getAssociationMappings();
+        $associationMappings = $objectManager->getClassMetadata(\get_class($eventArgs->getObject()))->getAssociationMappings();
 
         foreach ($changeSet as $key => $value) {
             if (!isset($associationMappings[$key])) {
@@ -75,6 +78,7 @@ final class PurgeHttpCacheListener
      */
     public function onFlush(OnFlushEventArgs $eventArgs): void
     {
+        // @phpstan-ignore-next-line
         $em = method_exists($eventArgs, 'getObjectManager') ? $eventArgs->getObjectManager() : $eventArgs->getEntityManager();
         $uow = $em->getUnitOfWork();
 
@@ -124,13 +128,20 @@ final class PurgeHttpCacheListener
 
     private function gatherRelationTags(EntityManagerInterface $em, object $entity): void
     {
-        $associationMappings = $em->getClassMetadata(ClassUtils::getClass($entity))->getAssociationMappings();
-        foreach (array_keys($associationMappings) as $property) {
-            if (
-                \array_key_exists('targetEntity', $associationMappings[$property])
-                && !$this->resourceClassResolver->isResourceClass($associationMappings[$property]['targetEntity'])) {
+        $associationMappings = $em->getClassMetadata($entity::class)->getAssociationMappings();
+        /** @var array|AssociationMapping $associationMapping according to the version of doctrine orm */
+        foreach ($associationMappings as $property => $associationMapping) {
+            if ($associationMapping instanceof AssociationMapping && ($associationMapping->targetEntity ?? null) && !$this->resourceClassResolver->isResourceClass($associationMapping->targetEntity)) {
                 return;
             }
+
+            if (
+                \is_array($associationMapping)
+                && \array_key_exists('targetEntity', $associationMapping)
+                && !$this->resourceClassResolver->isResourceClass($associationMapping['targetEntity'])) {
+                return;
+            }
+
             if ($this->propertyAccessor->isReadable($entity, $property)) {
                 $this->addTagsFor($this->propertyAccessor->getValue($entity, $property));
             }

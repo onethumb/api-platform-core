@@ -70,6 +70,7 @@ Feature: Documentation support
     And the OpenAPI class "UuidIdentifierDummy" exists
     And the OpenAPI class "ThirdLevel" exists
     And the OpenAPI class "DummyCar" exists
+    And the OpenAPI class "DummyWebhook" exists
     And the OpenAPI class "ParentDummy" doesn't exist
     And the OpenAPI class "UnknownDummy" doesn't exist
     And the OpenAPI path "/relation_embedders/{id}/custom" exists
@@ -98,7 +99,6 @@ Feature: Documentation support
     And the "playMode" property for the OpenAPI class "VideoGame" should be equal to:
     """
     {
-      "owl:maxCardinality": 1,
       "type": "string",
       "format": "iri-reference",
       "example": "https://example.com/"
@@ -115,6 +115,10 @@ Feature: Documentation support
 
     And the JSON node "paths./dummy_cars.get.parameters[8].name" should be equal to "foobar[]"
     And the JSON node "paths./dummy_cars.get.parameters[8].description" should be equal to "Allows you to reduce the response to contain only the properties you need. If your desired property is nested, you can address it using nested arrays. Example: foobar[]={propertyName}&foobar[]={anotherPropertyName}&foobar[{nestedPropertyParent}][]={nestedProperty}"
+
+    # Webhook
+    And the JSON node "webhooks.a.get.description" should be equal to "Something else here for example"
+    And the JSON node "webhooks.b.post.description" should be equal to "Hi! it's me, I'm the problem, it's me"
 
     # Subcollection - check filter on subResource
     And the JSON node "paths./related_dummies/{id}/related_to_dummy_friends.get.parameters[0].name" should be equal to "id"
@@ -267,6 +271,14 @@ Feature: Documentation support
         }
     }
     """
+    And the JSON node "paths./override_open_api_responses.post.responses" should be equal to:
+    """
+    {
+      "204": {
+        "description": "User activated"
+      }
+    }
+    """
 
   Scenario: OpenAPI UI is enabled for docs endpoint
     Given I add "Accept" header equal to "text/html"
@@ -310,7 +322,6 @@ Feature: Documentation support
     And the "resourceRelated" property for the OpenAPI class "Resource" should be equal to:
     """
     {
-      "owl:maxCardinality": 1,
       "readOnly": true,
       "anyOf": [
         {
@@ -389,7 +400,41 @@ Feature: Documentation support
     And the "data" property for the OpenAPI class "WrappedResponseEntity.CustomOutputEntityWrapperDto-read" should be equal to:
     """
     {
-      "owl:maxCardinality": 1,
       "$ref": "#\/components\/schemas\/WrappedResponseEntity-read"
     }
     """
+
+  Scenario: Retrieve the OpenAPI documentation with 3.0 specification
+    Given I send a "GET" request to "/docs.jsonopenapi?spec_version=3.0.0"
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the JSON node "openapi" should be equal to "3.0.0"
+    And the JSON node "components.schemas.DummyBoolean.properties.id.anyOf" should be equal to:
+    """
+    [
+      {
+        "type": "integer"
+      },
+      {
+        "type": "null"
+      }
+    ]
+    """
+    And the JSON node "components.schemas.DummyBoolean.properties.isDummyBoolean.anyOf" should be equal to:
+    """
+     [
+      {
+        "type": "boolean"
+      },
+      {
+        "type": "null"
+      }
+    ]
+    """
+    And the JSON node "components.schemas.DummyBoolean.properties.isDummyBoolean.owl:maxCardinality" should not exist
+
+  Scenario: Retrieve the OpenAPI documentation in JSON
+    Given I add "Accept" header equal to "text/html,*/*;q=0.8"
+    And I send a "GET" request to "/docs.jsonopenapi"
+    Then the response status code should be 200
+    And the response should be in JSON

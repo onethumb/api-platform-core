@@ -37,10 +37,14 @@ use Symfony\Component\PropertyInfo\Type;
  */
 final class TypeConverter implements TypeConverterInterface
 {
-    public function __construct(private readonly TypeBuilderEnumInterface|TypeBuilderInterface $typeBuilder, private readonly TypesContainerInterface $typesContainer, private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory, private readonly PropertyMetadataFactoryInterface $propertyMetadataFactory)
+    public function __construct(private readonly ContextAwareTypeBuilderInterface|TypeBuilderEnumInterface|TypeBuilderInterface $typeBuilder, private readonly TypesContainerInterface $typesContainer, private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory, private readonly PropertyMetadataFactoryInterface $propertyMetadataFactory)
     {
         if ($typeBuilder instanceof TypeBuilderInterface) {
-            @trigger_error(sprintf('$typeBuilder argument of TypeConverter implementing "%s" is deprecated since API Platform 3.1. It has to implement "%s" instead.', TypeBuilderInterface::class, TypeBuilderEnumInterface::class), \E_USER_DEPRECATED);
+            @trigger_error(\sprintf('$typeBuilder argument of TypeConverter implementing "%s" is deprecated since API Platform 3.1. It has to implement "%s" instead.', TypeBuilderInterface::class, TypeBuilderEnumInterface::class), \E_USER_DEPRECATED);
+        }
+
+        if ($typeBuilder instanceof TypeBuilderEnumInterface) {
+            @trigger_error(\sprintf('$typeBuilder argument of TypeConverter implementing "%s" is deprecated since API Platform 3.3. It has to implement "%s" instead.', TypeBuilderEnumInterface::class, ContextAwareTypeBuilderInterface::class), \E_USER_DEPRECATED);
         }
     }
 
@@ -70,28 +74,7 @@ final class TypeConverter implements TypeConverterInterface
                     return GraphQLType::string();
                 }
 
-                $resourceType = $this->getResourceType($type, $input, $rootOperation, $rootResource, $property, $depth);
-
-                if (!$resourceType && is_a($type->getClassName(), \BackedEnum::class, true)) {
-                    // Remove the condition in API Platform 4.
-                    if ($this->typeBuilder instanceof TypeBuilderEnumInterface) {
-                        $operation = null;
-                        try {
-                            $resourceMetadataCollection = $this->resourceMetadataCollectionFactory->create($type->getClassName());
-                            $operation = $resourceMetadataCollection->getOperation();
-                        } catch (ResourceClassNotFoundException|OperationNotFoundException) {
-                        }
-                        /** @var Query $enumOperation */
-                        $enumOperation = (new Query())
-                            ->withClass($type->getClassName())
-                            ->withShortName($operation?->getShortName() ?? (new \ReflectionClass($type->getClassName()))->getShortName())
-                            ->withDescription($operation?->getDescription());
-
-                        return $this->typeBuilder->getEnumType($enumOperation);
-                    }
-                }
-
-                return $resourceType;
+                return $this->getResourceType($type, $input, $rootOperation, $rootResource, $property, $depth);
             default:
                 return null;
         }
@@ -105,14 +88,14 @@ final class TypeConverter implements TypeConverterInterface
         try {
             $astTypeNode = Parser::parseType($type);
         } catch (SyntaxError $e) {
-            throw new InvalidArgumentException(sprintf('"%s" is not a valid GraphQL type.', $type), 0, $e);
+            throw new InvalidArgumentException(\sprintf('"%s" is not a valid GraphQL type.', $type), 0, $e);
         }
 
         if ($graphQlType = $this->resolveAstTypeNode($astTypeNode, $type)) {
             return $graphQlType;
         }
 
-        throw new InvalidArgumentException(sprintf('The type "%s" was not resolved.', $type));
+        throw new InvalidArgumentException(\sprintf('The type "%s" was not resolved.', $type));
     }
 
     private function getResourceType(Type $type, bool $input, Operation $rootOperation, string $rootResource, ?string $property, int $depth): ?GraphQLType
@@ -149,6 +132,25 @@ final class TypeConverter implements TypeConverterInterface
         }
 
         if (!$hasGraphQl) {
+            if (is_a($resourceClass, \BackedEnum::class, true)) {
+                // Remove the condition in API Platform 4.
+                if ($this->typeBuilder instanceof TypeBuilderEnumInterface || $this->typeBuilder instanceof ContextAwareTypeBuilderInterface) {
+                    $operation = null;
+                    try {
+                        $resourceMetadataCollection = $this->resourceMetadataCollectionFactory->create($resourceClass);
+                        $operation = $resourceMetadataCollection->getOperation();
+                    } catch (ResourceClassNotFoundException|OperationNotFoundException) {
+                    }
+                    /** @var Query $enumOperation */
+                    $enumOperation = (new Query())
+                        ->withClass($resourceClass)
+                        ->withShortName($operation?->getShortName() ?? (new \ReflectionClass($resourceClass))->getShortName())
+                        ->withDescription($operation?->getDescription());
+
+                    return $this->typeBuilder->getEnumType($enumOperation);
+                }
+            }
+
             return null;
         }
 
@@ -182,7 +184,13 @@ final class TypeConverter implements TypeConverterInterface
             throw new OperationNotFoundException();
         }
 
-        return $this->typeBuilder->getResourceObjectType($resourceClass, $resourceMetadataCollection, $operation, $input, false, $depth);
+        return $this->typeBuilder instanceof ContextAwareTypeBuilderInterface ?
+            $this->typeBuilder->getResourceObjectType($resourceMetadataCollection, $operation, $propertyMetadata, [
+                'input' => $input,
+                'wrapped' => false,
+                'depth' => $depth,
+            ]) :
+            $this->typeBuilder->getResourceObjectType($resourceClass, $resourceMetadataCollection, $operation, $input, false, $depth);
     }
 
     private function resolveAstTypeNode(TypeNode $astTypeNode, string $fromType): ?GraphQLType

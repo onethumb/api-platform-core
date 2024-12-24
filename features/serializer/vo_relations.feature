@@ -150,18 +150,18 @@ Feature: Value object as ApiResource
           "type": "string",
           "pattern": "^hydra:Error$"
         },
-        "hydra:title": {
+        "title": {
           "type": "string",
           "pattern": "^An error occurred$"
         },
-        "hydra:description": {
-          "pattern": "^Cannot create an instance of \"ApiPlatform\\\\Tests\\\\Fixtures\\\\TestBundle\\\\(Document|Entity)\\\\VoDummyCar\" from serialized data because its constructor requires parameter \"drivers\" to be present.$"
+        "description": {
+          "pattern": "^Cannot create an instance of \"ApiPlatform\\\\Tests\\\\Fixtures\\\\TestBundle\\\\(Document|Entity)\\\\VoDummyCar\" from serialized data because its constructor requires the following parameters to be present : \"\\$drivers\".$"
         }
       },
       "required": [
         "@type",
-        "hydra:title",
-        "hydra:description"
+        "title",
+        "description"
       ]
     }
     """

@@ -22,7 +22,7 @@ use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
- * Converts {@see \Symfony\Component\Validator\ConstraintViolationListInterface} to a JSON API error representation.
+ * Converts {@see ConstraintViolationListInterface} to a JSON API error representation.
  *
  * @author Héctor Hurtarte <hectorh30@gmail.com>
  */
@@ -37,7 +37,7 @@ final class ConstraintViolationListNormalizer implements NormalizerInterface, Ca
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $violations = [];
         foreach ($object as $violation) {
@@ -55,7 +55,7 @@ final class ConstraintViolationListNormalizer implements NormalizerInterface, Ca
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return self::FORMAT === $format && $data instanceof ConstraintViolationListInterface;
     }

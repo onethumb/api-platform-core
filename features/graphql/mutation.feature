@@ -505,6 +505,31 @@ Feature: GraphQL mutation support
     And the JSON node "data.createPerson.person.name" should be equal to "Mob"
     And the JSON node "data.createPerson.person.genderType" should be equal to "FEMALE"
 
+  @!mongodb
+  Scenario: Create an item with an enum collection
+    When I send the following GraphQL request:
+    """
+    mutation {
+      createPerson(input: {name: "Harry", academicGrades: [BACHELOR, MASTER]}) {
+        person {
+          id
+          name
+          genderType
+          academicGrades
+        }
+      }
+    }
+    """
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/json"
+    And the JSON node "data.createPerson.person.id" should be equal to "/people/2"
+    And the JSON node "data.createPerson.person.name" should be equal to "Harry"
+    And the JSON node "data.createPerson.person.genderType" should be equal to "MALE"
+    And the JSON node "data.createPerson.person.academicGrades" should have 2 elements
+    And the JSON node "data.createPerson.person.academicGrades[0]" should be equal to "BACHELOR"
+    And the JSON node "data.createPerson.person.academicGrades[1]" should be equal to "MASTER"
+
   Scenario: Create an item with an enum as a resource
     When I send the following GraphQL request:
     """
@@ -1009,3 +1034,38 @@ Feature: GraphQL mutation support
     """
     Then the response status code should be 200
     And the JSON node "data.uploadMultipleMediaObject.mediaObject.contentUrl" should be equal to "test.gif"
+
+  @!mongodb
+  Scenario: Delete an invalid item through a mutation
+    When I send the following GraphQL request:
+    """
+    mutation {
+      deleteActivityLog(input: {id: "/activity_logs/1"}) {
+        activityLog {
+          id
+        }
+      }
+    }
+    """
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/json"
+    And the JSON node "errors" should not exist
+    And the JSON node "data.deleteActivityLog.activityLog" should exist
+
+  @!mongodb
+  Scenario: Mutation should run before validation
+    When I send the following GraphQL request:
+    """
+    mutation {
+      createActivityLog(input: {name: ""}) {
+        activityLog {
+          name
+        }
+      }
+    }
+    """
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/json"
+    And the JSON node "data.createActivityLog.activityLog.name" should be equal to "hi"

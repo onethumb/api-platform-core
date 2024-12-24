@@ -16,7 +16,7 @@ namespace ApiPlatform\Doctrine\Orm\Filter;
 use ApiPlatform\Doctrine\Common\Filter\DateFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\DateFilterTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\DBAL\Types\Type as DBALType;
 use Doctrine\DBAL\Types\Types;
@@ -138,7 +138,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $values, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $values, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         // Expect $values to be an array having the period as keys and the date value as values
         if (
@@ -153,7 +153,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         $alias = $queryBuilder->getRootAliases()[0];
         $field = $property;
 
-        if ($this->isPropertyNested($property, $resourceClass)) {
+        if ($this->isPropertyNested($property, $resourceClass) && \count($values) > 0) {
             [$alias, $field] = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator, $resourceClass, Join::INNER_JOIN);
         }
 
@@ -161,7 +161,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         $type = (string) $this->getDoctrineFieldType($property, $resourceClass);
 
         if (self::EXCLUDE_NULL === $nullManagement) {
-            $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field)));
+            $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(\sprintf('%s.%s', $alias, $field)));
         }
 
         if (isset($values[self::PARAMETER_BEFORE])) {
@@ -220,7 +220,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * Adds the where clause according to the chosen null management.
      */
-    protected function addWhere(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $alias, string $field, string $operator, mixed $value, string $nullManagement = null, DBALType|string $type = null): void
+    protected function addWhere(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $alias, string $field, string $operator, mixed $value, ?string $nullManagement = null, DBALType|string|null $type = null): void
     {
         $type = (string) $type;
         $value = $this->normalizeValue($value, $operator);
@@ -234,7 +234,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         } catch (\Exception) {
             // Silently ignore this filter if it can not be transformed to a \DateTime
             $this->logger->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
+                'exception' => new InvalidArgumentException(\sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
             ]);
 
             return;
@@ -247,7 +247,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
             self::PARAMETER_AFTER => '>=',
             self::PARAMETER_STRICTLY_AFTER => '>',
         ];
-        $baseWhere = sprintf('%s.%s %s :%s', $alias, $field, $operatorValue[$operator], $valueParameter);
+        $baseWhere = \sprintf('%s.%s %s :%s', $alias, $field, $operatorValue[$operator], $valueParameter);
 
         if (null === $nullManagement || self::EXCLUDE_NULL === $nullManagement) {
             $queryBuilder->andWhere($baseWhere);
@@ -258,12 +258,12 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         ) {
             $queryBuilder->andWhere($queryBuilder->expr()->orX(
                 $baseWhere,
-                $queryBuilder->expr()->isNull(sprintf('%s.%s', $alias, $field))
+                $queryBuilder->expr()->isNull(\sprintf('%s.%s', $alias, $field))
             ));
         } else {
             $queryBuilder->andWhere($queryBuilder->expr()->andX(
                 $baseWhere,
-                $queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field))
+                $queryBuilder->expr()->isNotNull(\sprintf('%s.%s', $alias, $field))
             ));
         }
 

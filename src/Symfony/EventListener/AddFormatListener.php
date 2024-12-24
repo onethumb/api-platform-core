@@ -17,7 +17,9 @@ use ApiPlatform\Api\FormatMatcher;
 use ApiPlatform\Metadata\Error as ErrorOperation;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
+use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
 use Negotiation\Exception\InvalidArgument;
 use Negotiation\Negotiator;
 use Symfony\Component\HttpFoundation\Request;
@@ -34,8 +36,21 @@ final class AddFormatListener
 {
     use OperationRequestInitiatorTrait;
 
-    public function __construct(private readonly Negotiator $negotiator, ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly array $formats = [], private readonly array $errorFormats = [], private readonly array $docsFormats = [], private readonly ?bool $eventsBackwardCompatibility = null) // @phpstan-ignore-line
+    private ?Negotiator $negotiator;
+    private ?ProviderInterface $provider = null;
+
+    /**
+     * @param ProviderInterface|Negotiator $negotiator
+     */
+    public function __construct($negotiator, ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly array $formats = [], private readonly array $errorFormats = [], private readonly array $docsFormats = [], private readonly ?bool $eventsBackwardCompatibility = null) // @phpstan-ignore-line
     {
+        if ($negotiator instanceof ProviderInterface) {
+            $this->provider = $negotiator;
+        } else {
+            trigger_deprecation('api-platform/core', '3.3', 'Use a "%s" as first argument in "%s" instead of "%s".', ProviderInterface::class, self::class, Negotiator::class);
+            $this->negotiator = $negotiator;
+        }
+
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }
 
@@ -50,6 +65,31 @@ final class AddFormatListener
         $request = $event->getRequest();
         $operation = $this->initializeOperation($request);
 
+        // TODO: legacy code
+        if ($request->attributes->get('_api_exception_action')) {
+            return;
+        }
+
+        $attributes = RequestAttributesExtractor::extractAttributes($request);
+        if (!($attributes['respond'] ?? $request->attributes->getBoolean('_api_respond'))) {
+            return;
+        }
+
+        if ($operation && $this->provider) {
+            $this->provider->provide($operation, $request->attributes->get('_api_uri_variables') ?? [], [
+                'request' => $request,
+                'uri_variables' => $request->attributes->get('_api_uri_variables') ?? [],
+                'resource_class' => $operation->getClass(),
+            ]);
+
+            return;
+        }
+
+        // TODO: the code below needs to be removed in 4.x
+        if ($this->provider && !$operation) {
+            return;
+        }
+
         if ('api_platform.action.entrypoint' === $request->attributes->get('_controller')) {
             return;
         }
@@ -62,7 +102,8 @@ final class AddFormatListener
             return;
         }
 
-        if (!($request->attributes->has('_api_resource_class')
+        if (!(
+            $request->attributes->has('_api_resource_class')
             || $request->attributes->getBoolean('_api_respond', false)
             || $request->attributes->getBoolean('_graphql', false)
         )) {
@@ -79,7 +120,7 @@ final class AddFormatListener
             $mimeTypes = array_keys($flattenedMimeTypes);
         } elseif (!isset($formats[$routeFormat])) {
             if (!$request->attributes->get('data') instanceof \Exception) {
-                throw new NotFoundHttpException(sprintf('Format "%s" is not supported', $routeFormat));
+                throw new NotFoundHttpException(\sprintf('Format "%s" is not supported', $routeFormat));
             }
             $this->setRequestErrorFormat($operation, $request);
 
@@ -174,7 +215,7 @@ final class AddFormatListener
      */
     private function getNotAcceptableHttpException(string $accept, array $mimeTypes): NotAcceptableHttpException
     {
-        return new NotAcceptableHttpException(sprintf(
+        return new NotAcceptableHttpException(\sprintf(
             'Requested format "%s" is not supported. Supported MIME types are "%s".',
             $accept,
             implode('", "', array_keys($mimeTypes))

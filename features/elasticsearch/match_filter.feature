@@ -209,7 +209,7 @@ Feature: Match filter on collections from Elasticsearch
         "hydra:view": {
           "type": "object",
           "properties": {
-            "@id": {"pattern": "^/tweets\\?message%5B%5D=Good%20job&message%5B%5D=run&author.firstName=Caroline$"},
+            "@id": {"pattern": "^/tweets\\?author.firstName=Caroline&message%5B%5D=Good%20job&message%5B%5D=run$"},
             "@type": {"pattern": "^hydra:PartialCollectionView$"}
           }
         }
@@ -422,10 +422,61 @@ Feature: Match filter on collections from Elasticsearch
         "hydra:view": {
           "type": "object",
           "properties": {
-            "@id": {"pattern": "^/books\\?message%5B%5D=Good%20job&message%5B%5D=run&library.firstName=Caroline$"},
+            "@id": {"pattern": "^/books\\?library.firstName=Caroline&message%5B%5D=Good%20job&message%5B%5D=run$"},
             "@type": {"pattern": "^hydra:PartialCollectionView$"}
           }
         }
       }
     }
     """
+
+  Scenario: Match filter on a multi-level nested property of text type with new elasticsearch operations
+    When I send a "GET" request to "/books?library.relatedGenres.name=Fiction"
+    Then the response status code should be 200
+    And the response should be in JSON
+    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
+    And the JSON should be valid according to this schema:
+    """
+    {
+      "type": "object",
+      "properties": {
+        "@context": {"pattern": "^/contexts/Book$"},
+        "@id": {"pattern": "^/books$"},
+        "@type": {"pattern": "^hydra:Collection$"},
+        "hydra:member": {
+          "type": "array",
+          "additionalItems": false,
+          "maxItems": 2,
+          "minItems": 2,
+          "items": [
+            {
+              "type": "object",
+              "properties": {
+                "@id": {
+                  "type": "string",
+                  "pattern": "^/books/0acfd90d-5bfe-4e42-b708-dc38bf20677c$"
+                }
+              }
+            },
+            {
+              "type": "object",
+              "properties": {
+                "@id": {
+                  "type": "string",
+                  "pattern": "^/books/f36a0026-0635-4865-86a6-5adb21d94d64$"
+                }
+              }
+            }
+          ]
+        },
+        "hydra:view": {
+          "type": "object",
+          "properties": {
+            "@id": {"pattern": "^/books\\?library.relatedGenres.name=Fiction$"},
+            "@type": {"pattern": "^hydra:PartialCollectionView$"}
+          }
+        }
+      }
+    }
+    """
+

@@ -18,7 +18,10 @@ use ApiPlatform\Doctrine\Common\Filter\ExistsFilterTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryBuilderHelper;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
 use ApiPlatform\Metadata\Operation;
-use Doctrine\ORM\Mapping\ClassMetadataInfo;
+use Doctrine\ORM\Mapping\AssociationMapping;
+use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ManyToManyOwningSideMapping;
+use Doctrine\ORM\Mapping\ToOneOwningSideMapping;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -114,7 +117,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
 {
     use ExistsFilterTrait;
 
-    public function __construct(ManagerRegistry $managerRegistry, LoggerInterface $logger = null, array $properties = null, string $existsParameterName = self::QUERY_PARAMETER_KEY, NameConverterInterface $nameConverter = null)
+    public function __construct(ManagerRegistry $managerRegistry, ?LoggerInterface $logger = null, ?array $properties = null, string $existsParameterName = self::QUERY_PARAMETER_KEY, ?NameConverterInterface $nameConverter = null)
     {
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
 
@@ -124,7 +127,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
     /**
      * {@inheritdoc}
      */
-    public function apply(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    public function apply(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         foreach ($context['filters'][$this->existsParameterName] ?? [] as $property => $value) {
             $this->filterProperty($this->denormalizePropertyName($property), $value, $queryBuilder, $queryNameGenerator, $resourceClass, $operation, $context);
@@ -134,7 +137,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if (
             !$this->isPropertyEnabled($property, $resourceClass)
@@ -161,7 +164,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
         if ($metadata->hasAssociation($field)) {
             if ($metadata->isCollectionValuedAssociation($field)) {
                 $queryBuilder
-                    ->andWhere(sprintf('%s.%s %s EMPTY', $alias, $field, $value ? 'IS NOT' : 'IS'));
+                    ->andWhere(\sprintf('%s.%s %s EMPTY', $alias, $field, $value ? 'IS NOT' : 'IS'));
 
                 return;
             }
@@ -170,20 +173,20 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
                 $alias = QueryBuilderHelper::addJoinOnce($queryBuilder, $queryNameGenerator, $alias, $field, Join::LEFT_JOIN);
 
                 $queryBuilder
-                    ->andWhere(sprintf('%s %s NULL', $alias, $value ? 'IS NOT' : 'IS'));
+                    ->andWhere(\sprintf('%s %s NULL', $alias, $value ? 'IS NOT' : 'IS'));
 
                 return;
             }
 
             $queryBuilder
-                ->andWhere(sprintf('%s.%s %s NULL', $alias, $field, $value ? 'IS NOT' : 'IS'));
+                ->andWhere(\sprintf('%s.%s %s NULL', $alias, $field, $value ? 'IS NOT' : 'IS'));
 
             return;
         }
 
         if ($metadata->hasField($field)) {
             $queryBuilder
-                ->andWhere(sprintf('%s.%s %s NULL', $alias, $field, $value ? 'IS NOT' : 'IS'));
+                ->andWhere(\sprintf('%s.%s %s NULL', $alias, $field, $value ? 'IS NOT' : 'IS'));
         }
     }
 
@@ -199,7 +202,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
 
         if ($metadata->hasAssociation($field)) {
             if ($metadata->isSingleValuedAssociation($field)) {
-                if (!($metadata instanceof ClassMetadataInfo)) {
+                if (!($metadata instanceof ClassMetadata)) {
                     return false;
                 }
 
@@ -211,7 +214,7 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
             return true;
         }
 
-        if ($metadata instanceof ClassMetadataInfo && $metadata->hasField($field)) {
+        if ($metadata instanceof ClassMetadata && $metadata->hasField($field)) {
             return $metadata->isNullable($field);
         }
 
@@ -223,8 +226,26 @@ final class ExistsFilter extends AbstractFilter implements ExistsFilterInterface
      *
      * @see https://github.com/doctrine/doctrine2/blob/v2.5.4/lib/Doctrine/ORM/Tools/EntityGenerator.php#L1221-L1246
      */
-    private function isAssociationNullable(array $associationMapping): bool
+    private function isAssociationNullable(AssociationMapping|array $associationMapping): bool
     {
+        if ($associationMapping instanceof AssociationMapping) {
+            if (!empty($associationMapping->id)) {
+                return false;
+            }
+
+            if ($associationMapping instanceof ToOneOwningSideMapping || $associationMapping instanceof ManyToManyOwningSideMapping) {
+                foreach ($associationMapping->joinColumns as $joinColumn) {
+                    if (false === $joinColumn->nullable) {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+
+            return true;
+        }
+
         if (!empty($associationMapping['id'])) {
             return false;
         }

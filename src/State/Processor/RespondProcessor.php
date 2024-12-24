@@ -60,7 +60,7 @@ final class RespondProcessor implements ProcessorInterface
         }
 
         $headers = [
-            'Content-Type' => sprintf('%s; charset=utf-8', $request->getMimeType($request->getRequestFormat())),
+            'Content-Type' => \sprintf('%s; charset=utf-8', $request->getMimeType($request->getRequestFormat())),
             'Vary' => 'Accept',
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'deny',
@@ -71,10 +71,14 @@ final class RespondProcessor implements ProcessorInterface
             $headers = array_merge($headers, $exceptionHeaders);
         }
 
+        if ($operationHeaders = $operation->getHeaders()) {
+            $headers = array_merge($headers, $operationHeaders);
+        }
+
         $status = $operation->getStatus();
 
         if ($sunset = $operation->getSunset()) {
-            $headers['Sunset'] = (new \DateTimeImmutable($sunset))->format(\DateTime::RFC1123);
+            $headers['Sunset'] = (new \DateTimeImmutable($sunset))->format(\DateTimeInterface::RFC1123);
         }
 
         if ($acceptPatch = $operation->getAcceptPatch()) {
@@ -84,9 +88,14 @@ final class RespondProcessor implements ProcessorInterface
         $method = $request->getMethod();
         $originalData = $context['original_data'] ?? null;
 
-        if ($hasData = ($this->resourceClassResolver && $originalData && \is_object($originalData) && $this->resourceClassResolver->isResourceClass($this->getObjectClass($originalData))) && $this->iriConverter) {
+        $outputMetadata = $operation->getOutput() ?? ['class' => $operation->getClass()];
+        $hasOutput = \is_array($outputMetadata) && \array_key_exists('class', $outputMetadata) && null !== $outputMetadata['class'];
+        $hasData = !$hasOutput ? false : ($this->resourceClassResolver && $originalData && \is_object($originalData) && $this->resourceClassResolver->isResourceClass($this->getObjectClass($originalData)));
+
+        if ($hasData && $this->iriConverter) {
             if (
-                300 <= $status && $status < 400
+                !isset($headers['Location'])
+                && 300 <= $status && $status < 400
                 && (($operation->getExtraProperties()['is_alternate_resource_metadata'] ?? false) || ($operation->getExtraProperties()['canonical_uri_template'] ?? null))
             ) {
                 $canonicalOperation = $operation;
@@ -102,11 +111,11 @@ final class RespondProcessor implements ProcessorInterface
 
         $status ??= self::METHOD_TO_CODE[$method] ?? 200;
 
-        if ($hasData && $this->iriConverter) {
+        if ($hasData && $this->iriConverter && !isset($headers['Content-Location'])) {
             $iri = $this->iriConverter->getIriFromResource($originalData);
             $headers['Content-Location'] = $iri;
 
-            if ((201 === $status || (300 <= $status && $status < 400)) && 'POST' === $method) {
+            if ((201 === $status || (300 <= $status && $status < 400)) && 'POST' === $method && !isset($headers['Location'])) {
                 $headers['Location'] = $iri;
             }
         }

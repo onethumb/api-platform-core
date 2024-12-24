@@ -21,13 +21,15 @@ use Symfony\Component\HttpKernel\Event\ResponseEvent;
 /**
  * Configures cache HTTP headers for the current response.
  *
+ * @deprecated use ApiPlatform\HttpCache\State\AddHeadersProcessor instead
+ *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
 final class AddHeadersListener
 {
     use OperationRequestInitiatorTrait;
 
-    public function __construct(private readonly bool $etag = false, private readonly ?int $maxAge = null, private readonly ?int $sharedMaxAge = null, private readonly ?array $vary = null, private readonly ?bool $public = null, ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?int $staleWhileRevalidate = null, private readonly ?int $staleIfError = null)
+    public function __construct(private readonly bool $etag = false, private readonly ?int $maxAge = null, private readonly ?int $sharedMaxAge = null, private readonly ?array $vary = null, private readonly ?bool $public = null, ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?int $staleWhileRevalidate = null, private readonly ?int $staleIfError = null)
     {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

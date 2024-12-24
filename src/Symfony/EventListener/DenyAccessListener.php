@@ -25,13 +25,15 @@ use Symfony\Component\Security\Core\Exception\AccessDeniedException;
 /**
  * Denies access to the current resource if the logged user doesn't have sufficient permissions.
  *
+ * @deprecated use ApiPlatform\Symfony\Security\State\AccessCheckerProvider instead
+ *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
 final class DenyAccessListener
 {
     use OperationRequestInitiatorTrait;
 
-    public function __construct(ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?ResourceAccessCheckerInterface $resourceAccessChecker = null)
+    public function __construct(?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, private readonly ?ResourceAccessCheckerInterface $resourceAccessChecker = null)
     {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

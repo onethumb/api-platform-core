@@ -15,6 +15,7 @@ namespace ApiPlatform\Metadata\GraphQl;
 
 use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\Operation as AbstractOperation;
+use ApiPlatform\Metadata\Parameters;
 use ApiPlatform\State\OptionsInterface;
 
 class Operation extends AbstractOperation
@@ -39,52 +40,57 @@ class Operation extends AbstractOperation
         protected ?array $args = null,
         protected ?array $extraArgs = null,
         protected ?array $links = null,
+        protected ?bool $validateAfterResolver = null,
+        protected ?string $securityAfterResolver = null,
+        protected ?string $securityMessageAfterResolver = null,
 
-        string $shortName = null,
-        string $class = null,
-        bool $paginationEnabled = null,
-        string $paginationType = null,
-        int $paginationItemsPerPage = null,
-        int $paginationMaximumItemsPerPage = null,
-        bool $paginationPartial = null,
-        bool $paginationClientEnabled = null,
-        bool $paginationClientItemsPerPage = null,
-        bool $paginationClientPartial = null,
-        bool $paginationFetchJoinCollection = null,
-        bool $paginationUseOutputWalkers = null,
-        array $order = null,
-        string $description = null,
-        array $normalizationContext = null,
-        array $denormalizationContext = null,
-        bool $collectDenormalizationErrors = null,
-        string $security = null,
-        string $securityMessage = null,
-        string $securityPostDenormalize = null,
-        string $securityPostDenormalizeMessage = null,
-        string $securityPostValidation = null,
-        string $securityPostValidationMessage = null,
-        string $deprecationReason = null,
-        array $filters = null,
-        array $validationContext = null,
+        ?string $shortName = null,
+        ?string $class = null,
+        ?bool $paginationEnabled = null,
+        ?string $paginationType = null,
+        ?int $paginationItemsPerPage = null,
+        ?int $paginationMaximumItemsPerPage = null,
+        ?bool $paginationPartial = null,
+        ?bool $paginationClientEnabled = null,
+        ?bool $paginationClientItemsPerPage = null,
+        ?bool $paginationClientPartial = null,
+        ?bool $paginationFetchJoinCollection = null,
+        ?bool $paginationUseOutputWalkers = null,
+        ?array $order = null,
+        ?string $description = null,
+        ?array $normalizationContext = null,
+        ?array $denormalizationContext = null,
+        ?bool $collectDenormalizationErrors = null,
+        string|\Stringable|null $security = null,
+        ?string $securityMessage = null,
+        string|\Stringable|null $securityPostDenormalize = null,
+        ?string $securityPostDenormalizeMessage = null,
+        string|\Stringable|null $securityPostValidation = null,
+        ?string $securityPostValidationMessage = null,
+        ?string $deprecationReason = null,
+        ?array $filters = null,
+        ?array $validationContext = null,
         $input = null,
         $output = null,
         $mercure = null,
         $messenger = null,
-        bool $elasticsearch = null,
-        int $urlGenerationStrategy = null,
-        bool $read = null,
-        bool $deserialize = null,
-        bool $validate = null,
-        bool $write = null,
-        bool $serialize = null,
-        bool $fetchPartial = null,
-        bool $forceEager = null,
-        int $priority = null,
-        string $name = null,
+        ?bool $elasticsearch = null,
+        ?int $urlGenerationStrategy = null,
+        ?bool $read = null,
+        ?bool $deserialize = null,
+        ?bool $validate = null,
+        ?bool $write = null,
+        ?bool $serialize = null,
+        ?bool $fetchPartial = null,
+        ?bool $forceEager = null,
+        ?int $priority = null,
+        ?string $name = null,
         $provider = null,
         $processor = null,
-        OptionsInterface $stateOptions = null,
-        array $extraProperties = []
+        ?OptionsInterface $stateOptions = null,
+        array|Parameters|null $parameters = null,
+        ?bool $queryParameterValidationEnabled = null,
+        array $extraProperties = [],
     ) {
         parent::__construct(
             shortName: $shortName,
@@ -131,6 +137,8 @@ class Operation extends AbstractOperation
             provider: $provider,
             processor: $processor,
             stateOptions: $stateOptions,
+            parameters: $parameters,
+            queryParameterValidationEnabled: $queryParameterValidationEnabled,
             extraProperties: $extraProperties
         );
     }
@@ -140,7 +148,7 @@ class Operation extends AbstractOperation
         return $this->resolver;
     }
 
-    public function withResolver(string $resolver = null): self
+    public function withResolver(?string $resolver = null): self
     {
         $self = clone $this;
         $self->resolver = $resolver;
@@ -153,7 +161,7 @@ class Operation extends AbstractOperation
         return $this->args;
     }
 
-    public function withArgs(array $args = null): self
+    public function withArgs(?array $args = null): self
     {
         $self = clone $this;
         $self->args = $args;
@@ -166,7 +174,7 @@ class Operation extends AbstractOperation
         return $this->extraArgs;
     }
 
-    public function withExtraArgs(array $extraArgs = null): self
+    public function withExtraArgs(?array $extraArgs = null): self
     {
         $self = clone $this;
         $self->extraArgs = $extraArgs;
@@ -189,6 +197,45 @@ class Operation extends AbstractOperation
     {
         $self = clone $this;
         $self->links = $links;
+
+        return $self;
+    }
+
+    public function canValidateAfterResolver(): ?bool
+    {
+        return $this->validateAfterResolver;
+    }
+
+    public function withValidateAfterResolver(bool $validateAfterResolver = true): self
+    {
+        $self = clone $this;
+        $self->validateAfterResolver = $validateAfterResolver;
+
+        return $self;
+    }
+
+    public function getSecurityAfterResolver(): ?string
+    {
+        return $this->securityAfterResolver;
+    }
+
+    public function withSecurityAfterResolver(string $securityAfterResolver): self
+    {
+        $self = clone $this;
+        $self->securityAfterResolver = $securityAfterResolver;
+
+        return $self;
+    }
+
+    public function getSecurityMessageAfterResolver(): ?string
+    {
+        return $this->securityMessageAfterResolver;
+    }
+
+    public function withSecurityMessageAfterResolver(string $securityMessageAfterResolver): self
+    {
+        $self = clone $this;
+        $self->securityMessageAfterResolver = $securityMessageAfterResolver;
 
         return $self;
     }

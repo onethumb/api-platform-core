@@ -30,6 +30,8 @@ use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
  * @author Kévin Dunglas <dunglas@gmail.com>
+ *
+ * @group legacy
  */
 class RespondListenerTest extends TestCase
 {
@@ -38,7 +40,7 @@ class RespondListenerTest extends TestCase
     public function testDoNotHandleResponse(): void
     {
         $listener = new RespondListener();
-        $event = new ViewEvent($this->prophesize(HttpKernelInterface::class)->reveal(), new Request(), \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST, null);
+        $event = new ViewEvent($this->prophesize(HttpKernelInterface::class)->reveal(), new Request(), HttpKernelInterface::MAIN_REQUEST, null);
         $listener->onKernelView($event);
 
         $this->assertNull($event->getResponse());
@@ -50,7 +52,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             new Request([], [], ['_api_respond' => false]),
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'foo'
         );
         $listener->onKernelView($event);
@@ -66,7 +68,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'foo'
         );
 
@@ -90,7 +92,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'bar'
         );
         $resourceMetadataFactoryProphecy = $this->prophesize(ResourceMetadataCollectionFactoryInterface::class);
@@ -116,7 +118,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'bar'
         );
 
@@ -145,7 +147,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'foo'
         );
 
@@ -173,7 +175,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'foo'
         );
 
@@ -194,7 +196,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             new Request([], [], ['_api_resource_class' => Dummy::class, '_api_operation_name' => 'get', '_api_respond' => true]),
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'bar'
         );
 
@@ -219,7 +221,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             new Request([], [], ['_api_resource_class' => Dummy::class, '_api_operation_name' => 'get', '_api_respond' => true]),
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'bar'
         );
         $resourceMetadataFactoryProphecy = $this->prophesize(ResourceMetadataCollectionFactoryInterface::class);
@@ -241,7 +243,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             $request,
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             'bar'
         );
         $resourceMetadataFactoryProphecy = $this->prophesize(ResourceMetadataCollectionFactoryInterface::class);
@@ -265,7 +267,7 @@ class RespondListenerTest extends TestCase
         $event = new ViewEvent(
             $this->prophesize(HttpKernelInterface::class)->reveal(),
             new Request([], [], ['_api_resource_class' => Dummy::class, '_api_operation_name' => 'get', '_api_respond' => true]),
-            \defined(HttpKernelInterface::class.'::MAIN_REQUEST') ? HttpKernelInterface::MAIN_REQUEST : HttpKernelInterface::MASTER_REQUEST,
+            HttpKernelInterface::MAIN_REQUEST,
             $response
         );
         $listener->onKernelView($event);

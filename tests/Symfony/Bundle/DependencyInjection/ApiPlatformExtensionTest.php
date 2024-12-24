@@ -78,6 +78,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Uid\AbstractUid;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
 
+/**
+ * The target configuration for API Platform 4 is at src/Symfony/Tests/Bundle/DependencyInjection/ApiPlatformExtensionTest.php
+ * this holds tests for the legacy configuration having event_listeners_backward_compatibility_layer=true.
+ *
+ * @group legacy
+ */
 class ApiPlatformExtensionTest extends TestCase
 {
     use ExpectDeprecationTrait;
@@ -156,6 +162,7 @@ class ApiPlatformExtensionTest extends TestCase
             'graphql_playground' => ['enabled' => false],
         ],
         'keep_legacy_inflector' => false,
+        'event_listeners_backward_compatibility_layer' => true,
     ]];
 
     private ContainerBuilder $container;
@@ -186,7 +193,7 @@ class ApiPlatformExtensionTest extends TestCase
     private function assertContainerHas(array $services, array $aliases = []): void
     {
         foreach ($services as $service) {
-            $this->assertTrue($this->container->hasDefinition($service), sprintf('Definition "%s" not found.', $service));
+            $this->assertTrue($this->container->hasDefinition($service), \sprintf('Definition "%s" not found.', $service));
         }
 
         foreach ($aliases as $alias) {
@@ -196,12 +203,12 @@ class ApiPlatformExtensionTest extends TestCase
 
     private function assertNotContainerHasService(string $service): void
     {
-        $this->assertFalse($this->container->hasDefinition($service), sprintf('Service "%s" found.', $service));
+        $this->assertFalse($this->container->hasDefinition($service), \sprintf('Service "%s" found.', $service));
     }
 
     private function assertContainerHasAlias(string $alias): void
     {
-        $this->assertTrue($this->container->hasAlias($alias), sprintf('Alias "%s" not found.', $alias));
+        $this->assertTrue($this->container->hasAlias($alias), \sprintf('Alias "%s" not found.', $alias));
     }
 
     private function assertServiceHasTags(string $service, array $tags = []): void
@@ -209,7 +216,7 @@ class ApiPlatformExtensionTest extends TestCase
         $serviceTags = $this->container->getDefinition($service)->getTags();
 
         foreach ($tags as $tag) {
-            $this->assertArrayHasKey($tag, $serviceTags, sprintf('Tag "%s" not found on the service "%s".', $tag, $service));
+            $this->assertArrayHasKey($tag, $serviceTags, \sprintf('Tag "%s" not found on the service "%s".', $tag, $service));
         }
     }
 
@@ -500,6 +507,16 @@ class ApiPlatformExtensionTest extends TestCase
         $this->assertServiceHasTags('api_platform.swagger.listener.ui', ['kernel.event_listener']);
     }
 
+    public function testSwaggerUiDisabled(): void
+    {
+        $config = self::DEFAULT_CONFIG;
+        $config['api_platform']['enable_swagger_ui'] = false;
+
+        (new ApiPlatformExtension())->load($config, $this->container);
+
+        $this->assertNotContainerHasService('api_platform.swagger_ui.provider');
+    }
+
     public function testJsonApiConfiguration(): void
     {
         $config = self::DEFAULT_CONFIG;
@@ -615,16 +632,12 @@ class ApiPlatformExtensionTest extends TestCase
         $services = [
             // problem.xml
             'api_platform.problem.encoder',
-            'api_platform.problem.normalizer.constraint_violation_list',
-            'api_platform.problem.normalizer.error',
         ];
 
         $this->assertContainerHas($services, []);
 
         // problem.xml
         $this->assertServiceHasTags('api_platform.problem.encoder', ['serializer.encoder']);
-        $this->assertServiceHasTags('api_platform.problem.normalizer.constraint_violation_list', ['serializer.normalizer']);
-        $this->assertServiceHasTags('api_platform.problem.normalizer.error', ['serializer.normalizer']);
     }
 
     public function testGraphQlConfiguration(): void
@@ -1284,5 +1297,27 @@ class ApiPlatformExtensionTest extends TestCase
 
         (new ApiPlatformExtension())->load($config, $this->container);
         $this->assertTrue($this->container->hasDefinition('api_platform.graphql.resolver.factory.item'));
+    }
+
+    /**
+     * @group legacy
+     */
+    public function testLegacyJsonProblemConfiguration(): void
+    {
+        $config = self::DEFAULT_CONFIG;
+        $config['api_platform']['defaults']['extra_properties'] = ['rfc_7807_compliant_errors' => false];
+        (new ApiPlatformExtension())->load($config, $this->container);
+
+        $services = [
+            // problem.xml
+            'api_platform.problem.normalizer.constraint_violation_list',
+            'api_platform.problem.normalizer.error',
+        ];
+
+        $this->assertContainerHas($services, []);
+
+        // problem.xml
+        $this->assertServiceHasTags('api_platform.problem.normalizer.constraint_violation_list', ['serializer.normalizer']);
+        $this->assertServiceHasTags('api_platform.problem.normalizer.error', ['serializer.normalizer']);
     }
 }

@@ -28,7 +28,7 @@ trait ContentNegotiationTrait
     /**
      * Gets the format associated with the mime type.
      *
-     * Adapted from {@see \Symfony\Component\HttpFoundation\Request::getFormat}.
+     * Adapted from {@see Request::getFormat}.
      *
      * @param array<string, string|string[]> $formats
      */
@@ -84,7 +84,7 @@ trait ContentNegotiationTrait
                 $mimeTypes = Request::getMimeTypes($routeFormat);
                 $flattenedMimeTypes = $this->flattenMimeTypes([$routeFormat => $mimeTypes]);
             } elseif ($throw) {
-                throw new NotFoundHttpException(sprintf('Format "%s" is not supported', $routeFormat));
+                throw new NotFoundHttpException(\sprintf('Format "%s" is not supported', $routeFormat));
             }
         }
 
@@ -106,7 +106,7 @@ trait ContentNegotiationTrait
             }
         }
 
-        // Then use the Symfony request format if available and applicable
+        // Then, use the Symfony request format if available and applicable
         $requestFormat = $request->getRequestFormat('') ?: null;
         if (null !== $requestFormat) {
             $mimeType = $request->getMimeType($requestFormat);
@@ -129,10 +129,24 @@ trait ContentNegotiationTrait
      */
     private function getNotAcceptableHttpException(string $accept, array $mimeTypes): NotAcceptableHttpException
     {
-        return new NotAcceptableHttpException(sprintf(
+        return new NotAcceptableHttpException(\sprintf(
             'Requested format "%s" is not supported. Supported MIME types are "%s".',
             $accept,
             implode('", "', array_keys($mimeTypes))
         ));
+    }
+
+    /**
+     * Adds the supported formats to the request.
+     *
+     * This is necessary for {@see Request::getMimeType} and {@see Request::getMimeTypes} to work.
+     *
+     * @param array<string, string|string[]> $formats
+     */
+    private function addRequestFormats(Request $request, array $formats): void
+    {
+        foreach ($formats as $format => $mimeTypes) {
+            $request->setFormat($format, (array) $mimeTypes);
+        }
     }
 }

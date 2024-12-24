@@ -21,7 +21,7 @@ use Doctrine\ORM\QueryBuilder;
 
 class CustomFilter extends AbstractFilter
 {
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if ('custom' !== $property) {
             return;
@@ -30,9 +30,9 @@ class CustomFilter extends AbstractFilter
         $alias = $queryBuilder->getRootAliases()[0];
         $secondAlias = $queryNameGenerator->generateJoinAlias('relatedDummies');
 
-        $joinCondition = $queryBuilder->expr()->like(sprintf('%s.name', $secondAlias), ':param');
+        $joinCondition = $queryBuilder->expr()->like(\sprintf('%s.name', $secondAlias), ':param');
 
-        $queryBuilder->join(sprintf('%s.relatedDummies', $alias), $secondAlias, Join::WITH, $joinCondition)
+        $queryBuilder->join(\sprintf('%s.relatedDummies', $alias), $secondAlias, Join::WITH, $joinCondition)
         ->setParameter('param', '%'.$value.'%')
         ->andWhere('1=1'); // problem only gets triggered when there is a where part.
     }

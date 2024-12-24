@@ -15,8 +15,9 @@ namespace ApiPlatform\Serializer;
 
 use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
+use ApiPlatform\Metadata\Util\AttributesExtractor;
 use ApiPlatform\Serializer\Filter\FilterInterface;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\State\SerializerContextBuilderInterface as StateSerializerContextBuilderInterface;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -27,16 +28,16 @@ use Symfony\Component\HttpFoundation\Request;
  */
 final class SerializerFilterContextBuilder implements SerializerContextBuilderInterface
 {
-    public function __construct(private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory, private readonly ContainerInterface $filterLocator, private readonly SerializerContextBuilderInterface $decorated)
+    public function __construct(private readonly ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory, private readonly ContainerInterface $filterLocator, private readonly SerializerContextBuilderInterface|StateSerializerContextBuilderInterface $decorated)
     {
     }
 
     /**
      * {@inheritdoc}
      */
-    public function createFromRequest(Request $request, bool $normalization, array $attributes = null): array
+    public function createFromRequest(Request $request, bool $normalization, ?array $attributes = null): array
     {
-        if (null === $attributes && !$attributes = RequestAttributesExtractor::extractAttributes($request)) {
+        if (null === $attributes && !$attributes = AttributesExtractor::extractAttributes($request->attributes->all())) {
             throw new RuntimeException('Request attributes are not valid.');
         }
 

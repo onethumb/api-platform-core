@@ -25,6 +25,8 @@ use Symfony\Component\WebLink\HttpHeaderSerializer;
 /**
  * Adds the HTTP Link header pointing to the Mercure hub for resources having their updates dispatched.
  *
+ * @deprecated use ApiPlatform\Symfony\State\MercureLinkProcessor instead
+ *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
 final class AddLinkHeaderListener
@@ -34,8 +36,8 @@ final class AddLinkHeaderListener
 
     public function __construct(
         private readonly Discovery $discovery,
-        ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
-        private readonly HttpHeaderSerializer $serializer = new HttpHeaderSerializer()
+        ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
+        private readonly HttpHeaderSerializer $serializer = new HttpHeaderSerializer(),
     ) {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

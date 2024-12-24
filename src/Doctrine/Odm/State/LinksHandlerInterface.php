@@ -24,10 +24,10 @@ interface LinksHandlerInterface
     /**
      * Handle Doctrine ORM links.
      *
-     * @see ApiPlatform\Doctrine\Odm\State\LinksHandlerTrait
+     * @see LinksHandlerTrait
      *
-     * @param array<string, mixed>                                                  $uriVariables
-     * @param array{entityClass: string, operation: Operation}&array<string, mixed> $context
+     * @param array<string, mixed>                                                    $uriVariables
+     * @param array{documentClass: string, operation: Operation}&array<string, mixed> $context
      */
     public function handleLinks(Builder $aggregationBuilder, array $uriVariables, array $context): void;
 }

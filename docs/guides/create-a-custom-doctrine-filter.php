@@ -7,7 +7,7 @@
 // tags: doctrine, expert
 // ---
 
-// Custom filters can be written by implementing the `ApiPlatform\Api\FilterInterface` interface.
+// Custom filters can be written by implementing the `ApiPlatform\Metadata\FilterInterface` interface.
 //
 // API Platform provides a convenient way to create Doctrine ORM and MongoDB ODM filters. If you use [custom state providers](/docs/guide/state-providers), you can still create filters by implementing the previously mentioned interface, but - as API Platform isn't aware of your persistence system's internals - you have to create the filtering logic by yourself.
 //
@@ -33,7 +33,7 @@ namespace App\Filter {
         /*
          * Filtered properties is accessible through getProperties() method: property => strategy
          */
-        protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+        protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
         {
             /*
              * Otherwise this filter is applied to order and page as well.

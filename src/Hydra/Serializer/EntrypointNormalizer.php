@@ -17,9 +17,9 @@ use ApiPlatform\Api\Entrypoint;
 use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
 use ApiPlatform\Api\UrlGeneratorInterface as LegacyUrlGeneratorInterface;
 use ApiPlatform\Documentation\Entrypoint as DocumentationEntrypoint;
-use ApiPlatform\Exception\InvalidArgumentException;
-use ApiPlatform\Exception\OperationNotFoundException;
 use ApiPlatform\Metadata\CollectionOperationInterface;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\OperationNotFoundException;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\UrlGeneratorInterface;
@@ -43,7 +43,7 @@ final class EntrypointNormalizer implements NormalizerInterface, CacheableSuppor
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $entrypoint = [
             '@context' => $this->urlGenerator->generate('api_jsonld_context', ['shortName' => 'Entrypoint']),
@@ -82,7 +82,7 @@ final class EntrypointNormalizer implements NormalizerInterface, CacheableSuppor
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return self::FORMAT === $format && ($data instanceof Entrypoint || $data instanceof DocumentationEntrypoint);
     }
