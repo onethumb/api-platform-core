@@ -23,8 +23,7 @@ use Ramsey\Uuid\UuidInterface;
     operations: [
         new Post(uriTemplate: 'dummy_collect_denormalization'),
     ],
-    collectDenormalizationErrors: true,
-    extraProperties: ['rfc_7807_compliant_errors' => false]
+    collectDenormalizationErrors: true
 )]
 #[ORM\Entity]
 class DummyWithCollectDenormalizationErrors
@@ -55,7 +54,7 @@ class DummyWithCollectDenormalizationErrors
     #[ORM\ManyToMany(targetEntity: RelatedDummy::class)]
     public Collection|iterable $relatedDummies;
 
-    public function __construct(string $baz, string $qux = null)
+    public function __construct(string $baz, ?string $qux = null)
     {
         $this->baz = $baz;
         $this->qux = $qux;

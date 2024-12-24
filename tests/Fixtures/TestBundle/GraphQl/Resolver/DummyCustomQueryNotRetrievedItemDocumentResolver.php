@@ -15,7 +15,6 @@ namespace ApiPlatform\Tests\Fixtures\TestBundle\GraphQl\Resolver;
 
 use ApiPlatform\GraphQl\Resolver\QueryItemResolverInterface;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\DummyCustomQuery as DummyCustomQueryDocument;
-use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyCustomQuery;
 
 /**
  * Resolver for dummy item custom query.
@@ -24,7 +23,7 @@ use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyCustomQuery;
  */
 class DummyCustomQueryNotRetrievedItemDocumentResolver implements QueryItemResolverInterface
 {
-    public function __invoke(?object $item, array $context): DummyCustomQuery|DummyCustomQueryDocument
+    public function __invoke(?object $item, array $context): DummyCustomQueryDocument
     {
         if (null === $item) {
             $item = new DummyCustomQueryDocument();

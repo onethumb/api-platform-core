@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\JsonSchema\Tests\Fixtures;
 
-use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Attribute\Groups;
 
 /**
  * This class is not mapped as an API resource.
@@ -23,14 +23,10 @@ use Symfony\Component\Serializer\Annotation\Groups;
 class NotAResource
 {
     public function __construct(
-        /**
-         * @Groups("contain_non_resource")
-         */
+        #[Groups('contain_non_resource')]
         private $foo,
-        /**
-         * @Groups("contain_non_resource")
-         */
-        private $bar
+        #[Groups('contain_non_resource')]
+        private $bar,
     ) {
     }
 

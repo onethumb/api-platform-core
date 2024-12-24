@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace ApiPlatform\State\Processor;
 
 use ApiPlatform\Metadata\Operation;
-use ApiPlatform\Serializer\ResourceList;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
 use ApiPlatform\State\ProcessorInterface;
+use ApiPlatform\State\ResourceList;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\SerializerInterface;
@@ -26,32 +26,41 @@ use Symfony\Component\WebLink\Link;
 /**
  * Serializes data.
  *
+ * @template T1
+ * @template T2
+ *
+ * @implements ProcessorInterface<T1, T2>
+ *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
 final class SerializeProcessor implements ProcessorInterface
 {
-    public function __construct(private readonly ProcessorInterface $processor, private readonly SerializerInterface $serializer, private readonly SerializerContextBuilderInterface $serializerContextBuilder)
+    /**
+     * @param ProcessorInterface<mixed, mixed>|null $processor
+     */
+    public function __construct(private readonly ?ProcessorInterface $processor, private readonly SerializerInterface $serializer, private readonly SerializerContextBuilderInterface $serializerContextBuilder)
     {
     }
 
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = [])
     {
         if ($data instanceof Response || !$operation->canSerialize() || !($request = $context['request'] ?? null)) {
-            return $this->processor->process($data, $operation, $uriVariables, $context);
+            return $this->processor ? $this->processor->process($data, $operation, $uriVariables, $context) : $data;
         }
 
         // @see ApiPlatform\State\Processor\RespondProcessor
         $context['original_data'] = $data;
 
+        $class = $operation->getClass();
         $serializerContext = $this->serializerContextBuilder->createFromRequest($request, true, [
-            'resource_class' => $operation->getClass(),
+            'resource_class' => $class,
             'operation' => $operation,
         ]);
 
         $serializerContext['uri_variables'] = $uriVariables;
 
         if (isset($serializerContext['output']) && \array_key_exists('class', $serializerContext['output']) && null === $serializerContext['output']['class']) {
-            return $this->processor->process(null, $operation, $uriVariables, $context);
+            return $this->processor ? $this->processor->process(null, $operation, $uriVariables, $context) : null;
         }
 
         $resources = new ResourceList();
@@ -72,6 +81,6 @@ final class SerializeProcessor implements ProcessorInterface
             $request->attributes->set('_api_platform_links', $linkProvider);
         }
 
-        return $this->processor->process($serialized, $operation, $uriVariables, $context);
+        return $this->processor ? $this->processor->process($serialized, $operation, $uriVariables, $context) : $serialized;
     }
 }

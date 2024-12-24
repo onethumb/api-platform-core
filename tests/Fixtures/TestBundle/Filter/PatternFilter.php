@@ -23,7 +23,7 @@ class PatternFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
     }
 
@@ -35,8 +35,8 @@ class PatternFilter extends AbstractFilter
                 'property' => 'pattern',
                 'type' => 'string',
                 'required' => false,
-                'swagger' => [
-                    'pattern' => '/^(pattern|nrettap)$/',
+                'schema' => [
+                    'pattern' => '^(pattern|nrettap)$',
                 ],
             ],
         ];

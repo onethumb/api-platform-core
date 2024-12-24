@@ -7,6 +7,8 @@ resources:
             uriVariables: ['author']
             types: ['someirischema']
             description: User programs
+            headers:
+                hello: 'world'
             normalizationContext:
                 groups: ['foo', 'bar']
                 enabled: false
@@ -21,6 +23,13 @@ resources:
                     extraProperties:
                         foo: 'bar'
                         boolean: true
+                    parameters:
+                        author: 
+                            description: 'hello'
+                            required: true
+                            in: 'query'
+                            schema:
+                                type: 'string'
 
     ApiPlatform\Metadata\Tests\Fixtures\ApiResource\SingleFileConfigDummy:
         shortName: single_file_config

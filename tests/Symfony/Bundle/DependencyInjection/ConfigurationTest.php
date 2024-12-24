@@ -13,12 +13,10 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Tests\Symfony\Bundle\DependencyInjection;
 
-use ApiPlatform\Exception\FilterValidationException;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Symfony\Bundle\DependencyInjection\Configuration;
 use Doctrine\ORM\OptimisticLockException;
 use PHPUnit\Framework\TestCase;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -33,8 +31,6 @@ use Symfony\Component\Serializer\Exception\ExceptionInterface;
  */
 class ConfigurationTest extends TestCase
 {
-    use ExpectDeprecationTrait;
-
     private Configuration $configuration;
 
     private Processor $processor;
@@ -50,9 +46,6 @@ class ConfigurationTest extends TestCase
         $this->runDefaultConfigTests();
     }
 
-    /**
-     * @group mongodb
-     */
     public function testDefaultConfigWithMongoDbOdm(): void
     {
         $this->runDefaultConfigTests(['orm', 'odm']);
@@ -82,11 +75,12 @@ class ConfigurationTest extends TestCase
             'description' => 'description',
             'version' => '1.0.0',
             'show_webby' => true,
-            'formats' => [],
+            'formats' => [
+                'jsonld' => ['mime_types' => ['application/ld+json']],
+            ],
             'docs_formats' => [
                 'jsonopenapi' => ['mime_types' => ['application/vnd.openapi+json']],
                 'yamlopenapi' => ['mime_types' => ['application/vnd.openapi+yaml']],
-                'json' => ['mime_types' => ['application/json']],
                 'jsonld' => ['mime_types' => ['application/ld+json']],
                 'html' => ['mime_types' => ['text/html']],
             ],
@@ -98,13 +92,14 @@ class ConfigurationTest extends TestCase
                 'jsonld' => ['mime_types' => ['application/ld+json']],
                 'json' => ['mime_types' => ['application/problem+json', 'application/json']],
             ],
+            'jsonschema_formats' => [],
             'exception_to_status' => [
                 ExceptionInterface::class => Response::HTTP_BAD_REQUEST,
                 InvalidArgumentException::class => Response::HTTP_BAD_REQUEST,
-                FilterValidationException::class => Response::HTTP_BAD_REQUEST,
                 OptimisticLockException::class => Response::HTTP_CONFLICT,
             ],
             'path_segment_name_generator' => 'api_platform.metadata.path_segment_name_generator.underscore',
+            'inflector' => 'api_platform.metadata.inflector',
             'validator' => [
                 'serialize_payload_fields' => [],
                 'query_parameter_validation' => true,
@@ -128,6 +123,8 @@ class ConfigurationTest extends TestCase
                 'introspection' => [
                     'enabled' => true,
                 ],
+                'max_query_depth' => 20,
+                'max_query_complexity' => 500,
                 'nesting_separator' => '_',
                 'collection' => [
                     'pagination' => [
@@ -138,7 +135,6 @@ class ConfigurationTest extends TestCase
             'elasticsearch' => [
                 'enabled' => false,
                 'hosts' => [],
-                'mapping' => [],
             ],
             'oauth' => [
                 'enabled' => false,
@@ -155,6 +151,7 @@ class ConfigurationTest extends TestCase
             'swagger' => [
                 'versions' => [3],
                 'api_keys' => [],
+                'http_auth' => [],
                 'swagger_ui_extra_configuration' => [],
             ],
             'eager_loading' => [
@@ -220,12 +217,17 @@ class ConfigurationTest extends TestCase
                     'url' => null,
                 ],
                 'swagger_ui_extra_configuration' => [],
+                'overrideResponses' => true,
             ],
             'maker' => [
                 'enabled' => true,
             ],
-            'keep_legacy_inflector' => true,
-            'event_listeners_backward_compatibility_layer' => true,
+            'use_symfony_listeners' => false,
+            'handle_symfony_errors' => false,
+            'enable_link_security' => false,
+            'serializer' => [
+                'hydra_prefix' => null,
+            ],
         ], $config);
     }
 
@@ -239,9 +241,7 @@ class ConfigurationTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider invalidHttpStatusCodeProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidHttpStatusCodeProvider')]
     public function testExceptionToStatusConfigWithInvalidHttpStatusCode($invalidHttpStatusCode): void
     {
         $this->expectException(InvalidConfigurationException::class);
@@ -268,9 +268,7 @@ class ConfigurationTest extends TestCase
         ];
     }
 
-    /**
-     * @dataProvider invalidHttpStatusCodeValueProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('invalidHttpStatusCodeValueProvider')]
     public function testExceptionToStatusConfigWithInvalidHttpStatusCodeValue($invalidHttpStatusCodeValue): void
     {
         $this->expectException(InvalidTypeException::class);
@@ -395,5 +393,25 @@ class ConfigurationTest extends TestCase
         ]);
 
         $this->assertTrue($config['elasticsearch']['enabled']);
+    }
+
+    /**
+     * Test config for http auth.
+     */
+    public function testHttpAuth(): void
+    {
+        $config = $this->processor->processConfiguration($this->configuration, [
+            'api_platform' => [
+                'swagger' => [
+                    'http_auth' => ['PAT' => [
+                        'scheme' => 'bearer',
+                        'bearerFormat' => 'JWT',
+                    ]],
+                ],
+            ],
+        ]);
+
+        $this->assertArrayHasKey('http_auth', $config['swagger']);
+        $this->assertSame(['scheme' => 'bearer', 'bearerFormat' => 'JWT'], $config['swagger']['http_auth']['PAT']);
     }
 }

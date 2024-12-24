@@ -20,16 +20,20 @@ use ApiPlatform\State\OptionsInterface;
  */
 abstract class Metadata
 {
+    protected ?Parameters $parameters = null;
+
     /**
-     * @param string|null $deprecationReason       https://api-platform.com/docs/core/deprecations/#deprecating-resource-classes-operations-and-properties
-     * @param string|null $security                https://api-platform.com/docs/core/security
-     * @param string|null $securityPostDenormalize https://api-platform.com/docs/core/security/#executing-access-control-rules-after-denormalization
-     * @param mixed|null  $mercure
-     * @param mixed|null  $messenger
-     * @param mixed|null  $input
-     * @param mixed|null  $output
-     * @param mixed|null  $provider
-     * @param mixed|null  $processor
+     * @param string|null                                                                       $deprecationReason       https://api-platform.com/docs/core/deprecations/#deprecating-resource-classes-operations-and-properties
+     * @param string|\Stringable|null                                                           $security                https://api-platform.com/docs/core/security
+     * @param string|\Stringable|null                                                           $securityPostDenormalize https://api-platform.com/docs/core/security/#executing-access-control-rules-after-denormalization
+     * @param mixed|null                                                                        $mercure
+     * @param mixed|null                                                                        $messenger
+     * @param mixed|null                                                                        $input
+     * @param mixed|null                                                                        $output
+     * @param mixed|null                                                                        $provider
+     * @param mixed|null                                                                        $processor
+     * @param Parameters|array<string, Parameter>                                               $parameters
+     * @param callable|string|array<string, \Illuminate\Contracts\Validation\Rule|array|string> $rules                   Laravel rules can be a FormRequest class, a callable or an array of rules
      */
     public function __construct(
         protected ?string $shortName = null,
@@ -60,17 +64,32 @@ abstract class Metadata
         protected ?bool $paginationClientPartial = null,
         protected ?bool $paginationFetchJoinCollection = null,
         protected ?bool $paginationUseOutputWalkers = null,
-        protected ?string $security = null,
+        protected string|\Stringable|null $security = null,
         protected ?string $securityMessage = null,
-        protected ?string $securityPostDenormalize = null,
+        protected string|\Stringable|null $securityPostDenormalize = null,
         protected ?string $securityPostDenormalizeMessage = null,
-        protected ?string $securityPostValidation = null,
+        protected string|\Stringable|null $securityPostValidation = null,
         protected ?string $securityPostValidationMessage = null,
         protected $provider = null,
         protected $processor = null,
         protected ?OptionsInterface $stateOptions = null,
-        protected array $extraProperties = []
+        /*
+         * @experimental
+         */
+        array|Parameters|null $parameters = null,
+        protected mixed $rules = null,
+        protected ?string $policy = null,
+        protected array|string|null $middleware = null,
+        protected ?bool $queryParameterValidationEnabled = null,
+        protected ?bool $strictQueryParameterValidation = null,
+        protected ?bool $hideHydraOperation = null,
+        protected array $extraProperties = [],
     ) {
+        if (\is_array($parameters) && $parameters) {
+            $parameters = new Parameters($parameters);
+        }
+
+        $this->parameters = $parameters;
     }
 
     public function getShortName(): ?string
@@ -104,7 +123,7 @@ abstract class Metadata
         return $this->description;
     }
 
-    public function withDescription(string $description = null): static
+    public function withDescription(?string $description = null): static
     {
         $self = clone $this;
         $self->description = $description;
@@ -169,7 +188,7 @@ abstract class Metadata
         return $this->collectDenormalizationErrors;
     }
 
-    public function withCollectDenormalizationErrors(bool $collectDenormalizationErrors = null): static
+    public function withCollectDenormalizationErrors(?bool $collectDenormalizationErrors = null): static
     {
         $self = clone $this;
         $self->collectDenormalizationErrors = $collectDenormalizationErrors;
@@ -451,7 +470,7 @@ abstract class Metadata
 
     public function getSecurity(): ?string
     {
-        return $this->security;
+        return $this->security instanceof \Stringable ? (string) $this->security : $this->security;
     }
 
     public function withSecurity($security): static
@@ -477,7 +496,7 @@ abstract class Metadata
 
     public function getSecurityPostDenormalize(): ?string
     {
-        return $this->securityPostDenormalize;
+        return $this->securityPostDenormalize instanceof \Stringable ? (string) $this->securityPostDenormalize : $this->securityPostDenormalize;
     }
 
     public function withSecurityPostDenormalize($securityPostDenormalize): static
@@ -503,10 +522,10 @@ abstract class Metadata
 
     public function getSecurityPostValidation(): ?string
     {
-        return $this->securityPostValidation;
+        return $this->securityPostValidation instanceof \Stringable ? (string) $this->securityPostValidation : $this->securityPostValidation;
     }
 
-    public function withSecurityPostValidation(string $securityPostValidation = null): static
+    public function withSecurityPostValidation(string|\Stringable|null $securityPostValidation = null): static
     {
         $self = clone $this;
         $self->securityPostValidation = $securityPostValidation;
@@ -519,7 +538,7 @@ abstract class Metadata
         return $this->securityPostValidationMessage;
     }
 
-    public function withSecurityPostValidationMessage(string $securityPostValidationMessage = null): static
+    public function withSecurityPostValidationMessage(?string $securityPostValidationMessage = null): static
     {
         $self = clone $this;
         $self->securityPostValidationMessage = $securityPostValidationMessage;
@@ -566,6 +585,77 @@ abstract class Metadata
         return $self;
     }
 
+    /**
+     * @return string|callable|array<string, \Illuminate\Contracts\Validation\Rule|array|string>
+     */
+    public function getRules(): mixed
+    {
+        return $this->rules;
+    }
+
+    /**
+     * @param string|callable|array<string, \Illuminate\Contracts\Validation\Rule|array|string> $rules
+     */
+    public function withRules(mixed $rules): static
+    {
+        $self = clone $this;
+        $self->rules = $rules;
+
+        return $self;
+    }
+
+    public function getParameters(): ?Parameters
+    {
+        return $this->parameters;
+    }
+
+    public function withParameters(array|Parameters $parameters): static
+    {
+        $self = clone $this;
+        $self->parameters = \is_array($parameters) ? new Parameters($parameters) : $parameters;
+
+        return $self;
+    }
+
+    public function getQueryParameterValidationEnabled(): ?bool
+    {
+        return $this->queryParameterValidationEnabled;
+    }
+
+    public function withQueryParameterValidationEnabled(bool $queryParameterValidationEnabled): static
+    {
+        $self = clone $this;
+        $self->queryParameterValidationEnabled = $queryParameterValidationEnabled;
+
+        return $self;
+    }
+
+    public function getPolicy(): ?string
+    {
+        return $this->policy;
+    }
+
+    public function withPolicy(string $policy): static
+    {
+        $self = clone $this;
+        $self->policy = $policy;
+
+        return $self;
+    }
+
+    public function getMiddleware(): mixed
+    {
+        return $this->middleware;
+    }
+
+    public function withMiddleware(string|array $middleware): static
+    {
+        $self = clone $this;
+        $self->middleware = $middleware;
+
+        return $self;
+    }
+
     public function getExtraProperties(): ?array
     {
         return $this->extraProperties;
@@ -575,6 +665,32 @@ abstract class Metadata
     {
         $self = clone $this;
         $self->extraProperties = $extraProperties;
+
+        return $self;
+    }
+
+    public function getStrictQueryParameterValidation(): ?bool
+    {
+        return $this->strictQueryParameterValidation;
+    }
+
+    public function withStrictQueryParameterValidation(bool $strictQueryParameterValidation): static
+    {
+        $self = clone $this;
+        $self->strictQueryParameterValidation = $strictQueryParameterValidation;
+
+        return $self;
+    }
+
+    public function getHideHydraOperation(): ?bool
+    {
+        return $this->hideHydraOperation;
+    }
+
+    public function withHideHydraOperation(bool $hideHydraOperation): static
+    {
+        $self = clone $this;
+        $self->hideHydraOperation = $hideHydraOperation;
 
         return $self;
     }

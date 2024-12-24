@@ -53,15 +53,24 @@ final class OpenApiCommand extends Command
     {
         $filesystem = new Filesystem();
         $io = new SymfonyStyle($input, $output);
-        $data = $this->normalizer->normalize($this->openApiFactory->__invoke(), 'json');
+        $data = $this->normalizer->normalize($this->openApiFactory->__invoke(), 'json', [
+            'spec_version' => $input->getOption('spec-version'),
+        ]);
+
+        if ($input->getOption('yaml') && !class_exists(Yaml::class)) {
+            $output->writeln('The "symfony/yaml" component is not installed.');
+
+            return 1;
+        }
+
         $content = $input->getOption('yaml')
-            ? Yaml::dump($data, 10, 2, Yaml::DUMP_OBJECT_AS_MAP | Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK)
+            ? Yaml::dump($data, 10, 2, Yaml::DUMP_OBJECT_AS_MAP | Yaml::DUMP_EMPTY_ARRAY_AS_SEQUENCE | Yaml::DUMP_MULTI_LINE_LITERAL_BLOCK | Yaml::DUMP_NUMERIC_KEY_AS_STRING)
             : (json_encode($data, \JSON_PRETTY_PRINT | \JSON_UNESCAPED_SLASHES) ?: '');
 
         $filename = $input->getOption('output');
         if ($filename && \is_string($filename)) {
             $filesystem->dumpFile($filename, $content);
-            $io->success(sprintf('Data written to %s.', $filename));
+            $io->success(\sprintf('Data written to %s.', $filename));
 
             return \defined(Command::class.'::SUCCESS') ? Command::SUCCESS : 0;
         }
@@ -76,5 +85,3 @@ final class OpenApiCommand extends Command
         return 'api:openapi:export';
     }
 }
-
-class_alias(OpenApiCommand::class, \ApiPlatform\Symfony\Bundle\Command\OpenApiCommand::class);

@@ -22,7 +22,7 @@ use ApiPlatform\State\OptionsInterface;
  *
  * The API Resource attribute declares the behaviors attached to a Resource inside API Platform.
  * This class is immutable, and if you set a value yourself, API Platform will not override the value.
- * The API Resource helps sharing options with operations.
+ * The API Resource helps to share options with operations.
  *
  * Read more about how metadata works [here](/docs/in-depth/metadata).
  *
@@ -38,6 +38,7 @@ class ApiResource extends Metadata
     /**
      * @param array<int, HttpOperation>|array<string, HttpOperation>|Operations|null $operations   Operations is a list of HttpOperation
      * @param array<string, Link>|array<string, mixed[]>|string[]|string|null        $uriVariables
+     * @param array<string, string>                                                  $headers
      * @param string|callable|null                                                   $provider
      * @param string|callable|null                                                   $processor
      * @param mixed|null                                                             $mercure
@@ -105,7 +106,7 @@ class ApiResource extends Metadata
          *       'jsonapi' => ['application/vnd.api+json'],
          *       'json' =>    ['application/json'],
          *       'xml' =>     ['application/xml', 'text/xml'],
-         *       'yaml' =>    ['application/x-yaml'],
+         *       'yaml' =>    ['application/yaml'],
          *       'csv' =>     ['text/csv'],
          *       'html' =>    ['text/html'],
          *       'myformat' =>['application/vnd.myformat'],
@@ -251,7 +252,7 @@ class ApiResource extends Metadata
          * ```yaml
          * # api/config/api_platform/resources.yaml
          * App\Entity\Book:
-         *     urlGenerationStrategy: !php/const ApiPlatform\Api\UrlGeneratorInterface::ABS_URL
+         *     urlGenerationStrategy: !php/const ApiPlatform\Metadata\UrlGeneratorInterface::ABS_URL
          * ```
          *
          * ```xml
@@ -314,12 +315,12 @@ class ApiResource extends Metadata
          * - With GraphQL, the [`isDeprecated` and `deprecationReason` properties](https://facebook.github.io/graphql/June2018/#sec-Deprecation) will be added to the schema
          */
         protected ?string $deprecationReason = null,
+        protected ?array $headers = null,
         protected ?array $cacheHeaders = null,
         protected ?array $normalizationContext = null,
         protected ?array $denormalizationContext = null,
         protected ?bool $collectDenormalizationErrors = null,
         protected ?array $hydraContext = null,
-        protected ?array $openapiContext = null, // TODO Remove in 4.0
         protected bool|OpenApiOperation|null $openapi = null,
         /**
          * The `validationContext` option configures the context of validation for the current ApiResource.
@@ -944,11 +945,11 @@ class ApiResource extends Metadata
          * </div>
          */
         protected ?string $paginationType = null,
-        protected ?string $security = null,
+        protected string|\Stringable|null $security = null,
         protected ?string $securityMessage = null,
-        protected ?string $securityPostDenormalize = null,
+        protected string|\Stringable|null $securityPostDenormalize = null,
         protected ?string $securityPostDenormalizeMessage = null,
-        protected ?string $securityPostValidation = null,
+        protected string|\Stringable|null $securityPostValidation = null,
         protected ?string $securityPostValidationMessage = null,
         protected ?bool $compositeIdentifier = null,
         protected ?array $exceptionToStatus = null,
@@ -958,6 +959,12 @@ class ApiResource extends Metadata
         $provider = null,
         $processor = null,
         protected ?OptionsInterface $stateOptions = null,
+        protected mixed $rules = null,
+        ?string $policy = null,
+        array|string|null $middleware = null,
+        array|Parameters|null $parameters = null,
+        protected ?bool $strictQueryParameterValidation = null,
+        protected ?bool $hideHydraOperation = null,
         protected array $extraProperties = [],
     ) {
         parent::__construct(
@@ -998,6 +1005,12 @@ class ApiResource extends Metadata
             provider: $provider,
             processor: $processor,
             stateOptions: $stateOptions,
+            parameters: $parameters,
+            rules: $rules,
+            policy: $policy,
+            middleware: $middleware,
+            strictQueryParameterValidation: $strictQueryParameterValidation,
+            hideHydraOperation: $hideHydraOperation,
             extraProperties: $extraProperties
         );
 
@@ -1018,6 +1031,7 @@ class ApiResource extends Metadata
     {
         $self = clone $this;
         $self->operations = $operations;
+        $self->operations->sort();
 
         return $self;
     }
@@ -1280,6 +1294,19 @@ class ApiResource extends Metadata
         return $self;
     }
 
+    public function getHeaders(): ?array
+    {
+        return $this->headers;
+    }
+
+    public function withHeaders(array $headers): self
+    {
+        $self = clone $this;
+        $self->headers = $headers;
+
+        return $self;
+    }
+
     public function getCacheHeaders(): ?array
     {
         return $this->cacheHeaders;
@@ -1305,29 +1332,6 @@ class ApiResource extends Metadata
     {
         $self = clone $this;
         $self->hydraContext = $hydraContext;
-
-        return $self;
-    }
-
-    /**
-     * TODO Remove in 4.0.
-     *
-     * @deprecated
-     */
-    public function getOpenapiContext(): ?array
-    {
-        return $this->openapiContext;
-    }
-
-    /**
-     * TODO Remove in 4.0.
-     *
-     * @deprecated
-     */
-    public function withOpenapiContext(array $openapiContext): self
-    {
-        $self = clone $this;
-        $self->openapiContext = $openapiContext;
 
         return $self;
     }
@@ -1367,19 +1371,6 @@ class ApiResource extends Metadata
     {
         $self = clone $this;
         $self->exceptionToStatus = $exceptionToStatus;
-
-        return $self;
-    }
-
-    public function getQueryParameterValidationEnabled(): ?bool
-    {
-        return $this->queryParameterValidationEnabled;
-    }
-
-    public function withQueryParameterValidationEnabled(bool $queryParameterValidationEnabled): self
-    {
-        $self = clone $this;
-        $self->queryParameterValidationEnabled = $queryParameterValidationEnabled;
 
         return $self;
     }

@@ -17,12 +17,15 @@ use ApiPlatform\Documentation\Entrypoint;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Resource\Factory\ResourceNameCollectionFactoryInterface;
 use ApiPlatform\Metadata\Resource\ResourceNameCollection;
+use ApiPlatform\OpenApi\Serializer\LegacyOpenApiNormalizer;
 use ApiPlatform\State\ProcessorInterface;
 use ApiPlatform\State\ProviderInterface;
 use Symfony\Component\HttpFoundation\Request;
 
 /**
  * Generates the API entrypoint.
+ *
+ * @deprecated use ApiPlatform\Symfony\EntrypointAction instead
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
@@ -34,16 +37,25 @@ final class EntrypointAction
         private readonly ResourceNameCollectionFactoryInterface $resourceNameCollectionFactory,
         private readonly ProviderInterface $provider,
         private readonly ProcessorInterface $processor,
-        private readonly array $documentationFormats = []
+        private readonly array $documentationFormats = [],
     ) {
     }
 
     public function __invoke(Request $request)
     {
-        static::$resourceNameCollection = $this->resourceNameCollectionFactory->create();
-        $context = ['request' => $request];
+        self::$resourceNameCollection = $this->resourceNameCollectionFactory->create();
+        $context = [
+            'request' => $request,
+            'spec_version' => (string) $request->query->get(LegacyOpenApiNormalizer::SPEC_VERSION),
+        ];
         $request->attributes->set('_api_platform_disable_listeners', true);
-        $operation = new Get(outputFormats: $this->documentationFormats, read: true, serialize: true, class: Entrypoint::class, provider: [self::class, 'provide']);
+        $operation = new Get(
+            outputFormats: $this->documentationFormats,
+            read: true,
+            serialize: true,
+            class: Entrypoint::class,
+            provider: [self::class, 'provide']
+        );
         $request->attributes->set('_api_operation', $operation);
         $body = $this->provider->provide($operation, [], $context);
         $operation = $request->attributes->get('_api_operation');
@@ -53,6 +65,6 @@ final class EntrypointAction
 
     public static function provide(): Entrypoint
     {
-        return new Entrypoint(static::$resourceNameCollection);
+        return new Entrypoint(self::$resourceNameCollection);
     }
 }

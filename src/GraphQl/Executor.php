@@ -18,6 +18,8 @@ use GraphQL\GraphQL;
 use GraphQL\Type\Schema;
 use GraphQL\Validator\DocumentValidator;
 use GraphQL\Validator\Rules\DisableIntrospection;
+use GraphQL\Validator\Rules\QueryComplexity;
+use GraphQL\Validator\Rules\QueryDepth;
 
 /**
  * Wrapper for the GraphQL facade.
@@ -26,19 +28,25 @@ use GraphQL\Validator\Rules\DisableIntrospection;
  */
 final class Executor implements ExecutorInterface
 {
-    public function __construct(private readonly bool $graphQlIntrospectionEnabled = true)
+    public function __construct(private readonly bool $graphQlIntrospectionEnabled = true, private readonly int $maxQueryComplexity = 500, private readonly int $maxQueryDepth = 20)
     {
         DocumentValidator::addRule(
             new DisableIntrospection(
                 $this->graphQlIntrospectionEnabled ? DisableIntrospection::DISABLED : DisableIntrospection::ENABLED
             )
         );
+
+        $queryComplexity = new QueryComplexity($this->maxQueryComplexity);
+        DocumentValidator::addRule($queryComplexity);
+
+        $queryDepth = new QueryDepth($this->maxQueryDepth);
+        DocumentValidator::addRule($queryDepth);
     }
 
     /**
      * {@inheritdoc}
      */
-    public function executeQuery(Schema $schema, $source, mixed $rootValue = null, mixed $context = null, array $variableValues = null, string $operationName = null, callable $fieldResolver = null, array $validationRules = null): ExecutionResult
+    public function executeQuery(Schema $schema, $source, mixed $rootValue = null, mixed $context = null, ?array $variableValues = null, ?string $operationName = null, ?callable $fieldResolver = null, ?array $validationRules = null): ExecutionResult
     {
         return GraphQL::executeQuery($schema, $source, $rootValue, $context, $variableValues, $operationName, $fieldResolver, $validationRules);
     }

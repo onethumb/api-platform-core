@@ -14,6 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Metadata\Util;
 
 use ApiPlatform\Metadata\ApiFilter;
+use Symfony\Component\String\UnicodeString;
 
 /**
  * Generates a service id for a generic filter.
@@ -41,7 +42,7 @@ trait AttributeFilterExtractorTrait
     /**
      * Given a filter attribute and reflection elements, find out the properties where the filter is applied.
      */
-    private function getFilterProperties(ApiFilter $filterAttribute, \ReflectionClass $reflectionClass, \ReflectionProperty $reflectionProperty = null): array
+    private function getFilterProperties(ApiFilter $filterAttribute, \ReflectionClass $reflectionClass, ?\ReflectionProperty $reflectionProperty = null): array
     {
         $properties = [];
 
@@ -75,7 +76,7 @@ trait AttributeFilterExtractorTrait
     /**
      * Reads filter attribute from a ReflectionClass.
      *
-     * @return array Key is the filter id. It has two values, properties and the ApiFilter instance
+     * @return array<string, array{array<string, mixed>, class-string, ApiFilter}> indexed by the filter id, the filter tuple has the filter arguments, the filter class and the ApiFilter attribute instance
      */
     private function readFilterAttributes(\ReflectionClass $reflectionClass): array
     {
@@ -83,10 +84,10 @@ trait AttributeFilterExtractorTrait
 
         foreach ($this->getFilterAttributes($reflectionClass) as $filterAttribute) {
             $filterClass = $filterAttribute->filterClass;
-            $id = $this->generateFilterId($reflectionClass, $filterClass, $filterAttribute->id);
+            $id = $this->generateFilterId($reflectionClass, $filterClass, $filterAttribute->id ?? $filterAttribute->alias);
 
             if (!isset($filters[$id])) {
-                $filters[$id] = [$filterAttribute->arguments, $filterClass];
+                $filters[$id] = [$filterAttribute->arguments, $filterClass, $filterAttribute];
             }
 
             if ($properties = $this->getFilterProperties($filterAttribute, $reflectionClass)) {
@@ -97,10 +98,10 @@ trait AttributeFilterExtractorTrait
         foreach ($reflectionClass->getProperties() as $reflectionProperty) {
             foreach ($this->getFilterAttributes($reflectionProperty) as $filterAttribute) {
                 $filterClass = $filterAttribute->filterClass;
-                $id = $this->generateFilterId($reflectionClass, $filterClass, $filterAttribute->id);
+                $id = $this->generateFilterId($reflectionClass, $filterClass, $filterAttribute->id ?? $filterAttribute->alias);
 
                 if (!isset($filters[$id])) {
-                    $filters[$id] = [$filterAttribute->arguments, $filterClass];
+                    $filters[$id] = [$filterAttribute->arguments, $filterClass, $filterAttribute];
                 }
 
                 if ($properties = $this->getFilterProperties($filterAttribute, $reflectionClass, $reflectionProperty)) {
@@ -129,10 +130,10 @@ trait AttributeFilterExtractorTrait
      * @param string           $filterClass     the filter class
      * @param string|null      $filterId        the filter id
      */
-    private function generateFilterId(\ReflectionClass $reflectionClass, string $filterClass, string $filterId = null): string
+    private function generateFilterId(\ReflectionClass $reflectionClass, string $filterClass, ?string $filterId = null): string
     {
         $suffix = null !== $filterId ? '_'.$filterId : $filterId;
 
-        return 'annotated_'.Inflector::tableize(str_replace('\\', '', $reflectionClass->getName().(new \ReflectionClass($filterClass))->getName().$suffix));
+        return 'annotated_'.(new UnicodeString(str_replace('\\', '', $reflectionClass->getName().(new \ReflectionClass($filterClass))->getName().$suffix)))->snake()->toString();
     }
 }

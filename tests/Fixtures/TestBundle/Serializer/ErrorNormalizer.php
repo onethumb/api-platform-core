@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Tests\Fixtures\TestBundle\Serializer;
 
-use ApiPlatform\Tests\Fixtures\TestBundle\Exception\TestException;
+use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 
 final class ErrorNormalizer implements NormalizerInterface
@@ -22,7 +22,7 @@ final class ErrorNormalizer implements NormalizerInterface
     {
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject
     {
         $a = $this->decorated->normalize($object, $format, $context);
         $a['hello'] = 'world';
@@ -30,22 +30,19 @@ final class ErrorNormalizer implements NormalizerInterface
         return $a;
     }
 
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
-        if (\is_object($data) && $data instanceof TestException) {
-            return true;
-        }
-
-        return $this->decorated->supportsNormalization($data, $format, $context);
-    }
-
-    public function hasCacheableSupportsMethod(): bool
-    {
-        return false;
+        return 'json' === $format;
     }
 
     public function getSupportedTypes(?string $format): array
     {
-        return $this->decorated->getSupportedTypes($format);
+        if ('json' === $format) {
+            return [
+                FlattenException::class => true,
+            ];
+        }
+
+        return [];
     }
 }

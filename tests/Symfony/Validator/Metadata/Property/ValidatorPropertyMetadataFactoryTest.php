@@ -69,11 +69,12 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
 
     public function testCreateWithPropertyWithRequiredConstraints(): void
     {
-        $propertyMetadata = (new ApiProperty())->withDescription('A dummy')->withReadable(true)->withWritable(true);
-        $expectedPropertyMetadata = $propertyMetadata->withRequired(true);
+        $dummyPropertyMetadata = (new ApiProperty())->withDescription('A dummy')->withReadable(true)->withWritable(true);
+        $emailPropertyMetadata = (new ApiProperty())->withTypes(['https://schema.org/email'])->withReadable(true)->withWritable(true);
 
         $decoratedPropertyMetadataFactory = $this->prophesize(PropertyMetadataFactoryInterface::class);
-        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy', [])->willReturn($propertyMetadata)->shouldBeCalled();
+        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy', [])->willReturn($dummyPropertyMetadata)->shouldBeCalled();
+        $decoratedPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummyEmail', [])->willReturn($emailPropertyMetadata)->shouldBeCalled();
 
         $validatorMetadataFactory = $this->prophesize(MetadataFactoryInterface::class);
         $validatorMetadataFactory->getMetadataFor(DummyValidatedEntity::class)->willReturn($this->validatorClassMetadata)->shouldBeCalled();
@@ -83,9 +84,16 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
             $decoratedPropertyMetadataFactory->reveal(),
             []
         );
-        $resultedPropertyMetadata = $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy');
 
-        $this->assertEquals($expectedPropertyMetadata, $resultedPropertyMetadata);
+        $this->assertEquals(
+            $dummyPropertyMetadata->withRequired(true),
+            $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummy'),
+        );
+
+        $this->assertEquals(
+            $emailPropertyMetadata->withRequired(false),
+            $validatorPropertyMetadataFactory->create(DummyValidatedEntity::class, 'dummyEmail'),
+        );
     }
 
     public function testCreateWithPropertyWithNotRequiredConstraints(): void
@@ -310,9 +318,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
         $this->assertEquals('^(dummy)$', $schema['pattern']);
     }
 
-    /**
-     * @dataProvider providePropertySchemaFormatCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('providePropertySchemaFormatCases')]
     public function testCreateWithPropertyFormatRestriction(string $property, string $class, array $expectedSchema): void
     {
         $validatorClassMetadata = new ClassMetadata($class);
@@ -463,9 +469,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
         $this->assertEquals(['uniqueItems' => true], $schema);
     }
 
-    /**
-     * @dataProvider provideRangeConstraintCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideRangeConstraintCases')]
     public function testCreateWithRangeConstraint(Type $type, string $property, array $expectedSchema): void
     {
         $validatorClassMetadata = new ClassMetadata(DummyRangeValidatedEntity::class);
@@ -500,9 +504,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
         yield 'min/max float' => ['type' => new Type(Type::BUILTIN_TYPE_FLOAT), 'property' => 'dummyFloatMinMax', 'expectedSchema' => ['minimum' => 1.5, 'maximum' => 10.5]];
     }
 
-    /**
-     * @dataProvider provideChoiceConstraintCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideChoiceConstraintCases')]
     public function testCreateWithPropertyChoiceRestriction(ApiProperty $propertyMetadata, string $property, array $expectedSchema): void
     {
         $validatorClassMetadata = new ClassMetadata(DummyValidatedChoiceEntity::class);
@@ -539,9 +541,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
         yield 'multi choice min/max' => ['propertyMetadata' => (new ApiProperty())->withBuiltinTypes([new Type(Type::BUILTIN_TYPE_STRING)]), 'property' => 'dummyMultiChoiceMinMax', 'expectedSchema' => ['type' => 'array', 'items' => ['type' => 'string', 'enum' => ['a', 'b', 'c', 'd']], 'minItems' => 2, 'maxItems' => 4]];
     }
 
-    /**
-     * @dataProvider provideCountConstraintCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideCountConstraintCases')]
     public function testCreateWithPropertyCountRestriction(string $property, array $expectedSchema): void
     {
         $validatorClassMetadata = new ClassMetadata(DummyCountValidatedEntity::class);
@@ -622,7 +622,7 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
 
         $this->assertEquals([
             'type' => 'object',
-            'properties' => [
+            'properties' => new \ArrayObject([
                 'name' => new \ArrayObject(),
                 'email' => ['format' => 'email', 'minLength' => 2, 'maxLength' => 255],
                 'phone' => ['pattern' => '^([+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*)$'],
@@ -631,21 +631,19 @@ class ValidatorPropertyMetadataFactoryTest extends TestCase
                 ],
                 'social' => [
                     'type' => 'object',
-                    'properties' => [
+                    'properties' => new \ArrayObject([
                         'githubUsername' => new \ArrayObject(),
-                    ],
+                    ]),
                     'additionalProperties' => false,
                     'required' => ['githubUsername'],
                 ],
-            ],
+            ]),
             'additionalProperties' => true,
             'required' => ['name', 'email', 'social'],
         ], $schema);
     }
 
-    /**
-     * @dataProvider provideNumericConstraintCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideNumericConstraintCases')]
     public function testCreateWithPropertyNumericRestriction(ApiProperty $propertyMetadata, string $property, array $expectedSchema): void
     {
         $validatorClassMetadata = new ClassMetadata(DummyNumericValidatedEntity::class);

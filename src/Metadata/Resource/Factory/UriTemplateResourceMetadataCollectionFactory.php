@@ -29,8 +29,6 @@ final class UriTemplateResourceMetadataCollectionFactory implements ResourceMeta
 {
     use OperationDefaultsTrait;
 
-    private $triggerLegacyFormatOnce = [];
-
     public function __construct(private readonly LinkFactoryInterface $linkFactory, private readonly PathSegmentNameGeneratorInterface $pathSegmentNameGenerator, private readonly ?ResourceMetadataCollectionFactoryInterface $decorated = null)
     {
     }
@@ -75,7 +73,7 @@ final class UriTemplateResourceMetadataCollectionFactory implements ResourceMeta
                         $operation = $operation->withName($routeName);
                     }
 
-                    $operations->add($routeName, $operation);
+                    $operations->add($operation->getName(), $operation);
                     continue;
                 }
 
@@ -88,7 +86,7 @@ final class UriTemplateResourceMetadataCollectionFactory implements ResourceMeta
                 $operations->add($operation->getName(), $operation);
             }
 
-            $resource = $resource->withOperations($operations->sort());
+            $resource = $resource->withOperations($operations);
             $resourceMetadataCollection[$i] = $resource;
         }
 
@@ -97,29 +95,23 @@ final class UriTemplateResourceMetadataCollectionFactory implements ResourceMeta
 
     private function generateUriTemplate(HttpOperation $operation): string
     {
-        $uriTemplate = $operation->getUriTemplate() ?? sprintf('/%s', $this->pathSegmentNameGenerator->getSegmentName($operation->getShortName()));
+        $uriTemplate = $operation->getUriTemplate() ?? \sprintf('/%s', $this->pathSegmentNameGenerator->getSegmentName($operation->getShortName()));
         $uriVariables = $operation->getUriVariables() ?? [];
-        $legacyFormat = null;
 
-        if (str_ends_with($uriTemplate, '{._format}') || ($legacyFormat = str_ends_with($uriTemplate, '.{_format}'))) {
+        if (str_ends_with($uriTemplate, '{._format}')) {
             $uriTemplate = substr($uriTemplate, 0, -10);
-        }
-
-        if ($legacyFormat && ($this->triggerLegacyFormatOnce[$operation->getClass()] ?? true)) {
-            $this->triggerLegacyFormatOnce[$operation->getClass()] = false;
-            trigger_deprecation('api-platform/core', '3.0', sprintf('The special Symfony parameter ".{_format}" in your URI Template is deprecated, use an RFC6570 variable "{._format}" on the class "%s" instead. We will only use the RFC6570 compatible variable in 4.0.', $operation->getClass()));
         }
 
         if ($parameters = array_keys($uriVariables)) {
             foreach ($parameters as $parameterName) {
-                $part = sprintf('/{%s}', $parameterName);
+                $part = \sprintf('/{%s}', $parameterName);
                 if (!str_contains($uriTemplate, $part)) {
-                    $uriTemplate .= sprintf('/{%s}', $parameterName);
+                    $uriTemplate .= \sprintf('/{%s}', $parameterName);
                 }
             }
         }
 
-        return sprintf('%s%s', $uriTemplate, $legacyFormat ? '.{_format}' : '{._format}');
+        return \sprintf('%s%s', $uriTemplate, '{._format}');
     }
 
     private function configureUriVariables(ApiResource|HttpOperation $operation): ApiResource|HttpOperation
@@ -155,7 +147,8 @@ final class UriTemplateResourceMetadataCollectionFactory implements ResourceMeta
             return $operation;
         }
 
-        foreach ($uriVariables = $operation->getUriVariables() as $parameterName => $link) {
+        foreach ($uriVariables = $operation->getUriVariables() as $parameterName => $l) {
+            $link = null === $l->getFromClass() ? $l->withFromClass($operation->getClass()) : $l;
             $uriVariables[$parameterName] = $this->linkFactory->completeLink($link);
         }
         $operation = $operation->withUriVariables($uriVariables);

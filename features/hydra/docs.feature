@@ -13,22 +13,19 @@ Feature: Documentation support
     And the response should be in JSON
     And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
     # Context
-    And the JSON node "@context.@vocab" should be equal to "http://example.com/docs.jsonld#"
-    And the JSON node "@context.hydra" should be equal to "http://www.w3.org/ns/hydra/core#"
-    And the JSON node "@context.rdf" should be equal to "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    And the JSON node "@context.rdfs" should be equal to "http://www.w3.org/2000/01/rdf-schema#"
-    And the JSON node "@context.xmls" should be equal to "http://www.w3.org/2001/XMLSchema#"
-    And the JSON node "@context.owl" should be equal to "http://www.w3.org/2002/07/owl#"
-    And the JSON node "@context.domain.@id" should be equal to "rdfs:domain"
-    And the JSON node "@context.domain.@type" should be equal to "@id"
-    And the JSON node "@context.range.@id" should be equal to "rdfs:range"
-    And the JSON node "@context.range.@type" should be equal to "@id"
-    And the JSON node "@context.subClassOf.@id" should be equal to "rdfs:subClassOf"
-    And the JSON node "@context.subClassOf.@type" should be equal to "@id"
-    And the JSON node "@context.expects.@id" should be equal to "hydra:expects"
-    And the JSON node "@context.expects.@type" should be equal to "@id"
-    And the JSON node "@context.returns.@id" should be equal to "hydra:returns"
-    And the JSON node "@context.returns.@type" should be equal to "@id"
+    And the Hydra context matches the online resource "http://www.w3.org/ns/hydra/context.jsonld"
+    And the JSON node "@context[1].@vocab" should be equal to "http://example.com/docs.jsonld#"
+    And the JSON node "@context[1].hydra" should be equal to "http://www.w3.org/ns/hydra/core#"
+    And the JSON node "@context[1].rdf" should be equal to "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    And the JSON node "@context[1].rdfs" should be equal to "http://www.w3.org/2000/01/rdf-schema#"
+    And the JSON node "@context[1].xmls" should be equal to "http://www.w3.org/2001/XMLSchema#"
+    And the JSON node "@context[1].owl" should be equal to "http://www.w3.org/2002/07/owl#"
+    And the JSON node "@context[1].domain.@id" should be equal to "rdfs:domain"
+    And the JSON node "@context[1].domain.@type" should be equal to "@id"
+    And the JSON node "@context[1].range.@id" should be equal to "rdfs:range"
+    And the JSON node "@context[1].range.@type" should be equal to "@id"
+    And the JSON node "@context[1].subClassOf.@id" should be equal to "rdfs:subClassOf"
+    And the JSON node "@context[1].subClassOf.@type" should be equal to "@id"
     # Root properties
     And the JSON node "@id" should be equal to "/docs.jsonld"
     And the JSON node "hydra:title" should be equal to "My Dummy API"
@@ -69,6 +66,7 @@ Feature: Documentation support
     And the value of the node "hydra:property.domain" of the property "name" of the Hydra class "Dummy" is "#Dummy"
     And the value of the node "hydra:property.range" of the property "name" of the Hydra class "Dummy" is "xmls:string"
     And the value of the node "hydra:property.range" of the property "relatedDummy" of the Hydra class "Dummy" is "https://schema.org/Product"
+    And the value of the node "hydra:property.owl:maxCardinality" of the property "relatedDummy" of the Hydra class "Dummy" is "1"
     And the value of the node "hydra:property.range" of the property "relatedDummies" of the Hydra class "Dummy" is "https://schema.org/Product"
     And the value of the node "hydra:title" of the property "name" of the Hydra class "Dummy" is "name"
     And the value of the node "hydra:description" of the property "name" of the Hydra class "Dummy" is "The dummy name"
@@ -78,12 +76,12 @@ Feature: Documentation support
     And the value of the node "hydra:method" of the operation "GET" of the Hydra class "Dummy" is "GET"
     And the value of the node "hydra:title" of the operation "GET" of the Hydra class "Dummy" is "Retrieves a Dummy resource."
     And the value of the node "rdfs:label" of the operation "GET" of the Hydra class "Dummy" is "Retrieves a Dummy resource."
-    And the value of the node "returns" of the operation "GET" of the Hydra class "Dummy" is "#Dummy"
+    And the value of the node "returns" of the operation "GET" of the Hydra class "Dummy" is "Dummy"
     And the value of the node "hydra:title" of the operation "PUT" of the Hydra class "Dummy" is "Replaces the Dummy resource."
     And the value of the node "hydra:title" of the operation "DELETE" of the Hydra class "Dummy" is "Deletes the Dummy resource."
     And the value of the node "returns" of the operation "DELETE" of the Hydra class "Dummy" is "owl:Nothing"
     # Deprecations
     And the boolean value of the node "owl:deprecated" of the Hydra class "DeprecatedResource" is true
-    And the boolean value of the node "owl:deprecated" of the property "deprecatedField" of the Hydra class "DeprecatedResource" is true
+    And the boolean value of the node "hydra:property.owl:deprecated" of the property "deprecatedField" of the Hydra class "DeprecatedResource" is true
     And the boolean value of the node "owl:deprecated" of the property "The collection of DeprecatedResource resources" of the Hydra class "The API entrypoint" is true
     And the boolean value of the node "owl:deprecated" of the operation "GET" of the Hydra class "DeprecatedResource" is true

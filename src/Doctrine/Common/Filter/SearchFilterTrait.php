@@ -13,10 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Doctrine\Common\Filter;
 
-use ApiPlatform\Api\IdentifiersExtractorInterface as LegacyIdentifiersExtractorInterface;
-use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
 use ApiPlatform\Doctrine\Common\PropertyHelperTrait;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\IdentifiersExtractorInterface;
 use ApiPlatform\Metadata\IriConverterInterface;
 use Psr\Log\LoggerInterface;
@@ -32,9 +30,9 @@ trait SearchFilterTrait
 {
     use PropertyHelperTrait;
 
-    protected IriConverterInterface|LegacyIriConverterInterface $iriConverter;
+    protected IriConverterInterface $iriConverter;
     protected PropertyAccessorInterface $propertyAccessor;
-    protected null|IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface $identifiersExtractor = null;
+    protected ?IdentifiersExtractorInterface $identifiersExtractor = null;
 
     /**
      * {@inheritdoc}
@@ -111,7 +109,7 @@ trait SearchFilterTrait
 
     abstract protected function getLogger(): LoggerInterface;
 
-    abstract protected function getIriConverter(): LegacyIriConverterInterface|IriConverterInterface;
+    abstract protected function getIriConverter(): IriConverterInterface;
 
     abstract protected function getPropertyAccessor(): PropertyAccessorInterface;
 
@@ -153,7 +151,7 @@ trait SearchFilterTrait
 
         if (empty($values)) {
             $this->getLogger()->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('At least one value is required, multiple values should be in "%1$s[]=firstvalue&%1$s[]=secondvalue" format', $property)),
+                'exception' => new InvalidArgumentException(\sprintf('At least one value is required, multiple values should be in "%1$s[]=firstvalue&%1$s[]=secondvalue" format', $property)),
             ]);
 
             return null;
@@ -165,7 +163,7 @@ trait SearchFilterTrait
     /**
      * When the field should be an integer, check that the given value is a valid one.
      */
-    protected function hasValidValues(array $values, string $type = null): bool
+    protected function hasValidValues(array $values, ?string $type = null): bool
     {
         foreach ($values as $value) {
             if (null !== $value && \in_array($type, (array) self::DOCTRINE_INTEGER_TYPE, true) && false === filter_var($value, \FILTER_VALIDATE_INT)) {

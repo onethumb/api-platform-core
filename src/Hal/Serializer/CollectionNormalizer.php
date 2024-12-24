@@ -13,11 +13,10 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Hal\Serializer;
 
-use ApiPlatform\Api\ResourceClassResolverInterface as LegacyResourceClassResolverInterface;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\ResourceClassResolverInterface;
+use ApiPlatform\Metadata\Util\IriHelper;
 use ApiPlatform\Serializer\AbstractCollectionNormalizer;
-use ApiPlatform\Util\IriHelper;
 use Symfony\Component\Serializer\Exception\UnexpectedValueException;
 
 /**
@@ -30,7 +29,7 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
 {
     public const FORMAT = 'jsonhal';
 
-    public function __construct(ResourceClassResolverInterface|LegacyResourceClassResolverInterface $resourceClassResolver, string $pageParameterName, ResourceMetadataCollectionFactoryInterface $resourceMetadataFactory)
+    public function __construct(ResourceClassResolverInterface $resourceClassResolver, string $pageParameterName, ResourceMetadataCollectionFactoryInterface $resourceMetadataFactory)
     {
         parent::__construct($resourceClassResolver, $pageParameterName, $resourceMetadataFactory);
     }
@@ -84,7 +83,7 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
      *
      * @throws UnexpectedValueException
      */
-    protected function getItemsData(iterable $object, string $format = null, array $context = []): array
+    protected function getItemsData(iterable $object, ?string $format = null, array $context = []): array
     {
         $data = [];
 

@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Metadata;
 
+use ApiPlatform\Metadata\Exception\ProblemExceptionInterface;
+use ApiPlatform\OpenApi\Attributes\Webhook;
 use ApiPlatform\OpenApi\Model\Operation as OpenApiOperation;
 use ApiPlatform\State\OptionsInterface;
 use Symfony\Component\WebLink\Link as WebLink;
@@ -55,6 +57,7 @@ class HttpOperation extends Operation
      *     stale_while_revalidate?: int,
      *     stale-if-error?: int,
      * }|null $cacheHeaders {@see https://api-platform.com/docs/core/performance/#setting-custom-http-cache-headers}
+     * @param array<string, string>|null $headers
      * @param array{
      *     field: string,
      *     direction: string,
@@ -62,7 +65,6 @@ class HttpOperation extends Operation
      * @param array|null $normalizationContext   {@see https://api-platform.com/docs/core/serialization/#using-serialization-groups}
      * @param array|null $denormalizationContext {@see https://api-platform.com/docs/core/serialization/#using-serialization-groups}
      * @param array|null $hydraContext           {@see https://api-platform.com/docs/core/extending-jsonld-context/#hydra}
-     * @param array|null $openapiContext         {@see https://api-platform.com/docs/core/openapi/#using-the-openapi-and-swagger-contexts}
      * @param array{
      *     class?: string|null,
      *     name?: string,
@@ -71,11 +73,12 @@ class HttpOperation extends Operation
      *     class?: string|null,
      *     name?: string,
      * }|string|false|null $output {@see https://api-platform.com/docs/core/dto/#specifying-an-input-or-an-output-data-representation}
-     * @param string|array|bool|null $mercure   {@see https://api-platform.com/docs/core/mercure}
-     * @param string|bool|null       $messenger {@see https://api-platform.com/docs/core/messenger/#dispatching-a-resource-through-the-message-bus}
-     * @param string|callable|null   $provider  {@see https://api-platform.com/docs/core/state-providers/#state-providers}
-     * @param string|callable|null   $processor {@see https://api-platform.com/docs/core/state-processors/#state-processors}
-     * @param WebLink[]|null         $links
+     * @param string|array|bool|null                              $mercure   {@see https://api-platform.com/docs/core/mercure}
+     * @param string|bool|null                                    $messenger {@see https://api-platform.com/docs/core/messenger/#dispatching-a-resource-through-the-message-bus}
+     * @param string|callable|null                                $provider  {@see https://api-platform.com/docs/core/state-providers/#state-providers}
+     * @param string|callable|null                                $processor {@see https://api-platform.com/docs/core/state-processors/#state-processors}
+     * @param WebLink[]|null                                      $links
+     * @param array<class-string<ProblemExceptionInterface>>|null $errors
      */
     public function __construct(
         protected string $method = 'GET',
@@ -144,59 +147,66 @@ class HttpOperation extends Operation
         protected ?array $schemes = null,
         protected ?string $condition = null,
         protected ?string $controller = null,
+        protected ?array $headers = null,
         protected ?array $cacheHeaders = null,
         protected ?array $paginationViaCursor = null,
         protected ?array $hydraContext = null,
-        protected ?array $openapiContext = null, // TODO Remove in 4.0
-        protected bool|OpenApiOperation|null $openapi = null,
+        protected bool|OpenApiOperation|Webhook|null $openapi = null,
         protected ?array $exceptionToStatus = null,
-        protected ?bool $queryParameterValidationEnabled = null,
         protected ?array $links = null,
+        protected ?array $errors = null,
+        protected ?bool $strictQueryParameterValidation = null,
+        protected ?bool $hideHydraOperation = null,
 
-        string $shortName = null,
-        string $class = null,
-        bool $paginationEnabled = null,
-        string $paginationType = null,
-        int $paginationItemsPerPage = null,
-        int $paginationMaximumItemsPerPage = null,
-        bool $paginationPartial = null,
-        bool $paginationClientEnabled = null,
-        bool $paginationClientItemsPerPage = null,
-        bool $paginationClientPartial = null,
-        bool $paginationFetchJoinCollection = null,
-        bool $paginationUseOutputWalkers = null,
-        array $order = null,
-        string $description = null,
-        array $normalizationContext = null,
-        array $denormalizationContext = null,
-        bool $collectDenormalizationErrors = null,
-        string $security = null,
-        string $securityMessage = null,
-        string $securityPostDenormalize = null,
-        string $securityPostDenormalizeMessage = null,
-        string $securityPostValidation = null,
-        string $securityPostValidationMessage = null,
-        string $deprecationReason = null,
-        array $filters = null,
-        array $validationContext = null,
+        ?string $shortName = null,
+        ?string $class = null,
+        ?bool $paginationEnabled = null,
+        ?string $paginationType = null,
+        ?int $paginationItemsPerPage = null,
+        ?int $paginationMaximumItemsPerPage = null,
+        ?bool $paginationPartial = null,
+        ?bool $paginationClientEnabled = null,
+        ?bool $paginationClientItemsPerPage = null,
+        ?bool $paginationClientPartial = null,
+        ?bool $paginationFetchJoinCollection = null,
+        ?bool $paginationUseOutputWalkers = null,
+        ?array $order = null,
+        ?string $description = null,
+        ?array $normalizationContext = null,
+        ?array $denormalizationContext = null,
+        ?bool $collectDenormalizationErrors = null,
+        string|\Stringable|null $security = null,
+        ?string $securityMessage = null,
+        string|\Stringable|null $securityPostDenormalize = null,
+        ?string $securityPostDenormalizeMessage = null,
+        string|\Stringable|null $securityPostValidation = null,
+        ?string $securityPostValidationMessage = null,
+        ?string $deprecationReason = null,
+        ?array $filters = null,
+        ?array $validationContext = null,
         $input = null,
         $output = null,
         $mercure = null,
         $messenger = null,
-        bool $elasticsearch = null,
-        int $urlGenerationStrategy = null,
-        bool $read = null,
-        bool $deserialize = null,
-        bool $validate = null,
-        bool $write = null,
-        bool $serialize = null,
-        bool $fetchPartial = null,
-        bool $forceEager = null,
-        int $priority = null,
-        string $name = null,
+        ?bool $elasticsearch = null,
+        ?int $urlGenerationStrategy = null,
+        ?bool $read = null,
+        ?bool $deserialize = null,
+        ?bool $validate = null,
+        ?bool $write = null,
+        ?bool $serialize = null,
+        ?bool $fetchPartial = null,
+        ?bool $forceEager = null,
+        ?int $priority = null,
+        ?string $name = null,
         $provider = null,
         $processor = null,
-        OptionsInterface $stateOptions = null,
+        ?OptionsInterface $stateOptions = null,
+        array|Parameters|null $parameters = null,
+        array|string|null $rules = null,
+        ?string $policy = null,
+        array|string|null $middleware = null,
+        ?bool $queryParameterValidationEnabled = null,
         array $extraProperties = [],
     ) {
         parent::__construct(
@@ -244,6 +254,13 @@ class HttpOperation extends Operation
             provider: $provider,
             processor: $processor,
             stateOptions: $stateOptions,
+            parameters: $parameters,
+            rules: $rules,
+            policy: $policy,
+            middleware: $middleware,
+            queryParameterValidationEnabled: $queryParameterValidationEnabled,
+            strictQueryParameterValidation: $strictQueryParameterValidation,
+            hideHydraOperation: $hideHydraOperation,
             extraProperties: $extraProperties
         );
     }
@@ -266,7 +283,7 @@ class HttpOperation extends Operation
         return $this->uriTemplate;
     }
 
-    public function withUriTemplate(string $uriTemplate = null)
+    public function withUriTemplate(?string $uriTemplate = null)
     {
         $self = clone $this;
         $self->uriTemplate = $uriTemplate;
@@ -511,6 +528,19 @@ class HttpOperation extends Operation
         return $self;
     }
 
+    public function getHeaders(): ?array
+    {
+        return $this->headers;
+    }
+
+    public function withHeaders(array $headers): self
+    {
+        $self = clone $this;
+        $self->headers = $headers;
+
+        return $self;
+    }
+
     public function getCacheHeaders(): ?array
     {
         return $this->cacheHeaders;
@@ -550,25 +580,12 @@ class HttpOperation extends Operation
         return $self;
     }
 
-    public function getOpenapiContext(): ?array
-    {
-        return $this->openapiContext;
-    }
-
-    public function withOpenapiContext(array $openapiContext): self
-    {
-        $self = clone $this;
-        $self->openapiContext = $openapiContext;
-
-        return $self;
-    }
-
-    public function getOpenapi(): bool|OpenApiOperation|null
+    public function getOpenapi(): bool|OpenApiOperation|Webhook|null
     {
         return $this->openapi;
     }
 
-    public function withOpenapi(bool|OpenApiOperation $openapi): self
+    public function withOpenapi(bool|OpenApiOperation|Webhook $openapi): self
     {
         $self = clone $this;
         $self->openapi = $openapi;
@@ -589,19 +606,6 @@ class HttpOperation extends Operation
         return $self;
     }
 
-    public function getQueryParameterValidationEnabled(): ?bool
-    {
-        return $this->queryParameterValidationEnabled;
-    }
-
-    public function withQueryParameterValidationEnabled(bool $queryParameterValidationEnabled): self
-    {
-        $self = clone $this;
-        $self->queryParameterValidationEnabled = $queryParameterValidationEnabled;
-
-        return $self;
-    }
-
     public function getLinks(): ?array
     {
         return $this->links;
@@ -614,6 +618,22 @@ class HttpOperation extends Operation
     {
         $self = clone $this;
         $self->links = $links;
+
+        return $self;
+    }
+
+    public function getErrors(): ?array
+    {
+        return $this->errors;
+    }
+
+    /**
+     * @param class-string<ProblemExceptionInterface>[] $errors
+     */
+    public function withErrors(array $errors): self
+    {
+        $self = clone $this;
+        $self->errors = $errors;
 
         return $self;
     }

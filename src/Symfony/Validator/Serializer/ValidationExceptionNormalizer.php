@@ -13,26 +13,25 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Symfony\Validator\Serializer;
 
-use ApiPlatform\Serializer\CacheableSupportsMethodInterface;
-use ApiPlatform\Symfony\Validator\Exception\ValidationException;
+use ApiPlatform\Validator\Exception\ValidationException;
 use Symfony\Component\Serializer\NameConverter\AdvancedNameConverterInterface;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Serializer;
 
-class ValidationExceptionNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+class ValidationExceptionNormalizer implements NormalizerInterface
 {
     public function __construct(private readonly NormalizerInterface $decorated, private readonly ?NameConverterInterface $nameConverter)
     {
     }
 
-    public function normalize(mixed $object, string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array|string|int|float|bool|\ArrayObject|null
     {
         $messages = [];
         foreach ($object->getConstraintViolationList() as $violation) {
             $class = \is_object($root = $violation->getRoot()) ? $root::class : null;
 
-            if ($this->nameConverter instanceof AdvancedNameConverterInterface) {
+            if ($this->nameConverter instanceof AdvancedNameConverterInterface || $this->nameConverter instanceof MetadataAwareNameConverter) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath(), $class, $format);
             } elseif ($this->nameConverter instanceof NameConverterInterface) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath());
@@ -49,23 +48,9 @@ class ValidationExceptionNormalizer implements NormalizerInterface, CacheableSup
         return $this->decorated->normalize($object, $format, $context);
     }
 
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return $data instanceof ValidationException && $this->decorated->supportsNormalization($data, $format, $context);
-    }
-
-    public function hasCacheableSupportsMethod(): bool
-    {
-        if (method_exists(Serializer::class, 'getSupportedTypes')) {
-            trigger_deprecation(
-                'api-platform/core',
-                '3.1',
-                'The "%s()" method is deprecated, use "getSupportedTypes()" instead.',
-                __METHOD__
-            );
-        }
-
-        return false;
     }
 
     public function getSupportedTypes($format): array

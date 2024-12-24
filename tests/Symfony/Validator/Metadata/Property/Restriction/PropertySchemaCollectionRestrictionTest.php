@@ -54,9 +54,7 @@ final class PropertySchemaCollectionRestrictionTest extends TestCase
         ]);
     }
 
-    /**
-     * @dataProvider supportsProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('supportsProvider')]
     public function testSupports(Constraint $constraint, ApiProperty $propertyMetadata, bool $expectedResult): void
     {
         self::assertSame($expectedResult, $this->propertySchemaCollectionRestriction->supports($constraint, $propertyMetadata));
@@ -69,9 +67,7 @@ final class PropertySchemaCollectionRestrictionTest extends TestCase
         yield 'not supported' => [new Positive(), new ApiProperty(), false];
     }
 
-    /**
-     * @dataProvider createProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('createProvider')]
     public function testCreate(Constraint $constraint, ApiProperty $propertyMetadata, array $expectedResult): void
     {
         self::assertEquals($expectedResult, $this->propertySchemaCollectionRestriction->create($constraint, $propertyMetadata));
@@ -79,7 +75,7 @@ final class PropertySchemaCollectionRestrictionTest extends TestCase
 
     public static function createProvider(): \Generator
     {
-        yield 'empty' => [new Collection(['fields' => []]), new ApiProperty(), ['type' => 'object', 'properties' => [], 'additionalProperties' => false]];
+        yield 'empty' => [new Collection([]), new ApiProperty(), ['type' => 'object', 'properties' => new \ArrayObject(), 'additionalProperties' => false]];
 
         $fields = [
             'name' => new Required([
@@ -104,13 +100,13 @@ final class PropertySchemaCollectionRestrictionTest extends TestCase
                 ],
             ]),
         ];
-        $properties = [
+        $properties = new \ArrayObject([
             'name' => new \ArrayObject(),
             'email' => ['minLength' => 2, 'maxLength' => 255, 'format' => 'email'],
             'phone' => ['pattern' => '^([+]*[(]{0,1}[0-9]{1,4}[)]{0,1}[-\s\./0-9]*)$'],
             'age' => ['exclusiveMinimum' => 0],
-            'social' => ['type' => 'object', 'properties' => ['githubUsername' => new \ArrayObject()], 'additionalProperties' => false, 'required' => ['githubUsername']],
-        ];
+            'social' => ['type' => 'object', 'properties' => new \ArrayObject(['githubUsername' => new \ArrayObject()]), 'additionalProperties' => false, 'required' => ['githubUsername']],
+        ]);
         $required = ['name', 'email', 'social'];
 
         yield 'with fields' => [

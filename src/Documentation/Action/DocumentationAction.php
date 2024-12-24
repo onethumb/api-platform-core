@@ -21,6 +21,7 @@ use ApiPlatform\Metadata\Util\ContentNegotiationTrait;
 use ApiPlatform\OpenApi\Factory\OpenApiFactoryInterface;
 use ApiPlatform\OpenApi\OpenApi;
 use ApiPlatform\OpenApi\Serializer\ApiGatewayNormalizer;
+use ApiPlatform\OpenApi\Serializer\LegacyOpenApiNormalizer;
 use ApiPlatform\OpenApi\Serializer\OpenApiNormalizer;
 use ApiPlatform\State\ProcessorInterface;
 use ApiPlatform\State\ProviderInterface;
@@ -30,6 +31,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Generates the API documentation.
+ *
+ * @deprecated use ApiPlatform\Symfony\DocumentationAction instead
  *
  * @author Amrouche Hamza <hamza.simperfit@gmail.com>
  */
@@ -45,8 +48,8 @@ final class DocumentationAction
         private readonly ?OpenApiFactoryInterface $openApiFactory = null,
         private readonly ?ProviderInterface $provider = null,
         private readonly ?ProcessorInterface $processor = null,
-        Negotiator $negotiator = null,
-        private readonly array $documentationFormats = [OpenApiNormalizer::JSON_FORMAT => ['application/vnd.openapi+json'], OpenApiNormalizer::FORMAT => ['application/json']]
+        ?Negotiator $negotiator = null,
+        private readonly array $documentationFormats = [OpenApiNormalizer::JSON_FORMAT => ['application/vnd.openapi+json'], OpenApiNormalizer::FORMAT => ['application/json']],
     ) {
         $this->negotiator = $negotiator ?? new Negotiator();
     }
@@ -54,13 +57,17 @@ final class DocumentationAction
     /**
      * @return DocumentationInterface|OpenApi|Response
      */
-    public function __invoke(Request $request = null)
+    public function __invoke(?Request $request = null)
     {
         if (null === $request) {
             return new Documentation($this->resourceNameCollectionFactory->create(), $this->title, $this->description, $this->version);
         }
 
-        $context = ['api_gateway' => $request->query->getBoolean(ApiGatewayNormalizer::API_GATEWAY), 'base_url' => $request->getBaseUrl()];
+        $context = [
+            'api_gateway' => $request->query->getBoolean(ApiGatewayNormalizer::API_GATEWAY),
+            'base_url' => $request->getBaseUrl(),
+            'spec_version' => (string) $request->query->get(LegacyOpenApiNormalizer::SPEC_VERSION),
+        ];
         $request->attributes->set('_api_normalization_context', $request->attributes->get('_api_normalization_context', []) + $context);
         $format = $this->getRequestFormat($request, $this->documentationFormats);
 
@@ -78,12 +85,20 @@ final class DocumentationAction
     {
         if ($this->provider && $this->processor) {
             $context['request'] = $request;
-            $operation = new Get(class: OpenApi::class, read: true, serialize: true, provider: fn () => $this->openApiFactory->__invoke($context), normalizationContext: [ApiGatewayNormalizer::API_GATEWAY => $context['api_gateway'] ?? null], outputFormats: $this->documentationFormats);
+            $operation = new Get(
+                class: OpenApi::class,
+                read: true,
+                serialize: true,
+                provider: fn () => $this->openApiFactory->__invoke($context),
+                normalizationContext: [
+                    ApiGatewayNormalizer::API_GATEWAY => $context['api_gateway'] ?? null,
+                    LegacyOpenApiNormalizer::SPEC_VERSION => $context['spec_version'] ?? null,
+                ],
+                outputFormats: $this->documentationFormats
+            );
+
             if ('html' === $format) {
                 $operation = $operation->withProcessor('api_platform.swagger_ui.processor')->withWrite(true);
-            }
-            if ('json' === $format) {
-                trigger_deprecation('api-platform/core', '3.2', 'The "json" format is too broad, use "jsonopenapi" instead.');
             }
 
             return $this->processor->process($this->provider->provide($operation, [], $context), $operation, [], $context);

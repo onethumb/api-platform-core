@@ -14,19 +14,17 @@ declare(strict_types=1);
 namespace ApiPlatform\JsonApi\Serializer;
 
 use ApiPlatform\Metadata\Property\Factory\PropertyMetadataFactoryInterface;
-use ApiPlatform\Serializer\CacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\ConstraintViolationInterface;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
 /**
- * Converts {@see \Symfony\Component\Validator\ConstraintViolationListInterface} to a JSON API error representation.
+ * Converts {@see ConstraintViolationListInterface} to a JSON API error representation.
  *
  * @author Héctor Hurtarte <hectorh30@gmail.com>
  */
-final class ConstraintViolationListNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+final class ConstraintViolationListNormalizer implements NormalizerInterface
 {
     public const FORMAT = 'jsonapi';
 
@@ -37,7 +35,7 @@ final class ConstraintViolationListNormalizer implements NormalizerInterface, Ca
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
         $violations = [];
         foreach ($object as $violation) {
@@ -55,7 +53,7 @@ final class ConstraintViolationListNormalizer implements NormalizerInterface, Ca
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return self::FORMAT === $format && $data instanceof ConstraintViolationListInterface;
     }
@@ -63,20 +61,6 @@ final class ConstraintViolationListNormalizer implements NormalizerInterface, Ca
     public function getSupportedTypes($format): array
     {
         return self::FORMAT === $format ? [ConstraintViolationListInterface::class => true] : [];
-    }
-
-    public function hasCacheableSupportsMethod(): bool
-    {
-        if (method_exists(Serializer::class, 'getSupportedTypes')) {
-            trigger_deprecation(
-                'api-platform/core',
-                '3.1',
-                'The "%s()" method is deprecated, use "getSupportedTypes()" instead.',
-                __METHOD__
-            );
-        }
-
-        return true;
     }
 
     private function getSourcePointerFromViolation(ConstraintViolationInterface $violation): string

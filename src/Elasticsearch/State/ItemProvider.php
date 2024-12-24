@@ -13,10 +13,9 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Elasticsearch\State;
 
-use ApiPlatform\Elasticsearch\Metadata\Document\DocumentMetadata;
-use ApiPlatform\Elasticsearch\Metadata\Document\Factory\DocumentMetadataFactoryInterface;
 use ApiPlatform\Elasticsearch\Serializer\DocumentNormalizer;
 use ApiPlatform\Metadata\Exception\RuntimeException;
+use ApiPlatform\Metadata\InflectorInterface;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\Metadata\Util\Inflector;
 use ApiPlatform\State\ApiResource\Error;
@@ -24,8 +23,6 @@ use ApiPlatform\State\ProviderInterface;
 use Elastic\Elasticsearch\Client;
 use Elastic\Elasticsearch\Exception\ClientResponseException;
 use Elastic\Elasticsearch\Response\Elasticsearch;
-use Elasticsearch\Client as LegacyClient;
-use Elasticsearch\Common\Exceptions\Missing404Exception;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 
@@ -37,7 +34,7 @@ use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
  */
 final class ItemProvider implements ProviderInterface
 {
-    public function __construct(private readonly LegacyClient|Client $client, private readonly ?DocumentMetadataFactoryInterface $documentMetadataFactory = null, private readonly ?DenormalizerInterface $denormalizer = null) // @phpstan-ignore-line
+    public function __construct(private readonly Client $client, private readonly ?DenormalizerInterface $denormalizer = null, private readonly ?InflectorInterface $inflector = new Inflector())
     {
     }
 
@@ -47,16 +44,9 @@ final class ItemProvider implements ProviderInterface
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): ?object
     {
         $resourceClass = $operation->getClass();
-
         $options = $operation->getStateOptions() instanceof Options ? $operation->getStateOptions() : new Options(index: $this->getIndex($operation));
-
-        // TODO: remove in 4.x
-        if ($this->documentMetadataFactory && $operation->getElasticsearch() && !$operation->getStateOptions()) {
-            $options = $this->convertDocumentMetadata($this->documentMetadataFactory->create($resourceClass));
-        }
-
         if (!$options instanceof Options) {
-            throw new RuntimeException(sprintf('The "%s" provider was called without "%s".', self::class, Options::class));
+            throw new RuntimeException(\sprintf('The "%s" provider was called without "%s".', self::class, Options::class));
         }
 
         $params = [
@@ -65,9 +55,7 @@ final class ItemProvider implements ProviderInterface
         ];
 
         try {
-            $document = $this->client->get($params); // @phpstan-ignore-line
-        } catch (Missing404Exception) { // @phpstan-ignore-line
-            return null;
+            $document = $this->client->get($params);
         } catch (ClientResponseException $e) {
             $response = $e->getResponse();
             if (404 === $response->getStatusCode()) {
@@ -89,13 +77,8 @@ final class ItemProvider implements ProviderInterface
         return $item;
     }
 
-    private function convertDocumentMetadata(DocumentMetadata $documentMetadata): Options
-    {
-        return new Options($documentMetadata->getIndex(), $documentMetadata->getType());
-    }
-
     private function getIndex(Operation $operation): string
     {
-        return Inflector::tableize($operation->getShortName());
+        return $this->inflector->tableize($operation->getShortName());
     }
 }

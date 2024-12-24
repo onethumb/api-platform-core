@@ -13,7 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Symfony\Validator;
 
-use ApiPlatform\Symfony\Validator\Exception\ValidationException;
+use ApiPlatform\Validator\Exception\ValidationException;
 use ApiPlatform\Validator\ValidatorInterface;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Validator\Constraints\GroupSequence;
@@ -23,10 +23,8 @@ use Symfony\Component\Validator\Validator\ValidatorInterface as SymfonyValidator
  * Validates an item using the Symfony validator component.
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
- *
- * @final
  */
-class Validator implements ValidatorInterface
+final class Validator implements ValidatorInterface
 {
     public function __construct(private readonly SymfonyValidatorInterface $validator, private readonly ?ContainerInterface $container = null)
     {

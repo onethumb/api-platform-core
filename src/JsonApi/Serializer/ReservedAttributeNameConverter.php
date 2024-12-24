@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\JsonApi\Serializer;
 
+use ApiPlatform\Metadata\Exception\ProblemExceptionInterface;
 use Symfony\Component\Serializer\NameConverter\AdvancedNameConverterInterface;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 
@@ -21,7 +22,7 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  *
  * @author Baptiste Meyer <baptiste.meyer@gmail.com>
  */
-final class ReservedAttributeNameConverter implements AdvancedNameConverterInterface
+final class ReservedAttributeNameConverter implements NameConverterInterface, AdvancedNameConverterInterface
 {
     public const JSON_API_RESERVED_ATTRIBUTES = [
         'id' => '_id',
@@ -38,10 +39,14 @@ final class ReservedAttributeNameConverter implements AdvancedNameConverterInter
     /**
      * {@inheritdoc}
      */
-    public function normalize(string $propertyName, string $class = null, string $format = null, array $context = []): string
+    public function normalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         if (null !== $this->nameConverter) {
             $propertyName = $this->nameConverter->normalize($propertyName, $class, $format, $context);
+        }
+
+        if ($class && is_a($class, ProblemExceptionInterface::class, true)) {
+            return $propertyName;
         }
 
         if (isset(self::JSON_API_RESERVED_ATTRIBUTES[$propertyName])) {
@@ -54,7 +59,7 @@ final class ReservedAttributeNameConverter implements AdvancedNameConverterInter
     /**
      * {@inheritdoc}
      */
-    public function denormalize(string $propertyName, string $class = null, string $format = null, array $context = []): string
+    public function denormalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         if (\in_array($propertyName, self::JSON_API_RESERVED_ATTRIBUTES, true)) {
             $propertyName = substr($propertyName, 1);

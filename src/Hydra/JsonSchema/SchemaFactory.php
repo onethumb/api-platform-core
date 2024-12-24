@@ -14,8 +14,8 @@ declare(strict_types=1);
 namespace ApiPlatform\Hydra\JsonSchema;
 
 use ApiPlatform\JsonLd\ContextBuilder;
+use ApiPlatform\JsonLd\Serializer\HydraPrefixTrait;
 use ApiPlatform\JsonSchema\Schema;
-use ApiPlatform\JsonSchema\SchemaFactory as BaseSchemaFactory;
 use ApiPlatform\JsonSchema\SchemaFactoryAwareInterface;
 use ApiPlatform\JsonSchema\SchemaFactoryInterface;
 use ApiPlatform\Metadata\Operation;
@@ -25,8 +25,9 @@ use ApiPlatform\Metadata\Operation;
  *
  * @author Kévin Dunglas <dunglas@gmail.com>
  */
-final class SchemaFactory implements SchemaFactoryInterface
+final class SchemaFactory implements SchemaFactoryInterface, SchemaFactoryAwareInterface
 {
+    use HydraPrefixTrait;
     private const BASE_PROP = [
         'readOnly' => true,
         'type' => 'string',
@@ -58,9 +59,8 @@ final class SchemaFactory implements SchemaFactoryInterface
         ],
     ] + self::BASE_PROPS;
 
-    public function __construct(private readonly SchemaFactoryInterface $schemaFactory)
+    public function __construct(private readonly SchemaFactoryInterface $schemaFactory, private readonly array $defaultContext = [])
     {
-        $this->addDistinctFormat('jsonld');
         if ($this->schemaFactory instanceof SchemaFactoryAwareInterface) {
             $this->schemaFactory->setSchemaFactory($this);
         }
@@ -69,7 +69,7 @@ final class SchemaFactory implements SchemaFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function buildSchema(string $className, string $format = 'jsonld', string $type = Schema::TYPE_OUTPUT, Operation $operation = null, Schema $schema = null, array $serializerContext = null, bool $forceCollection = false): Schema
+    public function buildSchema(string $className, string $format = 'jsonld', string $type = Schema::TYPE_OUTPUT, ?Operation $operation = null, ?Schema $schema = null, ?array $serializerContext = null, bool $forceCollection = false): Schema
     {
         $schema = $this->schemaFactory->buildSchema($className, $format, $type, $operation, $schema, $serializerContext, $forceCollection);
         if ('jsonld' !== $format) {
@@ -107,17 +107,18 @@ final class SchemaFactory implements SchemaFactoryInterface
                     break;
             }
 
+            $hydraPrefix = $this->getHydraPrefix(($serializerContext ?? []) + $this->defaultContext);
             $schema['type'] = 'object';
             $schema['properties'] = [
-                'hydra:member' => [
+                $hydraPrefix.'member' => [
                     'type' => 'array',
                     'items' => $items,
                 ],
-                'hydra:totalItems' => [
+                $hydraPrefix.'totalItems' => [
                     'type' => 'integer',
                     'minimum' => 0,
                 ],
-                'hydra:view' => [
+                $hydraPrefix.'view' => [
                     'type' => 'object',
                     'properties' => [
                         '@id' => [
@@ -127,19 +128,19 @@ final class SchemaFactory implements SchemaFactoryInterface
                         '@type' => [
                             'type' => 'string',
                         ],
-                        'hydra:first' => [
+                        $hydraPrefix.'first' => [
                             'type' => 'string',
                             'format' => 'iri-reference',
                         ],
-                        'hydra:last' => [
+                        $hydraPrefix.'last' => [
                             'type' => 'string',
                             'format' => 'iri-reference',
                         ],
-                        'hydra:previous' => [
+                        $hydraPrefix.'previous' => [
                             'type' => 'string',
                             'format' => 'iri-reference',
                         ],
-                        'hydra:next' => [
+                        $hydraPrefix.'next' => [
                             'type' => 'string',
                             'format' => 'iri-reference',
                         ],
@@ -147,19 +148,19 @@ final class SchemaFactory implements SchemaFactoryInterface
                     'example' => [
                         '@id' => 'string',
                         'type' => 'string',
-                        'hydra:first' => 'string',
-                        'hydra:last' => 'string',
-                        'hydra:previous' => 'string',
-                        'hydra:next' => 'string',
+                        $hydraPrefix.'first' => 'string',
+                        $hydraPrefix.'last' => 'string',
+                        $hydraPrefix.'previous' => 'string',
+                        $hydraPrefix.'next' => 'string',
                     ],
                 ],
-                'hydra:search' => [
+                $hydraPrefix.'search' => [
                     'type' => 'object',
                     'properties' => [
                         '@type' => ['type' => 'string'],
-                        'hydra:template' => ['type' => 'string'],
-                        'hydra:variableRepresentation' => ['type' => 'string'],
-                        'hydra:mapping' => [
+                        $hydraPrefix.'template' => ['type' => 'string'],
+                        $hydraPrefix.'variableRepresentation' => ['type' => 'string'],
+                        $hydraPrefix.'mapping' => [
                             'type' => 'array',
                             'items' => [
                                 'type' => 'object',
@@ -175,7 +176,7 @@ final class SchemaFactory implements SchemaFactoryInterface
                 ],
             ];
             $schema['required'] = [
-                'hydra:member',
+                $hydraPrefix.'member',
             ];
 
             return $schema;
@@ -184,10 +185,10 @@ final class SchemaFactory implements SchemaFactoryInterface
         return $schema;
     }
 
-    public function addDistinctFormat(string $format): void
+    public function setSchemaFactory(SchemaFactoryInterface $schemaFactory): void
     {
-        if ($this->schemaFactory instanceof BaseSchemaFactory) {
-            $this->schemaFactory->addDistinctFormat($format);
+        if ($this->schemaFactory instanceof SchemaFactoryAwareInterface) {
+            $this->schemaFactory->setSchemaFactory($schemaFactory);
         }
     }
 }

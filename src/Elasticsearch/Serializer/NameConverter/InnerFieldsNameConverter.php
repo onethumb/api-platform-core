@@ -24,7 +24,7 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  *
  * @author Baptiste Meyer <baptiste.meyer@gmail.com>
  */
-final class InnerFieldsNameConverter implements AdvancedNameConverterInterface
+final class InnerFieldsNameConverter implements NameConverterInterface, AdvancedNameConverterInterface
 {
     public function __construct(private readonly NameConverterInterface $inner = new CamelCaseToSnakeCaseNameConverter())
     {
@@ -33,7 +33,7 @@ final class InnerFieldsNameConverter implements AdvancedNameConverterInterface
     /**
      * {@inheritdoc}
      */
-    public function normalize(string $propertyName, string $class = null, string $format = null, array $context = []): string
+    public function normalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         return $this->convertInnerFields($propertyName, true, $class, $format, $context);
     }
@@ -41,12 +41,12 @@ final class InnerFieldsNameConverter implements AdvancedNameConverterInterface
     /**
      * {@inheritdoc}
      */
-    public function denormalize(string $propertyName, string $class = null, string $format = null, array $context = []): string
+    public function denormalize(string $propertyName, ?string $class = null, ?string $format = null, array $context = []): string
     {
         return $this->convertInnerFields($propertyName, false, $class, $format, $context);
     }
 
-    private function convertInnerFields(string $propertyName, bool $normalization, string $class = null, string $format = null, array $context = []): string
+    private function convertInnerFields(string $propertyName, bool $normalization, ?string $class = null, ?string $format = null, array $context = []): string
     {
         $convertedProperties = [];
 

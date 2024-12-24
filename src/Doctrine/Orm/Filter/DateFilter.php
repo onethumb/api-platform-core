@@ -16,8 +16,13 @@ namespace ApiPlatform\Doctrine\Orm\Filter;
 use ApiPlatform\Doctrine\Common\Filter\DateFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\DateFilterTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\JsonSchemaFilterInterface;
+use ApiPlatform\Metadata\OpenApiParameterFilterInterface;
 use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Metadata\Parameter;
+use ApiPlatform\Metadata\QueryParameter;
+use ApiPlatform\OpenApi\Model\Parameter as OpenApiParameter;
 use Doctrine\DBAL\Types\Type as DBALType;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Query\Expr\Join;
@@ -120,7 +125,7 @@ use Doctrine\ORM\QueryBuilder;
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Théo FIDRY <theo.fidry@gmail.com>
  */
-final class DateFilter extends AbstractFilter implements DateFilterInterface
+final class DateFilter extends AbstractFilter implements DateFilterInterface, JsonSchemaFilterInterface, OpenApiParameterFilterInterface
 {
     use DateFilterTrait;
 
@@ -138,11 +143,11 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $values, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
-        // Expect $values to be an array having the period as keys and the date value as values
+        // Expect $value to be an array having the period as keys and the date value as values
         if (
-            !\is_array($values)
+            !\is_array($value)
             || !$this->isPropertyEnabled($property, $resourceClass)
             || !$this->isPropertyMapped($property, $resourceClass)
             || !$this->isDateField($property, $resourceClass)
@@ -153,7 +158,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         $alias = $queryBuilder->getRootAliases()[0];
         $field = $property;
 
-        if ($this->isPropertyNested($property, $resourceClass)) {
+        if ($this->isPropertyNested($property, $resourceClass) && \count($value) > 0) {
             [$alias, $field] = $this->addJoinsForNestedProperty($property, $alias, $queryBuilder, $queryNameGenerator, $resourceClass, Join::INNER_JOIN);
         }
 
@@ -161,56 +166,56 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         $type = (string) $this->getDoctrineFieldType($property, $resourceClass);
 
         if (self::EXCLUDE_NULL === $nullManagement) {
-            $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field)));
+            $queryBuilder->andWhere($queryBuilder->expr()->isNotNull(\sprintf('%s.%s', $alias, $field)));
         }
 
-        if (isset($values[self::PARAMETER_BEFORE])) {
+        if (isset($value[self::PARAMETER_BEFORE])) {
             $this->addWhere(
                 $queryBuilder,
                 $queryNameGenerator,
                 $alias,
                 $field,
                 self::PARAMETER_BEFORE,
-                $values[self::PARAMETER_BEFORE],
+                $value[self::PARAMETER_BEFORE],
                 $nullManagement,
                 $type
             );
         }
 
-        if (isset($values[self::PARAMETER_STRICTLY_BEFORE])) {
+        if (isset($value[self::PARAMETER_STRICTLY_BEFORE])) {
             $this->addWhere(
                 $queryBuilder,
                 $queryNameGenerator,
                 $alias,
                 $field,
                 self::PARAMETER_STRICTLY_BEFORE,
-                $values[self::PARAMETER_STRICTLY_BEFORE],
+                $value[self::PARAMETER_STRICTLY_BEFORE],
                 $nullManagement,
                 $type
             );
         }
 
-        if (isset($values[self::PARAMETER_AFTER])) {
+        if (isset($value[self::PARAMETER_AFTER])) {
             $this->addWhere(
                 $queryBuilder,
                 $queryNameGenerator,
                 $alias,
                 $field,
                 self::PARAMETER_AFTER,
-                $values[self::PARAMETER_AFTER],
+                $value[self::PARAMETER_AFTER],
                 $nullManagement,
                 $type
             );
         }
 
-        if (isset($values[self::PARAMETER_STRICTLY_AFTER])) {
+        if (isset($value[self::PARAMETER_STRICTLY_AFTER])) {
             $this->addWhere(
                 $queryBuilder,
                 $queryNameGenerator,
                 $alias,
                 $field,
                 self::PARAMETER_STRICTLY_AFTER,
-                $values[self::PARAMETER_STRICTLY_AFTER],
+                $value[self::PARAMETER_STRICTLY_AFTER],
                 $nullManagement,
                 $type
             );
@@ -220,7 +225,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
     /**
      * Adds the where clause according to the chosen null management.
      */
-    protected function addWhere(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $alias, string $field, string $operator, mixed $value, string $nullManagement = null, DBALType|string $type = null): void
+    protected function addWhere(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $alias, string $field, string $operator, mixed $value, ?string $nullManagement = null, DBALType|string|null $type = null): void
     {
         $type = (string) $type;
         $value = $this->normalizeValue($value, $operator);
@@ -234,7 +239,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         } catch (\Exception) {
             // Silently ignore this filter if it can not be transformed to a \DateTime
             $this->logger->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
+                'exception' => new InvalidArgumentException(\sprintf('The field "%s" has a wrong date format. Use one accepted by the \DateTime constructor', $field)),
             ]);
 
             return;
@@ -247,7 +252,7 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
             self::PARAMETER_AFTER => '>=',
             self::PARAMETER_STRICTLY_AFTER => '>',
         ];
-        $baseWhere = sprintf('%s.%s %s :%s', $alias, $field, $operatorValue[$operator], $valueParameter);
+        $baseWhere = \sprintf('%s.%s %s :%s', $alias, $field, $operatorValue[$operator], $valueParameter);
 
         if (null === $nullManagement || self::EXCLUDE_NULL === $nullManagement) {
             $queryBuilder->andWhere($baseWhere);
@@ -258,15 +263,36 @@ final class DateFilter extends AbstractFilter implements DateFilterInterface
         ) {
             $queryBuilder->andWhere($queryBuilder->expr()->orX(
                 $baseWhere,
-                $queryBuilder->expr()->isNull(sprintf('%s.%s', $alias, $field))
+                $queryBuilder->expr()->isNull(\sprintf('%s.%s', $alias, $field))
             ));
         } else {
             $queryBuilder->andWhere($queryBuilder->expr()->andX(
                 $baseWhere,
-                $queryBuilder->expr()->isNotNull(sprintf('%s.%s', $alias, $field))
+                $queryBuilder->expr()->isNotNull(\sprintf('%s.%s', $alias, $field))
             ));
         }
 
         $queryBuilder->setParameter($valueParameter, $value, $type);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function getSchema(Parameter $parameter): array
+    {
+        return ['type' => 'date'];
+    }
+
+    public function getOpenApiParameters(Parameter $parameter): OpenApiParameter|array|null
+    {
+        $in = $parameter instanceof QueryParameter ? 'query' : 'header';
+        $key = $parameter->getKey();
+
+        return [
+            new OpenApiParameter(name: $key.'[after]', in: $in),
+            new OpenApiParameter(name: $key.'[before]', in: $in),
+            new OpenApiParameter(name: $key.'[strictly_after]', in: $in),
+            new OpenApiParameter(name: $key.'[strictly_before]', in: $in),
+        ];
     }
 }

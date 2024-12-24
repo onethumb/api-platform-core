@@ -23,19 +23,19 @@ use Symfony\Component\HttpFoundation\Response;
  */
 final class ValidateProvider implements ProviderInterface
 {
-    public function __construct(private readonly ProviderInterface $decorated, private readonly ValidatorInterface $validator)
+    public function __construct(private readonly ?ProviderInterface $decorated, private readonly ValidatorInterface $validator, private readonly string $canValidateAccessor = 'canValidate')
     {
     }
 
     public function provide(Operation $operation, array $uriVariables = [], array $context = []): object|array|null
     {
-        $body = $this->decorated->provide($operation, $uriVariables, $context);
+        $body = $this->decorated?->provide($operation, $uriVariables, $context) ?? ($context['request'] ?? null)?->attributes->get('data');
 
         if ($body instanceof Response || !$body) {
             return $body;
         }
 
-        if (!($operation->canValidate() ?? true)) {
+        if (method_exists($operation, $this->canValidateAccessor) && !($operation->{$this->canValidateAccessor}() ?? ('canValidate' === $this->canValidateAccessor))) {
             return $body;
         }
 

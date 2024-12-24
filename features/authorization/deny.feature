@@ -78,7 +78,7 @@ Feature: Authorization checking
     And I send a "GET" request to "/secured_dummies/2"
     Then the response status code should be 200
 
-  Scenario: A user can see a secured owner-only property on an object they own
+  Scenario: A user can see a secured owner-only property, or accessible property based on voter, on an object they own
     When I add "Accept" header equal to "application/ld+json"
     And I add "Content-Type" header equal to "application/ld+json"
     And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
@@ -86,6 +86,8 @@ Feature: Authorization checking
     Then the response status code should be 200
     And the JSON node "ownerOnlyProperty" should exist
     And the JSON node "ownerOnlyProperty" should not be null
+    And the JSON node "attributeBasedProperty" should exist
+    And the JSON node "attributeBasedProperty" should not be null
 
   @!mongodb
   Scenario: An admin can create a secured resource with properties depending on themselves
@@ -116,12 +118,13 @@ Feature: Authorization checking
     And the JSON node "canUpdateProperty" should be true
     And the JSON node "property" should be false
 
-  Scenario: An admin can't see a secured owner-only property on objects they don't own
+  Scenario: An admin can't see a secured owner-only property, or non-accessible property based on voter, on objects they don't own
     When I add "Accept" header equal to "application/ld+json"
     And I add "Authorization" header equal to "Basic YWRtaW46a2l0dGVu"
     And I send a "GET" request to "/secured_dummies"
     Then the response status code should be 200
     And the response should not contain "ownerOnlyProperty"
+    And the response should not contain "attributeBasedProperty"
 
   Scenario: A user can't assign to themself an item they doesn't own
     When I add "Accept" header equal to "application/ld+json"
@@ -197,19 +200,103 @@ Feature: Authorization checking
     And the response should contain "adminOnlyProperty"
     And the JSON node "hydra:member[2].adminOnlyProperty" should be equal to the string "Is it safe?"
 
-  Scenario: An user can update an owner-only secured property on an object they own
+  Scenario: An user can update owner-only secured or accessible properties on an object they own
     When I add "Accept" header equal to "application/ld+json"
     And I add "Content-Type" header equal to "application/ld+json"
     And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
     And I send a "PUT" request to "/secured_dummies/3" with body:
     """
     {
-        "ownerOnlyProperty": "updated"
+        "ownerOnlyProperty": "updated",
+        "attributeBasedProperty": "updated"
     }
     """
     Then the response status code should be 200
     And the response should contain "ownerOnlyProperty"
     And the JSON node "ownerOnlyProperty" should be equal to the string "updated"
+    And the JSON node "attributeBasedProperty" should be equal to the string "updated"
+
+  @link_security
+  Scenario: An non existing entity should return Not found
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/40000/to_from"
+    Then the response status code should be 404
+
+  @link_security
+  Scenario: An user can get related linked dummies for an secured dummy they own
+    Given there are 1 SecuredDummy objects owned by dunglas with related dummies
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/4/to_from"
+    Then the response status code should be 200
+    And the response should contain "securedDummy"
+    And the JSON node "hydra:member[0].id" should be equal to 1
+
+  @link_security
+  Scenario: I define a custom name of the security object
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/4/with_name"
+    Then the response status code should be 200
+    And the response should contain "securedDummy"
+    And the JSON node "hydra:member[0].id" should be equal to 1
+
+  @link_security
+  Scenario: I define a from from link
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/related_linked_dummies/1/from_from"
+    Then the response status code should be 200
+    And the response should contain "id"
+    And the JSON node "hydra:member[0].id" should be equal to 4
+
+  @link_security
+  Scenario: I define multiple links with security
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/4/related/1"
+    Then the response status code should be 200
+    And the response should contain "id"
+    And the JSON node "hydra:member[0].id" should be equal to 1
+
+  @link_security
+  Scenario: An user can not get related linked dummies for an secured dummy they do not own
+    Given there are 1 SecuredDummy objects owned by someone with related dummies
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/5/to_from"
+    Then the response status code should be 403
+
+  @link_security
+  Scenario: I define a custom name of the security object
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/5/with_name"
+    Then the response status code should be 403
+
+  @link_security
+  Scenario: I define a from from link
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/related_linked_dummies/2/from_from"
+    Then the response status code should be 403
+
+  @link_security
+  Scenario: I define multiple links with security
+    When I add "Accept" header equal to "application/ld+json"
+    And I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "GET" request to "/secured_dummies/5/related/2"
+    Then the response status code should be 403
 
   Scenario: A user retrieves a resource with an admin only viewable property
     When I add "Accept" header equal to "application/json"
@@ -217,3 +304,16 @@ Feature: Authorization checking
     And I send a "GET" request to "/secured_dummies"
     Then the response status code should be 200
     And the response should contain "ownerOnlyProperty"
+    And the response should contain "attributeBasedProperty"
+
+  Scenario: Security post validation should be hit
+    When I add "Content-Type" header equal to "application/ld+json"
+    And I add "Authorization" header equal to "Basic ZHVuZ2xhczprZXZpbg=="
+    And I send a "POST" request to "/issue_6446" with body:
+    """
+    {
+      "title": ""
+    }
+    """
+    Then the response status code should be 403
+

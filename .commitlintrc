@@ -6,6 +6,7 @@
       2,
       "always",
       [
+        "laravel",
         "symfony",
         "doctrine",
         "metadata",
@@ -16,10 +17,12 @@
         "jsonapi",
         "graphql",
         "openapi",
+        "parametervalidator",
         "serializer",
         "jsonschema",
         "validation",
-        "state"
+        "state",
+        "test"
       ]
     ],
     "scope-empty": [
@@ -54,8 +57,7 @@
       [
         "sentence-case",
         "start-case",
-        "pascal-case",
-        "upper-case"
+        "pascal-case"
       ]
     ],
     "subject-empty": [
@@ -83,7 +85,7 @@
         "build",
         "chore",
         "ci",
-        "docs",
+        "doc",
         "feat",
         "fix",
         "perf",

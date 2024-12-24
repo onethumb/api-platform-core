@@ -113,24 +113,37 @@ Examples:
     test(doctrine): mongodb disambiguation
 
 We strongly recommend the use of a scope on API Platform core.
+Only the first commit on a Pull Request need to use a conventional commit, other commits will be squashed. 
 
 ### Tests
 
-On `api-platform/core` there are two kinds of tests: unit (`phpunit` through `simple-phpunit`) and integration tests (`behat`).
+On `api-platform/core` there are two kinds of tests: unit (`phpunit`) and integration tests (`behat`).
 
 Note that we stopped using `prophesize` for new tests since 3.2, use `phpunit` stub system.
 
-Both `simple-phpunit` and `behat` are development dependencies and should be available in the `vendor` directory.
+Both `phpunit` and `behat` are development dependencies and should be available in the `vendor` directory.
+
+Recommendations:
+
+* don't change existing tests if possible
+* always add a new `ApiResource` or a new `Entity/Document` to add a new test instead of changing an existing class
+* as of API Platform 3 each component has its own test directory, avoid the `tests/` directory except for functional tests
+* dependencies between components must be kept at its minimal (`api-platform/metadata`, `api-platform/state`) except for bridges (Doctrine, Symfony, Laravel etc.)
+* for functional testing with phpunit (see `tests/Functional`, add your ApiResource to `ApiPlatform\Tests\Fixtures\PhpUnitResourceNameCollectionFactory`)
+
+Note that in most of the testing, you don't need Doctrine take a look at how we write fixtures at: 
+
+https://github.com/api-platform/core/blob/002c8b25283c9c06a085945f6206052a99a5fb1e/tests/Fixtures/TestBundle/Entity/Issue5926/TestIssue5926.php#L20-L26
 
 #### PHPUnit and Coverage Generation
 
 To launch unit tests:
 
-    vendor/bin/simple-phpunit --stop-on-defect -vvv
+    vendor/bin/phpunit --stop-on-defect
 
 If you want coverage, you will need the `pcov` PHP extension and run:
 
-    vendor/bin/simple-phpunit --coverage-html coverage -vvv --stop-on-failure
+    vendor/bin/phpunit --coverage-html coverage --stop-on-defect
 
 Sometimes there might be an error with too many open files when generating coverage. To fix this, you can increase the `ulimit`, for example:
 
@@ -168,6 +181,11 @@ If you need a `Given` step, add it to the doctrine context in `tests/Core/Behat/
 ```
 
 The last step is to add you feature inside `features/`. You can add your test in one of our existing features, or create your own.
+
+## Components tests
+
+API Platform is split into several components. There are tests for each of these, to run them `cd src/Doctrine/Common` then `composer update` and `./vendor/bin/phpunit`.
+We do not provide a way to run all these tests at once yet.
 
 # License and Copyright Attribution
 

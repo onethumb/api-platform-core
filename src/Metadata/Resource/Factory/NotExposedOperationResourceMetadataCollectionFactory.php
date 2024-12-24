@@ -15,13 +15,12 @@ namespace ApiPlatform\Metadata\Resource\Factory;
 
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\CollectionOperationInterface;
-use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\NotExposed;
 use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
 
 /**
- * Adds a {@see NotExposed} operation with {@see NotFoundAction} on a resource which only has a GetCollection.
+ * Adds a {@see ApiPlatform\Metadata\NotExposed} operation with {@see ApiPlatform\Symfony\Action\NotFoundAction} on a resource which only has a GetCollection.
  * This operation helps to generate resource IRI for items.
  *
  * @author Vincent Chalamon <vincentchalamon@gmail.com>
@@ -35,7 +34,7 @@ final class NotExposedOperationResourceMetadataCollectionFactory implements Reso
     private $linkFactory;
     private $decorated;
 
-    public function __construct(LinkFactoryInterface $linkFactory, ResourceMetadataCollectionFactoryInterface $decorated = null)
+    public function __construct(LinkFactoryInterface $linkFactory, ?ResourceMetadataCollectionFactoryInterface $decorated = null)
     {
         $this->linkFactory = $linkFactory;
         $this->decorated = $decorated;
@@ -60,7 +59,7 @@ final class NotExposedOperationResourceMetadataCollectionFactory implements Reso
         foreach ($resourceMetadataCollection as $resource) {
             $operations = $resource->getOperations();
 
-            /** @var \ApiPlatform\Metadata\HttpOperation $operation */
+            /** @var HttpOperation $operation */
             foreach ($operations as $operation) {
                 // An item operation has been found, nothing to do anymore in this factory
                 if (('GET' === $operation->getMethod() && !$operation instanceof CollectionOperationInterface) || ($operation->getExtraProperties()['is_legacy_resource_metadata'] ?? false)) {

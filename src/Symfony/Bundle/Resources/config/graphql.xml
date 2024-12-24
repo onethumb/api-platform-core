@@ -7,6 +7,8 @@
     <services>
         <service id="api_platform.graphql.executor" class="ApiPlatform\GraphQl\Executor" public="false">
             <argument>%api_platform.graphql.introspection.enabled%</argument>
+            <argument>%api_platform.graphql.max_query_complexity%</argument>
+            <argument>%api_platform.graphql.max_query_depth%</argument>
         </service>
 
         <!-- Resolvers -->
@@ -119,15 +121,12 @@
             <argument type="service" id="api_platform.graphql.types_container" />
             <argument type="service" id="api_platform.graphql.type_builder" />
             <argument type="service" id="api_platform.graphql.type_converter" />
-            <!-- Note that this one is replaced by the below "api_platform.graphql.resolver.factory" we'll only use one in API Platform 4 -->
-            <argument type="service" id="api_platform.graphql.resolver.factory.item" />
-            <argument type="service" id="api_platform.graphql.resolver.factory.collection" on-invalid="null" />
-            <argument type="service" id="api_platform.graphql.resolver.factory.item_mutation" on-invalid="null" />
-            <argument type="service" id="api_platform.graphql.resolver.factory.item_subscription" on-invalid="null" />
+            <argument type="service" id="api_platform.graphql.resolver.factory" />
             <argument type="service" id="api_platform.filter_locator" />
             <argument type="service" id="api_platform.pagination" />
             <argument type="service" id="api_platform.name_converter" on-invalid="ignore" />
             <argument>%api_platform.graphql.nesting_separator%</argument>
+            <argument type="service" id="api_platform.inflector" on-invalid="null" />
         </service>
 
         <service id="api_platform.graphql.schema_builder" class="ApiPlatform\GraphQl\Type\SchemaBuilder" public="false">
@@ -151,6 +150,11 @@
             <argument type="service" id="api_platform.symfony.iri_converter" />
             <argument type="service" id="api_platform.graphql.serializer.context_builder" on-invalid="ignore" />
             <argument>%api_platform.graphql.nesting_separator%</argument>
+        </service>
+
+        <service id="api_platform.graphql.state_provider.parameter" class="ApiPlatform\State\Provider\ParameterProvider" decorates="api_platform.graphql.state_provider" decoration-priority="300">
+            <argument type="service" id="api_platform.graphql.state_provider.parameter.inner" />
+            <argument type="tagged_locator" tag="api_platform.parameter_provider" index-by="key" />
         </service>
 
         <!-- Validation occurs at 200, we want validation to be over when we reach custom resolvers -->
@@ -182,20 +186,12 @@
             <argument type="service" id="api_platform.pagination" />
         </service>
 
-        <service id="api_platform.graphql.resolver.factory.item" class="ApiPlatform\GraphQl\Resolver\Factory\ResolverFactory" public="false">
+        <service id="api_platform.graphql.resolver.factory" class="ApiPlatform\GraphQl\Resolver\Factory\ResolverFactory" public="false">
             <argument type="service" id="api_platform.graphql.state_provider" />
             <argument type="service" id="api_platform.graphql.state_processor" />
         </service>
 
         <!-- Resolver Stages -->
-
-        <service id="api_platform.graphql.provider.read" class="ApiPlatform\GraphQl\Provider\ReadProvider" public="false">
-            <argument type="service" id="api_platform.symfony.iri_converter" />
-            <argument type="service" id="api_platform.state_provider" />
-            <argument type="service" id="api_platform.graphql.serializer.context_builder" />
-            <argument>%api_platform.graphql.nesting_separator%</argument>
-        </service>
-
         <service id="api_platform.graphql.resolver.resource_field" class="ApiPlatform\GraphQl\Resolver\ResourceFieldResolver" public="false">
             <argument type="service" id="api_platform.symfony.iri_converter" />
         </service>
@@ -213,7 +209,7 @@
             <argument type="service" id="api_platform.metadata.resource.metadata_collection_factory" on-invalid="ignore" />
             <argument type="service" id="api_platform.security.resource_access_checker" on-invalid="ignore" />
 
-            <!-- Run before serializer.normalizer.json_serializable -->
+            <!-- Run before serializer.normalizer.json_serializable and before serializer.normalizer.backed_enum which is at 880 -->
             <tag name="serializer.normalizer" priority="-890" />
         </service>
 
@@ -231,10 +227,9 @@
         <service id="api_platform.graphql.subscription.subscription_manager" class="ApiPlatform\GraphQl\Subscription\SubscriptionManager">
             <argument type="service" id="api_platform.graphql.cache.subscription" />
             <argument type="service" id="api_platform.graphql.subscription.subscription_identifier_generator" />
-            <argument type="service" id="api_platform.graphql.resolver.stage.serialize" on-invalid="ignore" />
+            <argument type="service" id="api_platform.graphql.state_processor.normalize" on-invalid="ignore" />
             <argument type="service" id="api_platform.symfony.iri_converter" />
             <argument type="service" id="api_platform.metadata.resource.metadata_collection_factory" />
-            <argument type="service" id="api_platform.graphql.state_processor.normalize" on-invalid="ignore" />
         </service>
 
         <!-- Serializer -->

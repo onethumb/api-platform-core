@@ -52,13 +52,13 @@ final class AttributeFilterPass implements CompilerPassInterface
      */
     private function createFilterDefinitions(\ReflectionClass $resourceReflectionClass, ContainerBuilder $container): void
     {
-        foreach ($this->readFilterAttributes($resourceReflectionClass) as $id => [$arguments, $filterClass]) {
+        foreach ($this->readFilterAttributes($resourceReflectionClass) as $id => [$arguments, $filterClass, $filterAttribute]) {
             if ($container->has($id)) {
                 continue;
             }
 
             if (null === $filterReflectionClass = $container->getReflectionClass($filterClass, false)) {
-                throw new InvalidArgumentException(sprintf('Class "%s" used for service "%s" cannot be found.', $filterClass, $id));
+                throw new InvalidArgumentException(\sprintf('Class "%s" used for service "%s" cannot be found.', $filterClass, $id));
             }
 
             if ($container->has($filterClass) && ($parentDefinition = $container->findDefinition($filterClass))->isAbstract()) {
@@ -69,6 +69,10 @@ final class AttributeFilterPass implements CompilerPassInterface
             }
 
             $definition->addTag(self::TAG_FILTER_NAME);
+            if ($filterAttribute->alias) {
+                $definition->addTag(self::TAG_FILTER_NAME, ['id' => $filterAttribute->alias]);
+            }
+
             $definition->setAutowired(true);
 
             $parameterNames = [];
@@ -80,7 +84,7 @@ final class AttributeFilterPass implements CompilerPassInterface
 
             foreach ($arguments as $key => $value) {
                 if (!isset($parameterNames[$key])) {
-                    throw new InvalidArgumentException(sprintf('Class "%s" does not have argument "$%s".', $filterClass, $key));
+                    throw new InvalidArgumentException(\sprintf('Class "%s" does not have argument "$%s".', $filterClass, $key));
                 }
 
                 $definition->setArgument("$$key", $value);

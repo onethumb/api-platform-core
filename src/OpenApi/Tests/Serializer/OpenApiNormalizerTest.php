@@ -13,8 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\OpenApi\Tests\Serializer;
 
+use ApiPlatform\JsonSchema\DefinitionNameFactory;
 use ApiPlatform\JsonSchema\SchemaFactory;
-use ApiPlatform\JsonSchema\TypeFactory;
 use ApiPlatform\Metadata\ApiProperty;
 use ApiPlatform\Metadata\ApiResource;
 use ApiPlatform\Metadata\Delete;
@@ -42,15 +42,14 @@ use ApiPlatform\OpenApi\Model\Server;
 use ApiPlatform\OpenApi\OpenApi;
 use ApiPlatform\OpenApi\Options;
 use ApiPlatform\OpenApi\Serializer\OpenApiNormalizer;
+use ApiPlatform\OpenApi\Tests\Fixtures\Dummy;
 use ApiPlatform\State\Pagination\PaginationOptions;
-use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Dummy;
 use PHPUnit\Framework\TestCase;
 use Prophecy\Argument;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\PropertyInfo\Type;
 use Symfony\Component\Serializer\Encoder\JsonEncoder;
-use Symfony\Component\Serializer\NameConverter\CamelCaseToSnakeCaseNameConverter;
 use Symfony\Component\Serializer\Normalizer\ObjectNormalizer;
 use Symfony\Component\Serializer\Serializer;
 
@@ -205,10 +204,14 @@ class OpenApiNormalizerTest extends TestCase
         $propertyNameCollectionFactory = $propertyNameCollectionFactoryProphecy->reveal();
         $propertyMetadataFactory = $propertyMetadataFactoryProphecy->reveal();
 
-        $schemaFactory = new SchemaFactory(null, $resourceMetadataFactory, $propertyNameCollectionFactory, $propertyMetadataFactory, new CamelCaseToSnakeCaseNameConverter());
+        $definitionNameFactory = new DefinitionNameFactory(['jsonapi' => true, 'jsonhal' => true, 'jsonld' => true]);
 
-        $typeFactory = new TypeFactory();
-        $typeFactory->setSchemaFactory($schemaFactory);
+        $schemaFactory = new SchemaFactory(
+            resourceMetadataFactory: $resourceMetadataFactory,
+            propertyNameCollectionFactory: $propertyNameCollectionFactory,
+            propertyMetadataFactory: $propertyMetadataFactory,
+            definitionNameFactory: $definitionNameFactory,
+        );
 
         $factory = new OpenApiFactory(
             $resourceNameCollectionFactoryProphecy->reveal(),
@@ -216,7 +219,6 @@ class OpenApiNormalizerTest extends TestCase
             $propertyNameCollectionFactory,
             $propertyMetadataFactory,
             $schemaFactory,
-            $typeFactory,
             $filterLocatorProphecy->reveal(),
             [],
             new Options('Test API', 'This is a test API.', '1.2.3', true, 'oauth2', 'authorizationCode', '/oauth/v2/token', '/oauth/v2/auth', '/oauth/v2/refresh', ['scope param'], [

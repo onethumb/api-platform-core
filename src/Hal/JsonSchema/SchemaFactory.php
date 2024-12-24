@@ -24,7 +24,7 @@ use ApiPlatform\Metadata\Operation;
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Jachim Coudenys <jachimcoudenys@gmail.com>
  */
-final class SchemaFactory implements SchemaFactoryInterface
+final class SchemaFactory implements SchemaFactoryInterface, SchemaFactoryAwareInterface
 {
     private const HREF_PROP = [
         'href' => [
@@ -46,7 +46,6 @@ final class SchemaFactory implements SchemaFactoryInterface
 
     public function __construct(private readonly SchemaFactoryInterface $schemaFactory)
     {
-        $this->addDistinctFormat('jsonhal');
         if ($this->schemaFactory instanceof SchemaFactoryAwareInterface) {
             $this->schemaFactory->setSchemaFactory($this);
         }
@@ -55,7 +54,7 @@ final class SchemaFactory implements SchemaFactoryInterface
     /**
      * {@inheritdoc}
      */
-    public function buildSchema(string $className, string $format = 'jsonhal', string $type = Schema::TYPE_OUTPUT, Operation $operation = null, Schema $schema = null, array $serializerContext = null, bool $forceCollection = false): Schema
+    public function buildSchema(string $className, string $format = 'jsonhal', string $type = Schema::TYPE_OUTPUT, ?Operation $operation = null, ?Schema $schema = null, ?array $serializerContext = null, bool $forceCollection = false): Schema
     {
         $schema = $this->schemaFactory->buildSchema($className, $format, $type, $operation, $schema, $serializerContext, $forceCollection);
         if ('jsonhal' !== $format) {
@@ -79,8 +78,18 @@ final class SchemaFactory implements SchemaFactoryInterface
             $schema['type'] = 'object';
             $schema['properties'] = [
                 '_embedded' => [
-                    'type' => 'array',
-                    'items' => $items,
+                    'anyOf' => [
+                        [
+                            'type' => 'object',
+                            'properties' => [
+                                'item' => [
+                                    'type' => 'array',
+                                    'items' => $items,
+                                ],
+                            ],
+                        ],
+                        ['type' => 'object'],
+                    ],
                 ],
                 'totalItems' => [
                     'type' => 'integer',
@@ -127,10 +136,10 @@ final class SchemaFactory implements SchemaFactoryInterface
         return $schema;
     }
 
-    public function addDistinctFormat(string $format): void
+    public function setSchemaFactory(SchemaFactoryInterface $schemaFactory): void
     {
-        if (method_exists($this->schemaFactory, 'addDistinctFormat')) {
-            $this->schemaFactory->addDistinctFormat($format);
+        if ($this->schemaFactory instanceof SchemaFactoryAwareInterface) {
+            $this->schemaFactory->setSchemaFactory($schemaFactory);
         }
     }
 }

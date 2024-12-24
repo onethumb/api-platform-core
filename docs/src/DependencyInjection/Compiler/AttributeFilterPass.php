@@ -27,7 +27,7 @@ final class AttributeFilterPass implements CompilerPassInterface
 {
     use AttributeFilterExtractorTrait;
 
-    private const TAG_FILTER_NAME = 'api_platform.filter';
+    private const TAG_FILTER_NAME = 'api_platform.playground.filter';
 
     /**
      * {@inheritdoc}
@@ -35,7 +35,10 @@ final class AttributeFilterPass implements CompilerPassInterface
     public function process(ContainerBuilder $container): void
     {
         foreach (get_declared_classes() as $class) {
-            $this->createFilterDefinitions(new \ReflectionClass($class), $container);
+            $r = new \ReflectionClass($class);
+            if (str_contains((string) $r->getFileName(), 'guides')) {
+                $this->createFilterDefinitions($r, $container);
+            }
         }
     }
 
@@ -50,7 +53,7 @@ final class AttributeFilterPass implements CompilerPassInterface
             }
 
             if (null === $filterReflectionClass = $container->getReflectionClass($filterClass, false)) {
-                throw new InvalidArgumentException(sprintf('Class "%s" used for service "%s" cannot be found.', $filterClass, $id));
+                throw new InvalidArgumentException(\sprintf('Class "%s" used for service "%s" cannot be found.', $filterClass, $id));
             }
 
             if ($container->has($filterClass) && ($parentDefinition = $container->findDefinition($filterClass))->isAbstract()) {
@@ -72,7 +75,7 @@ final class AttributeFilterPass implements CompilerPassInterface
 
             foreach ($arguments as $key => $value) {
                 if (!isset($parameterNames[$key])) {
-                    throw new InvalidArgumentException(sprintf('Class "%s" does not have argument "$%s".', $filterClass, $key));
+                    throw new InvalidArgumentException(\sprintf('Class "%s" does not have argument "$%s".', $filterClass, $key));
                 }
 
                 $definition->setArgument("$$key", $value);

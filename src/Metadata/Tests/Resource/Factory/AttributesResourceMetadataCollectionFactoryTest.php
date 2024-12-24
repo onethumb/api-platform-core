@@ -34,6 +34,7 @@ use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\AttributeResource;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\AttributeResources;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\ExtraPropertiesResource;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\PasswordResource;
+use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\WithParameter;
 use ApiPlatform\Metadata\Tests\Fixtures\State\AttributeResourceProcessor;
 use ApiPlatform\Metadata\Tests\Fixtures\State\AttributeResourceProvider;
 use PHPUnit\Framework\TestCase;
@@ -94,7 +95,6 @@ class AttributesResourceMetadataCollectionFactoryTest extends TestCase
                             priority: 4,
                             status: 301,
                             provider: AttributeResourceProvider::class,
-                            // @noRector \Rector\Php81\Rector\Array_\FirstClassCallableRector
                             processor: [AttributeResourceProcessor::class, 'process']
                         ),
                         '_api_/dummy/{dummyId}/attribute_resources/{identifier}{._format}_patch' => new Patch(
@@ -105,14 +105,12 @@ class AttributesResourceMetadataCollectionFactoryTest extends TestCase
                             priority: 5,
                             status: 301,
                             provider: AttributeResourceProvider::class,
-                            // @noRector \Rector\Php81\Rector\Array_\FirstClassCallableRector
                             processor: [AttributeResourceProcessor::class, 'process']
                         ),
                     ],
                     inputFormats: ['json' => ['application/merge-patch+json']],
                     status: 301,
                     provider: AttributeResourceProvider::class,
-                    // @noRector \Rector\Php81\Rector\Array_\FirstClassCallableRector
                     processor: [AttributeResourceProcessor::class, 'process']
                 ),
             ]),
@@ -166,7 +164,6 @@ class AttributesResourceMetadataCollectionFactoryTest extends TestCase
                     '_api_AttributeDefaultOperations_get' => (new Get())->withOperation($operation),
                     '_api_AttributeDefaultOperations_get_collection' => (new GetCollection())->withOperation($operation),
                     '_api_AttributeDefaultOperations_post' => (new Post())->withOperation($operation),
-                    '_api_AttributeDefaultOperations_put' => (new Put())->withOperation($operation),
                     '_api_AttributeDefaultOperations_patch' => (new Patch())->withOperation($operation),
                     '_api_AttributeDefaultOperations_delete' => (new Delete())->withOperation($operation),
                 ],
@@ -210,7 +207,6 @@ class AttributesResourceMetadataCollectionFactoryTest extends TestCase
                     '_api_AttributeDefaultOperations_get' => (new Get())->withOperation($operation),
                     '_api_AttributeDefaultOperations_get_collection' => (new GetCollection())->withOperation($operation),
                     '_api_AttributeDefaultOperations_post' => (new Post())->withOperation($operation),
-                    '_api_AttributeDefaultOperations_put' => (new Put())->withOperation($operation),
                     '_api_AttributeDefaultOperations_patch' => (new Patch())->withOperation($operation),
                     '_api_AttributeDefaultOperations_delete' => (new Delete())->withOperation($operation),
                 ],
@@ -258,5 +254,16 @@ class AttributesResourceMetadataCollectionFactoryTest extends TestCase
         $this->assertTrue($operations->has('password_set'));
         $this->assertTrue($operations->has('password_reset_token'));
         $this->assertTrue($operations->has('password_reset'));
+    }
+
+    public function testWithParameters(): void
+    {
+        $attributeResourceMetadataCollectionFactory = new AttributesResourceMetadataCollectionFactory();
+
+        $metadataCollection = $attributeResourceMetadataCollectionFactory->create(WithParameter::class);
+        $parameters = $metadataCollection[0]->getParameters();
+        $this->assertCount(2, $parameters);
+        $parameters = $metadataCollection->getOperation('collection')->getParameters();
+        $this->assertCount(3, $parameters);
     }
 }

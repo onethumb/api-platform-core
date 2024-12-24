@@ -29,16 +29,6 @@ abstract class ApiTestCase extends KernelTestCase
     use ApiTestAssertionsTrait;
 
     /**
-     * {@inheritdoc}
-     */
-    protected function tearDown(): void
-    {
-        parent::tearDown();
-
-        self::getClient(null);
-    }
-
-    /**
      * Creates a Client.
      *
      * @param array $kernelOptions  Options to pass to the createKernel method
@@ -86,7 +76,7 @@ abstract class ApiTestCase extends KernelTestCase
                 || null === $objectManager = $container->get('doctrine_mongodb')->getManagerForClass($resourceClass)
             )
         ) {
-            throw new \RuntimeException(sprintf('"%s" only supports classes managed by Doctrine ORM or Doctrine MongoDB ODM. Override this method to implement your own retrieval logic if you don\'t use those libraries.', __METHOD__));
+            throw new \RuntimeException(\sprintf('"%s" only supports classes managed by Doctrine ORM or Doctrine MongoDB ODM. Override this method to implement your own retrieval logic if you don\'t use those libraries.', __METHOD__));
         }
 
         $item = $objectManager->getRepository($resourceClass)->findOneBy($criteria);

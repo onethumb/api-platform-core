@@ -15,8 +15,12 @@ namespace ApiPlatform\Doctrine\Orm\Filter;
 
 use ApiPlatform\Doctrine\Common\Filter\OrderFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\OrderFilterTrait;
+use ApiPlatform\Doctrine\Common\Filter\PropertyPlaceholderOpenApiParameterTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
+use ApiPlatform\Metadata\JsonSchemaFilterInterface;
+use ApiPlatform\Metadata\OpenApiParameterFilterInterface;
 use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Metadata\Parameter;
 use Doctrine\ORM\Query\Expr\Join;
 use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -110,7 +114,8 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  *
  * By default, whenever the query does not specify the direction explicitly (e.g.: `/books?order[title]&order[id]`), filters will not be applied unless you configure a default order direction to use:
  *
- * [codeSelector]
+ * <div data-code-selector>
+ *
  * ```php
  * <?php
  * // api/src/Entity/Book.php
@@ -181,7 +186,8 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  *     </resource>
  * </resources>
  * ```
- * [/codeSelector]
+ *
+ * </div>
  *
  * When the property used for ordering can contain `null` values, you may want to specify how `null` values are treated in the comparison:
  * - Use the default behavior of the DBMS: use `null` strategy
@@ -193,11 +199,12 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  * @author Kévin Dunglas <dunglas@gmail.com>
  * @author Théo FIDRY <theo.fidry@gmail.com>
  */
-final class OrderFilter extends AbstractFilter implements OrderFilterInterface
+final class OrderFilter extends AbstractFilter implements OrderFilterInterface, JsonSchemaFilterInterface, OpenApiParameterFilterInterface
 {
     use OrderFilterTrait;
+    use PropertyPlaceholderOpenApiParameterTrait;
 
-    public function __construct(ManagerRegistry $managerRegistry, string $orderParameterName = 'order', LoggerInterface $logger = null, array $properties = null, NameConverterInterface $nameConverter = null, private readonly ?string $orderNullsComparison = null)
+    public function __construct(?ManagerRegistry $managerRegistry = null, string $orderParameterName = 'order', ?LoggerInterface $logger = null, ?array $properties = null, ?NameConverterInterface $nameConverter = null, private readonly ?string $orderNullsComparison = null)
     {
         if (null !== $properties) {
             $properties = array_map(static function ($propertyOptions) {
@@ -220,14 +227,19 @@ final class OrderFilter extends AbstractFilter implements OrderFilterInterface
     /**
      * {@inheritdoc}
      */
-    public function apply(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    public function apply(QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
-        if (isset($context['filters']) && !isset($context['filters'][$this->orderParameterName])) {
+        if (
+            isset($context['filters'])
+            && (!isset($context['filters'][$this->orderParameterName]) || !\is_array($context['filters'][$this->orderParameterName]))
+            && !isset($context['parameter'])
+        ) {
             return;
         }
 
-        if (!isset($context['filters'][$this->orderParameterName]) || !\is_array($context['filters'][$this->orderParameterName])) {
-            parent::apply($queryBuilder, $queryNameGenerator, $resourceClass, $operation, $context);
+        $parameter = $context['parameter'] ?? null;
+        if (null !== ($value = $context['filters'][$parameter?->getProperty()] ?? null)) {
+            $this->filterProperty($this->denormalizePropertyName($parameter->getProperty()), $value, $queryBuilder, $queryNameGenerator, $resourceClass, $operation, $context);
 
             return;
         }
@@ -240,13 +252,13 @@ final class OrderFilter extends AbstractFilter implements OrderFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $direction, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if (!$this->isPropertyEnabled($property, $resourceClass) || !$this->isPropertyMapped($property, $resourceClass)) {
             return;
         }
 
-        $direction = $this->normalizeValue($direction, $property);
+        $direction = $this->normalizeValue($value, $property);
         if (null === $direction) {
             return;
         }
@@ -261,12 +273,20 @@ final class OrderFilter extends AbstractFilter implements OrderFilterInterface
         if (null !== $nullsComparison = $this->properties[$property]['nulls_comparison'] ?? $this->orderNullsComparison) {
             $nullsDirection = self::NULLS_DIRECTION_MAP[$nullsComparison][$direction];
 
-            $nullRankHiddenField = sprintf('_%s_%s_null_rank', $alias, str_replace('.', '_', $field));
+            $nullRankHiddenField = \sprintf('_%s_%s_null_rank', $alias, str_replace('.', '_', $field));
 
-            $queryBuilder->addSelect(sprintf('CASE WHEN %s.%s IS NULL THEN 0 ELSE 1 END AS HIDDEN %s', $alias, $field, $nullRankHiddenField));
+            $queryBuilder->addSelect(\sprintf('CASE WHEN %s.%s IS NULL THEN 0 ELSE 1 END AS HIDDEN %s', $alias, $field, $nullRankHiddenField));
             $queryBuilder->addOrderBy($nullRankHiddenField, $nullsDirection);
         }
 
-        $queryBuilder->addOrderBy(sprintf('%s.%s', $alias, $field), $direction);
+        $queryBuilder->addOrderBy(\sprintf('%s.%s', $alias, $field), $direction);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function getSchema(Parameter $parameter): array
+    {
+        return ['type' => 'string', 'enum' => ['asc', 'desc']];
     }
 }

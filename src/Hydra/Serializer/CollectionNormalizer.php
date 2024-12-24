@@ -13,9 +13,8 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Hydra\Serializer;
 
-use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
-use ApiPlatform\Api\ResourceClassResolverInterface as LegacyResourceClassResolverInterface;
 use ApiPlatform\JsonLd\ContextBuilderInterface;
+use ApiPlatform\JsonLd\Serializer\HydraPrefixTrait;
 use ApiPlatform\JsonLd\Serializer\JsonLdContextTrait;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
@@ -33,6 +32,7 @@ use ApiPlatform\State\Pagination\PartialPaginatorInterface;
  */
 final class CollectionNormalizer extends AbstractCollectionNormalizer
 {
+    use HydraPrefixTrait;
     use JsonLdContextTrait;
 
     public const FORMAT = 'jsonld';
@@ -41,12 +41,12 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
         self::IRI_ONLY => false,
     ];
 
-    public function __construct(private readonly ContextBuilderInterface $contextBuilder, LegacyResourceClassResolverInterface|ResourceClassResolverInterface $resourceClassResolver, private readonly LegacyIriConverterInterface|IriConverterInterface $iriConverter, readonly ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, array $defaultContext = [])
+    public function __construct(private readonly ContextBuilderInterface $contextBuilder, ResourceClassResolverInterface $resourceClassResolver, private readonly IriConverterInterface $iriConverter, readonly ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null, array $defaultContext = [])
     {
         $this->defaultContext = array_merge($this->defaultContext, $defaultContext);
 
         if ($resourceMetadataCollectionFactory) {
-            trigger_deprecation('api-platform/core', '3.0', sprintf('Injecting "%s" within "%s" is not needed anymore and this dependency will be removed in 4.0.', ResourceMetadataCollectionFactoryInterface::class, self::class));
+            trigger_deprecation('api-platform/core', '3.0', \sprintf('Injecting "%s" within "%s" is not needed anymore and this dependency will be removed in 4.0.', ResourceMetadataCollectionFactoryInterface::class, self::class));
         }
 
         parent::__construct($resourceClassResolver, '');
@@ -58,11 +58,12 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
     protected function getPaginationData(iterable $object, array $context = []): array
     {
         $resourceClass = $this->resourceClassResolver->getResourceClass($object, $context['resource_class']);
+        $hydraPrefix = $this->getHydraPrefix($context + $this->defaultContext);
         // This adds "jsonld_has_context" by reference, we moved the code to this class.
         // To follow a note I wrote in the ItemNormalizer, we need to change the JSON-LD context generation as it is more complicated then it should.
         $data = $this->addJsonLdContext($this->contextBuilder, $resourceClass, $context);
         $data['@id'] = $this->iriConverter->getIriFromResource($resourceClass, UrlGeneratorInterface::ABS_PATH, $context['operation'] ?? null, $context);
-        $data['@type'] = 'hydra:Collection';
+        $data['@type'] = $hydraPrefix.'Collection';
 
         if ($object instanceof PartialPaginatorInterface) {
             // on the last page, we _might_ be able to infer total item count, which is useful info to share
@@ -76,11 +77,11 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
         }
 
         if ($object instanceof PaginatorInterface) {
-            $data['hydra:totalItems'] = $object->getTotalItems();
+            $data[$hydraPrefix.'totalItems'] = $object->getTotalItems();
         }
 
         if (\is_array($object) || ($object instanceof \Countable && !$object instanceof PartialPaginatorInterface)) {
-            $data['hydra:totalItems'] = \count($object);
+            $data[$hydraPrefix.'totalItems'] = \count($object);
         }
 
         return $data;
@@ -89,17 +90,17 @@ final class CollectionNormalizer extends AbstractCollectionNormalizer
     /**
      * Gets items data.
      */
-    protected function getItemsData(iterable $object, string $format = null, array $context = []): array
+    protected function getItemsData(iterable $object, ?string $format = null, array $context = []): array
     {
-        $data = [];
-        $data['hydra:member'] = [];
+        $hydraPrefix = $this->getHydraPrefix($context + $this->defaultContext);
+        $data = [$hydraPrefix.'member' => []];
         $iriOnly = $context[self::IRI_ONLY] ?? $this->defaultContext[self::IRI_ONLY];
 
         foreach ($object as $obj) {
             if ($iriOnly) {
-                $data['hydra:member'][] = $this->iriConverter->getIriFromResource($obj);
+                $data[$hydraPrefix.'member'][] = $this->iriConverter->getIriFromResource($obj);
             } else {
-                $data['hydra:member'][] = $this->normalizer->normalize($obj, $format, $context + ['jsonld_has_context' => true]);
+                $data[$hydraPrefix.'member'][] = $this->normalizer->normalize($obj, $format, $context + ['jsonld_has_context' => true]);
             }
         }
 

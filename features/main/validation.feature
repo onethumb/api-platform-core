@@ -26,13 +26,13 @@ Feature: Using validations groups
     """
     Then the response status code should be 422
     And the response should be in JSON
-    And the JSON should be equal to:
+    And the JSON should be a superset of:
     """
     {
       "@context": "/contexts/ConstraintViolationList",
       "@type": "ConstraintViolationList",
-      "hydra:title": "An error occurred",
-      "hydra:description": "name: This value should not be null.",
+      "title": "An error occurred",
+      "description": "name: This value should not be null.",
       "violations": [
          {
              "propertyPath": "name",
@@ -42,7 +42,7 @@ Feature: Using validations groups
       ]
     }
     """
-    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
+    And the header "Content-Type" should be equal to "application/problem+json; charset=utf-8"
 
   @createSchema
   Scenario: Create a resource with validation group sequence
@@ -55,13 +55,13 @@ Feature: Using validations groups
     """
     Then the response status code should be 422
     And the response should be in JSON
-    And the JSON should be equal to:
+    And the JSON should be a superset of:
     """
     {
       "@context": "/contexts/ConstraintViolationList",
       "@type": "ConstraintViolationList",
-      "hydra:title": "An error occurred",
-      "hydra:description": "title: This value should not be null.",
+      "title": "An error occurred",
+      "description": "title: This value should not be null.",
       "violations": [
          {
              "propertyPath": "title",
@@ -71,7 +71,7 @@ Feature: Using validations groups
       ]
     }
     """
-    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
+    And the header "Content-Type" should be equal to "application/problem+json; charset=utf-8"
 
   @createSchema
   Scenario: Create a resource with serializedName property
@@ -87,7 +87,7 @@ Feature: Using validations groups
     And the JSON node "violations[0].message" should be equal to "This value should not be null."
     And the JSON node "violations[0].propertyPath" should be equal to "test"
     And the JSON node "detail" should be equal to "test: This value should not be null."
-    And the JSON node "hydra:description" should be equal to "test: This value should not be null."
+    And the JSON node "description" should be equal to "test: This value should not be null."
     And the header "Content-Type" should be equal to "application/problem+json; charset=utf-8"
 
   @!mongodb
@@ -107,18 +107,18 @@ Feature: Using validations groups
     """
     Then the response status code should be 422
     And the response should be in JSON
-    And the header "Content-Type" should be equal to "application/ld+json; charset=utf-8"
-    And the JSON should be equal to:
+    And the header "Content-Type" should be equal to "application/problem+json; charset=utf-8"
+    And the JSON should be a superset of:
     """
     {
       "@context": "/contexts/ConstraintViolationList",
       "@type": "ConstraintViolationList",
       "hydra:title": "An error occurred",
-      "hydra:description": "This value should be of type unknown.\nqux: This value should be of type string.\nfoo: This value should be of type bool.\nbar: This value should be of type int.\nuuid: This value should be of type uuid.\nrelatedDummy: This value should be of type array|string.\nrelatedDummies: This value should be of type array.",
+      "hydra:description": "baz: This value should be of type string.\nqux: This value should be of type string.\nfoo: This value should be of type bool.\nbar: This value should be of type int.\nuuid: This value should be of type uuid.\nrelatedDummy: This value should be of type array|string.\nrelatedDummies: This value should be of type array.",
       "violations": [
         {
-          "propertyPath": "",
-          "message": "This value should be of type unknown.",
+          "propertyPath": "baz",
+          "message": "This value should be of type string.",
           "code": "ba785a8c-82cb-4283-967c-3cf342181b40",
           "hint": "Failed to create object because the class misses the \"baz\" property."
         },

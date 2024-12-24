@@ -13,13 +13,11 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Doctrine\Orm\Filter;
 
-use ApiPlatform\Api\IdentifiersExtractorInterface as LegacyIdentifiersExtractorInterface;
-use ApiPlatform\Api\IriConverterInterface as LegacyIriConverterInterface;
 use ApiPlatform\Doctrine\Common\Filter\SearchFilterInterface;
 use ApiPlatform\Doctrine\Common\Filter\SearchFilterTrait;
 use ApiPlatform\Doctrine\Orm\Util\QueryBuilderHelper;
 use ApiPlatform\Doctrine\Orm\Util\QueryNameGeneratorInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\IdentifiersExtractorInterface;
 use ApiPlatform\Metadata\IriConverterInterface;
 use ApiPlatform\Metadata\Operation;
@@ -141,7 +139,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
     public const DOCTRINE_INTEGER_TYPE = Types::INTEGER;
 
-    public function __construct(ManagerRegistry $managerRegistry, IriConverterInterface|LegacyIriConverterInterface $iriConverter, PropertyAccessorInterface $propertyAccessor = null, LoggerInterface $logger = null, array $properties = null, IdentifiersExtractorInterface|LegacyIdentifiersExtractorInterface $identifiersExtractor = null, NameConverterInterface $nameConverter = null)
+    public function __construct(ManagerRegistry $managerRegistry, IriConverterInterface $iriConverter, ?PropertyAccessorInterface $propertyAccessor = null, ?LoggerInterface $logger = null, ?array $properties = null, ?IdentifiersExtractorInterface $identifiersExtractor = null, ?NameConverterInterface $nameConverter = null)
     {
         parent::__construct($managerRegistry, $logger, $properties, $nameConverter);
 
@@ -150,7 +148,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
         $this->propertyAccessor = $propertyAccessor ?: PropertyAccess::createPropertyAccessor();
     }
 
-    protected function getIriConverter(): IriConverterInterface|LegacyIriConverterInterface
+    protected function getIriConverter(): IriConverterInterface
     {
         return $this->iriConverter;
     }
@@ -163,7 +161,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
         if (
             null === $value
@@ -205,7 +203,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
             if (!$this->hasValidValues($values, $this->getDoctrineFieldType($property, $resourceClass))) {
                 $this->logger->notice('Invalid filter ignored', [
-                    'exception' => new InvalidArgumentException(sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
+                    'exception' => new InvalidArgumentException(\sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
                 ]);
 
                 return;
@@ -243,7 +241,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
                  */
                 if (!$this->hasValidValues([$value], $doctrineTypeField)) {
                     $this->logger->notice('Invalid filter ignored', [
-                        'exception' => new InvalidArgumentException(sprintf('Values for field "%s" are not valid according to the doctrine type.', $associationFieldIdentifier)),
+                        'exception' => new InvalidArgumentException(\sprintf('Values for field "%s" are not valid according to the doctrine type.', $associationFieldIdentifier)),
                     ]);
 
                     return null;
@@ -260,7 +258,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
              * Shouldn't this actually fail harder?
              */
             $this->logger->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
+                'exception' => new InvalidArgumentException(\sprintf('Values for field "%s" are not valid according to the doctrine type.', $field)),
             ]);
 
             return;
@@ -289,7 +287,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
 
         $wrapCase = $this->createWrapCase($caseSensitive);
         $valueParameter = ':'.$queryNameGenerator->generateParameterName($field);
-        $aliasedField = sprintf('%s.%s', $alias, $field);
+        $aliasedField = \sprintf('%s.%s', $alias, $field);
 
         if (!$strategy || self::STRATEGY_EXACT === $strategy) {
             if (1 === \count($values)) {
@@ -310,7 +308,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
         $ors = [];
         $parameters = [];
         foreach ($values as $key => $value) {
-            $keyValueParameter = sprintf('%s_%s', $valueParameter, $key);
+            $keyValueParameter = \sprintf('%s_%s', $valueParameter, $key);
             $parameters[] = [$caseSensitive ? $value : strtolower($value), $keyValueParameter];
 
             $ors[] = match ($strategy) {
@@ -336,7 +334,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
                         $wrapCase((string) $queryBuilder->expr()->concat("'% '", $keyValueParameter, "'%'"))
                     )
                 ),
-                default => throw new InvalidArgumentException(sprintf('strategy %s does not exist.', $strategy)),
+                default => throw new InvalidArgumentException(\sprintf('strategy %s does not exist.', $strategy)),
             };
         }
 
@@ -360,7 +358,7 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
                 return $expr;
             }
 
-            return sprintf('LOWER(%s)', $expr);
+            return \sprintf('LOWER(%s)', $expr);
         };
     }
 
@@ -369,8 +367,12 @@ final class SearchFilter extends AbstractFilter implements SearchFilterInterface
      */
     protected function getType(string $doctrineType): string
     {
+        // Remove this test when doctrine/dbal:3 support is removed
+        if (\defined(Types::class.'::ARRAY') && Types::ARRAY === $doctrineType) {
+            return 'array';
+        }
+
         return match ($doctrineType) {
-            Types::ARRAY => 'array',
             Types::BIGINT, Types::INTEGER, Types::SMALLINT => 'int',
             Types::BOOLEAN => 'bool',
             Types::DATE_MUTABLE, Types::TIME_MUTABLE, Types::DATETIME_MUTABLE, Types::DATETIMETZ_MUTABLE, Types::DATE_IMMUTABLE, Types::TIME_IMMUTABLE, Types::DATETIME_IMMUTABLE, Types::DATETIMETZ_IMMUTABLE => \DateTimeInterface::class,

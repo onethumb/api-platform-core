@@ -20,9 +20,9 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
 use ApiPlatform\Serializer\Filter\FilterInterface as SerializerFilterInterface;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
 use ApiPlatform\Serializer\SerializerFilterContextBuilder;
 use ApiPlatform\Serializer\Tests\Fixtures\ApiResource\DummyGroup;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use PHPUnit\Framework\TestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Psr\Container\ContainerInterface;
@@ -178,7 +178,7 @@ class SerializerFilterContextBuilderTest extends TestCase
         $serializerContextBuilderFilter->createFromRequest($request, true);
     }
 
-    private function getMetadataWithFilter(string $class, array $filters = null): ResourceMetadataCollection
+    private function getMetadataWithFilter(string $class, ?array $filters = null): ResourceMetadataCollection
     {
         return new ResourceMetadataCollection($class, [
             new ApiResource(operations: [

@@ -18,7 +18,8 @@ use ApiPlatform\Metadata\CollectionOperationInterface;
 use ApiPlatform\Metadata\Error as ErrorOperation;
 use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\Metadata\Util\AttributesExtractor;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Serializer\Encoder\CsvEncoder;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
@@ -38,9 +39,9 @@ final class SerializerContextBuilder implements SerializerContextBuilderInterfac
     /**
      * {@inheritdoc}
      */
-    public function createFromRequest(Request $request, bool $normalization, array $attributes = null): array
+    public function createFromRequest(Request $request, bool $normalization, ?array $attributes = null): array
     {
-        if (null === $attributes && !$attributes = RequestAttributesExtractor::extractAttributes($request)) {
+        if (null === $attributes && !$attributes = AttributesExtractor::extractAttributes($request->attributes->all())) {
             throw new RuntimeException('Request attributes are not valid.');
         }
 
@@ -81,7 +82,7 @@ final class SerializerContextBuilder implements SerializerContextBuilderInterfac
             }
         }
 
-        if (($options = $operation?->getStateOptions()) && $options instanceof Options && $options->getEntityClass()) {
+        if (null === $context['output'] && ($options = $operation?->getStateOptions()) && class_exists(Options::class) && $options instanceof Options && $options->getEntityClass()) {
             $context['force_resource_class'] = $operation->getClass();
         }
 
@@ -113,6 +114,11 @@ final class SerializerContextBuilder implements SerializerContextBuilderInterfac
         // to keep the cache computation smaller, we have "operation_name" and "iri" anyways
         $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'root_operation';
         $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'operation';
+        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'object';
+        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'data';
+        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'property_metadata';
+        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'circular_reference_limit_counters';
+        $context[AbstractObjectNormalizer::EXCLUDE_FROM_CACHE_KEY][] = 'debug_trace_id';
 
         // JSON API see JsonApiProvider
         if ($included = $request->attributes->get('_api_included')) {

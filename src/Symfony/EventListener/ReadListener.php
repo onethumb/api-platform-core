@@ -13,20 +13,17 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Symfony\EventListener;
 
-use ApiPlatform\Api\UriVariablesConverterInterface as LegacyUriVariablesConverterInterface;
-use ApiPlatform\Exception\InvalidIdentifierException;
-use ApiPlatform\Exception\InvalidUriVariableException;
-use ApiPlatform\Metadata\Put;
+use ApiPlatform\Metadata\Error;
+use ApiPlatform\Metadata\Exception\InvalidIdentifierException;
+use ApiPlatform\Metadata\Exception\InvalidUriVariableException;
+use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\UriVariablesConverterInterface;
 use ApiPlatform\Metadata\Util\CloneTrait;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
-use ApiPlatform\State\Exception\ProviderNotFoundException;
 use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\State\UriVariablesResolverTrait;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
-use ApiPlatform\State\Util\RequestParser;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\State\Util\RequestAttributesExtractor;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
@@ -41,11 +38,13 @@ final class ReadListener
     use OperationRequestInitiatorTrait;
     use UriVariablesResolverTrait;
 
+    /**
+     * @param ProviderInterface<object> $provider
+     */
     public function __construct(
         private readonly ProviderInterface $provider,
-        ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
-        private readonly ?SerializerContextBuilderInterface $serializerContextBuilder = null,
-        LegacyUriVariablesConverterInterface|UriVariablesConverterInterface $uriVariablesConverter = null,
+        ?ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory = null,
+        ?UriVariablesConverterInterface $uriVariablesConverter = null,
     ) {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
         $this->uriVariablesConverter = $uriVariablesConverter;
@@ -59,60 +58,36 @@ final class ReadListener
     public function onKernelRequest(RequestEvent $event): void
     {
         $request = $event->getRequest();
+
+        if (!($attributes = RequestAttributesExtractor::extractAttributes($request)) || !$attributes['receive']) {
+            return;
+        }
+
         $operation = $this->initializeOperation($request);
-
-        if ('api_platform.symfony.main_controller' === $operation?->getController() || $request->attributes->get('_api_platform_disable_listeners')) {
+        if (!$operation) {
             return;
         }
 
-        if (!($attributes = RequestAttributesExtractor::extractAttributes($request))) {
-            return;
+        if (null === $operation->canRead()) {
+            $operation = $operation->withRead($operation->getUriVariables() || $request->isMethodSafe());
         }
 
-        if (!$attributes['receive'] || !$operation || !($operation->canRead() ?? true) || (!$operation->getUriVariables() && !$request->isMethodSafe())) {
-            return;
+        $uriVariables = [];
+        if (!$operation instanceof Error && $operation instanceof HttpOperation) {
+            try {
+                $uriVariables = $this->getOperationUriVariables($operation, $request->attributes->all(), $operation->getClass());
+            } catch (InvalidIdentifierException|InvalidUriVariableException $e) {
+                if ($operation->canRead()) {
+                    throw new NotFoundHttpException('Invalid identifier value or configuration.', $e);
+                }
+            }
         }
 
-        $context = ['operation' => $operation];
-
-        if (null === $filters = $request->attributes->get('_api_filters')) {
-            $queryString = RequestParser::getQueryString($request);
-            $filters = $queryString ? RequestParser::parseRequestParams($queryString) : null;
-        }
-
-        if ($filters) {
-            $context['filters'] = $filters;
-        }
-
-        if ($this->serializerContextBuilder) {
-            // Builtin data providers are able to use the serialization context to automatically add join clauses
-            $context += $normalizationContext = $this->serializerContextBuilder->createFromRequest($request, true, $attributes);
-            $request->attributes->set('_api_normalization_context', $normalizationContext);
-        }
-
-        $parameters = $request->attributes->all();
-        $resourceClass = $operation->getClass() ?? $attributes['resource_class'];
-        try {
-            $uriVariables = $this->getOperationUriVariables($operation, $parameters, $resourceClass);
-            $data = $this->provider->provide($operation, $uriVariables, $context);
-        } catch (InvalidIdentifierException|InvalidUriVariableException $e) {
-            throw new NotFoundHttpException('Invalid identifier value or configuration.', $e);
-        } catch (ProviderNotFoundException $e) {
-            $data = null;
-        }
-
-        if (
-            null === $data
-            && 'POST' !== $operation->getMethod()
-            && (
-                'PUT' !== $operation->getMethod()
-                || ($operation instanceof Put && !($operation->getAllowCreate() ?? false))
-            )
-        ) {
-            throw new NotFoundHttpException('Not Found');
-        }
-
-        $request->attributes->set('data', $data);
-        $request->attributes->set('previous_data', $this->clone($data));
+        $request->attributes->set('_api_uri_variables', $uriVariables);
+        $this->provider->provide($operation, $uriVariables, [
+            'request' => $request,
+            'uri_variables' => $uriVariables,
+            'resource_class' => $operation->getClass(),
+        ]);
     }
 }

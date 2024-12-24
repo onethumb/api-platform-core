@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace ApiPlatform\Serializer;
 
 use Symfony\Component\Serializer\NameConverter\AdvancedNameConverterInterface;
+use Symfony\Component\Serializer\NameConverter\MetadataAwareNameConverter;
 use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Validator\ConstraintViolation;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 
@@ -27,13 +27,13 @@ use Symfony\Component\Validator\ConstraintViolationListInterface;
  *
  * @internal
  */
-abstract class AbstractConstraintViolationListNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+abstract class AbstractConstraintViolationListNormalizer implements NormalizerInterface
 {
     public const FORMAT = null; // Must be overridden
 
     private readonly ?array $serializePayloadFields;
 
-    public function __construct(array $serializePayloadFields = null, private readonly ?NameConverterInterface $nameConverter = null)
+    public function __construct(?array $serializePayloadFields = null, private readonly ?NameConverterInterface $nameConverter = null)
     {
         $this->serializePayloadFields = null === $serializePayloadFields ? null : array_flip($serializePayloadFields);
     }
@@ -41,28 +41,18 @@ abstract class AbstractConstraintViolationListNormalizer implements NormalizerIn
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
+        if (!($context['api_error_resource'] ?? false)) {
+            return false;
+        }
+
         return static::FORMAT === $format && $data instanceof ConstraintViolationListInterface;
     }
 
     public function getSupportedTypes($format): array
     {
         return $format === static::FORMAT ? [ConstraintViolationListInterface::class => true] : [];
-    }
-
-    public function hasCacheableSupportsMethod(): bool
-    {
-        if (method_exists(Serializer::class, 'getSupportedTypes')) {
-            trigger_deprecation(
-                'api-platform/core',
-                '3.1',
-                'The "%s()" method is deprecated, use "getSupportedTypes()" instead.',
-                __METHOD__
-            );
-        }
-
-        return true;
     }
 
     protected function getMessagesAndViolations(ConstraintViolationListInterface $constraintViolationList): array
@@ -72,7 +62,7 @@ abstract class AbstractConstraintViolationListNormalizer implements NormalizerIn
         foreach ($constraintViolationList as $violation) {
             $class = \is_object($root = $violation->getRoot()) ? $root::class : null;
 
-            if ($this->nameConverter instanceof AdvancedNameConverterInterface) {
+            if ($this->nameConverter instanceof AdvancedNameConverterInterface || $this->nameConverter instanceof MetadataAwareNameConverter) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath(), $class, static::FORMAT);
             } elseif ($this->nameConverter instanceof NameConverterInterface) {
                 $propertyPath = $this->nameConverter->normalize($violation->getPropertyPath());

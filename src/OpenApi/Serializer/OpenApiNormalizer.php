@@ -18,12 +18,11 @@ use ApiPlatform\OpenApi\OpenApi;
 use Symfony\Component\Serializer\Normalizer\AbstractNormalizer;
 use Symfony\Component\Serializer\Normalizer\AbstractObjectNormalizer;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Serializer;
 
 /**
  * Generates an OpenAPI v3 specification.
  */
-final class OpenApiNormalizer implements NormalizerInterface, CacheableSupportsMethodInterface
+final class OpenApiNormalizer implements NormalizerInterface
 {
     public const FORMAT = 'json';
     public const JSON_FORMAT = 'jsonopenapi';
@@ -37,9 +36,9 @@ final class OpenApiNormalizer implements NormalizerInterface, CacheableSupportsM
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): array
     {
-        $pathsCallback = static fn ($decoratedObject): array => $decoratedObject instanceof Paths ? $decoratedObject->getPaths() : [];
+        $pathsCallback = $this->getPathsCallBack();
         $context[AbstractObjectNormalizer::PRESERVE_EMPTY_OBJECTS] = true;
         $context[AbstractObjectNormalizer::SKIP_NULL_VALUES] = true;
         $context[AbstractNormalizer::CALLBACKS] = [
@@ -72,7 +71,7 @@ final class OpenApiNormalizer implements NormalizerInterface, CacheableSupportsM
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return (self::FORMAT === $format || self::JSON_FORMAT === $format || self::YAML_FORMAT === $format) && $data instanceof OpenApi;
     }
@@ -82,17 +81,45 @@ final class OpenApiNormalizer implements NormalizerInterface, CacheableSupportsM
         return (self::FORMAT === $format || self::JSON_FORMAT === $format || self::YAML_FORMAT === $format) ? [OpenApi::class => true] : [];
     }
 
-    public function hasCacheableSupportsMethod(): bool
+    private function getPathsCallBack(): \Closure
     {
-        if (method_exists(Serializer::class, 'getSupportedTypes')) {
-            trigger_deprecation(
-                'api-platform/core',
-                '3.1',
-                'The "%s()" method is deprecated, use "getSupportedTypes()" instead.',
-                __METHOD__
-            );
-        }
+        return static function ($decoratedObject): array {
+            if ($decoratedObject instanceof Paths) {
+                $paths = $decoratedObject->getPaths();
 
-        return true;
+                // sort paths by tags, then by path for each tag
+                uksort($paths, function ($keyA, $keyB) use ($paths) {
+                    $a = $paths[$keyA];
+                    $b = $paths[$keyB];
+
+                    $tagsA = [
+                        ...($a->getGet()?->getTags() ?? []),
+                        ...($a->getPost()?->getTags() ?? []),
+                        ...($a->getPatch()?->getTags() ?? []),
+                        ...($a->getPut()?->getTags() ?? []),
+                        ...($a->getDelete()?->getTags() ?? []),
+                    ];
+                    sort($tagsA);
+
+                    $tagsB = [
+                        ...($b->getGet()?->getTags() ?? []),
+                        ...($b->getPost()?->getTags() ?? []),
+                        ...($b->getPatch()?->getTags() ?? []),
+                        ...($b->getPut()?->getTags() ?? []),
+                        ...($b->getDelete()?->getTags() ?? []),
+                    ];
+                    sort($tagsB);
+
+                    return match (true) {
+                        current($tagsA) === current($tagsB) => $keyA <=> $keyB,
+                        default => current($tagsA) <=> current($tagsB),
+                    };
+                });
+
+                return $paths;
+            }
+
+            return [];
+        };
     }
 }

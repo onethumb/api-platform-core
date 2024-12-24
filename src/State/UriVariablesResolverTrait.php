@@ -13,7 +13,6 @@ declare(strict_types=1);
 
 namespace ApiPlatform\State;
 
-use ApiPlatform\Api\UriVariablesConverterInterface as LegacyUriVariablesConverterInterface;
 use ApiPlatform\Metadata\Exception\InvalidIdentifierException;
 use ApiPlatform\Metadata\HttpOperation;
 use ApiPlatform\Metadata\UriVariablesConverterInterface;
@@ -21,12 +20,12 @@ use ApiPlatform\Metadata\Util\CompositeIdentifierParser;
 
 trait UriVariablesResolverTrait
 {
-    private null|LegacyUriVariablesConverterInterface|UriVariablesConverterInterface $uriVariablesConverter = null;
+    private ?UriVariablesConverterInterface $uriVariablesConverter = null;
 
     /**
      * Resolves an operation's UriVariables to their identifiers values.
      */
-    private function getOperationUriVariables(HttpOperation $operation = null, array $parameters = [], string $resourceClass = null): array
+    private function getOperationUriVariables(?HttpOperation $operation = null, array $parameters = [], ?string $resourceClass = null): array
     {
         $identifiers = [];
 
@@ -38,7 +37,7 @@ trait UriVariablesResolverTrait
         foreach ($operation->getUriVariables() ?? [] as $parameterName => $uriVariableDefinition) {
             if (!isset($parameters[$parameterName])) {
                 if (!isset($parameters['id'])) {
-                    throw new InvalidIdentifierException(sprintf('Parameter "%s" not found, check the identifiers configuration.', $parameterName));
+                    throw new InvalidIdentifierException(\sprintf('Parameter "%s" not found, check the identifiers configuration.', $parameterName));
                 }
 
                 $parameterName = 'id';
@@ -48,7 +47,7 @@ trait UriVariablesResolverTrait
                 $currentIdentifiers = CompositeIdentifierParser::parse($parameters[$parameterName]);
 
                 if (($foundNumIdentifiers = \count($currentIdentifiers)) !== $numIdentifiers) {
-                    throw new InvalidIdentifierException(sprintf('We expected "%s" identifiers and got "%s".', $numIdentifiers, $foundNumIdentifiers));
+                    throw new InvalidIdentifierException(\sprintf('We expected "%s" identifiers and got "%s".', $numIdentifiers, $foundNumIdentifiers));
                 }
 
                 foreach ($currentIdentifiers as $key => $value) {

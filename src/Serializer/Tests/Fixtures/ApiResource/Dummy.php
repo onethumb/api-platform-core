@@ -86,6 +86,13 @@ class Dummy
     public Collection|iterable $relatedDummies;
 
     /**
+     * @phpstan-ignore-next-line
+     *
+     * @var Collection<int|float, RelatedDummy>
+     */
+    public Collection $relatedDummiesWithUnionTypes;
+
+    /**
      * @var array|null serialize data
      */
     public $jsonData = [];
@@ -107,6 +114,7 @@ class Dummy
     public function __construct()
     {
         $this->relatedDummies = new ArrayCollection();
+        $this->relatedDummiesWithUnionTypes = new ArrayCollection();
     }
 
     public function getId()
@@ -158,12 +166,12 @@ class Dummy
         return $this->foo;
     }
 
-    public function setFoo(array $foo = null): void
+    public function setFoo(?array $foo = null): void
     {
         $this->foo = $foo;
     }
 
-    public function setDummyDate(\DateTime $dummyDate = null): void
+    public function setDummyDate(?\DateTime $dummyDate = null): void
     {
         $this->dummyDate = $dummyDate;
     }

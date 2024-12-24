@@ -77,7 +77,7 @@ class CachedPropertyNameCollectionFactoryTest extends TestCase
         $decoratedPropertyNameCollectionFactory = $this->prophesize(PropertyNameCollectionFactoryInterface::class);
         $decoratedPropertyNameCollectionFactory->create(Dummy::class, [])->willReturn(new PropertyNameCollection(['id', 'name', 'description', 'dummy']))->shouldBeCalled();
 
-        $cacheException = new class() extends \Exception implements CacheException {};
+        $cacheException = new class extends \Exception implements CacheException {};
 
         $cacheItemPool = $this->prophesize(CacheItemPoolInterface::class);
         $cacheItemPool->getItem($this->generateCacheKey())->willThrow($cacheException)->shouldBeCalled();
@@ -92,6 +92,6 @@ class CachedPropertyNameCollectionFactoryTest extends TestCase
 
     private function generateCacheKey(string $resourceClass = Dummy::class, array $options = []): string
     {
-        return CachedPropertyNameCollectionFactory::CACHE_KEY_PREFIX.md5(serialize([$resourceClass, $options]));
+        return CachedPropertyNameCollectionFactory::CACHE_KEY_PREFIX.hash('xxh3', serialize([$resourceClass, $options]));
     }
 }

@@ -75,11 +75,10 @@ final class PropertyMetadataCompatibilityTest extends TestCase
         'iris' => ['https://schema.org/totalPrice'],
         'genId' => true,
         'uriTemplate' => '/sub-resource-get-collection',
+        'property' => 'test',
     ];
 
-    /**
-     * @dataProvider getExtractors
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getExtractors')]
     public function testValidMetadata(string $extractorClass, PropertyAdapterInterface $adapter): void
     {
         $reflClass = new \ReflectionClass(ApiProperty::class);
@@ -118,7 +117,7 @@ final class PropertyMetadataCompatibilityTest extends TestCase
                 continue;
             }
 
-            throw new \RuntimeException(sprintf('Unknown ApiProperty parameter "%s".', $parameter));
+            throw new \RuntimeException(\sprintf('Unknown ApiProperty parameter "%s".', $parameter));
         }
 
         return $property;

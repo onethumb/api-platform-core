@@ -42,12 +42,12 @@ class SerializerContextBuilderTest extends TestCase
         $this->serializerContextBuilder = $this->buildSerializerContextBuilder();
     }
 
-    private function buildSerializerContextBuilder(AdvancedNameConverterInterface $advancedNameConverter = null): SerializerContextBuilder
+    private function buildSerializerContextBuilder(?AdvancedNameConverterInterface $advancedNameConverter = null): SerializerContextBuilder
     {
         return new SerializerContextBuilder($advancedNameConverter ?? new CustomConverter());
     }
 
-    private function buildOperationFromContext(bool $isMutation, bool $isSubscription, array $expectedContext, bool $isNormalization = true, string $resourceClass = null): Operation
+    private function buildOperationFromContext(bool $isMutation, bool $isSubscription, array $expectedContext, bool $isNormalization = true, ?string $resourceClass = null): Operation
     {
         $operation = !$isMutation && !$isSubscription ? new Query() : new Mutation();
         if ($isSubscription) {
@@ -82,10 +82,8 @@ class SerializerContextBuilderTest extends TestCase
         return $operation;
     }
 
-    /**
-     * @dataProvider createNormalizationContextProvider
-     */
-    public function testCreateNormalizationContext(?string $resourceClass, string $operationName, array $fields, bool $isMutation, bool $isSubscription, bool $noInfo, array $expectedContext, callable $advancedNameConverter = null, string $expectedExceptionClass = null, string $expectedExceptionMessage = null): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('createNormalizationContextProvider')]
+    public function testCreateNormalizationContext(?string $resourceClass, string $operationName, array $fields, bool $isMutation, bool $isSubscription, bool $noInfo, array $expectedContext, ?callable $advancedNameConverter = null, ?string $expectedExceptionClass = null, ?string $expectedExceptionMessage = null): void
     {
         $resolverContext = [];
 
@@ -141,6 +139,15 @@ class SerializerContextBuilderTest extends TestCase
                     'id' => 3,
                     'field' => 'foo',
                 ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
+                ],
             ],
         ];
         yield 'nominal with advanced name converter' => [
@@ -160,6 +167,15 @@ class SerializerContextBuilderTest extends TestCase
                 'attributes' => [
                     'id' => 3,
                     'denormalizedField' => 'foo',
+                ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
                 ],
             ],
             $advancedNameConverterFactory,
@@ -181,6 +197,15 @@ class SerializerContextBuilderTest extends TestCase
                 'attributes' => [
                     'nodeField' => 'baz',
                 ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
+                ],
             ],
         ];
         yield 'no resource class' => [
@@ -196,6 +221,15 @@ class SerializerContextBuilderTest extends TestCase
                 'graphql_operation_name' => $operationName,
                 'attributes' => [
                     'related' => ['id' => 9],
+                ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
                 ],
             ],
         ];
@@ -216,6 +250,15 @@ class SerializerContextBuilderTest extends TestCase
                 'attributes' => [
                     'id' => 7,
                     'related' => ['field' => 'bar'],
+                ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
                 ],
             ],
         ];
@@ -238,13 +281,20 @@ class SerializerContextBuilderTest extends TestCase
                     'id' => 7,
                     'related' => ['field' => 'bar'],
                 ],
+                'exclude_from_cache_key' => [
+                    'root_operation',
+                    'operation',
+                    'object',
+                    'data',
+                    'property_metadata',
+                    'circular_reference_limit_counters',
+                    'debug_trace_id',
+                ],
             ],
         ];
     }
 
-    /**
-     * @dataProvider createDenormalizationContextProvider
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('createDenormalizationContextProvider')]
     public function testCreateDenormalizationContext(?string $resourceClass, string $operationName, array $expectedContext): void
     {
         $operation = $this->buildOperationFromContext(true, false, $expectedContext, false, $resourceClass);
@@ -268,6 +318,15 @@ class SerializerContextBuilderTest extends TestCase
                     'graphql_operation_name' => $operationName,
                     'input' => ['class' => 'inputClass'],
                     'output' => ['class' => 'outputClass'],
+                    'exclude_from_cache_key' => [
+                        'root_operation',
+                        'operation',
+                        'object',
+                        'data',
+                        'property_metadata',
+                        'circular_reference_limit_counters',
+                        'debug_trace_id',
+                    ],
                 ],
             ],
             'no resource class' => [
@@ -277,6 +336,15 @@ class SerializerContextBuilderTest extends TestCase
                     'resource_class' => $resourceClass,
                     'operation_name' => $operationName,
                     'graphql_operation_name' => $operationName,
+                    'exclude_from_cache_key' => [
+                        'root_operation',
+                        'operation',
+                        'object',
+                        'data',
+                        'property_metadata',
+                        'circular_reference_limit_counters',
+                        'debug_trace_id',
+                    ],
                 ],
             ],
         ];

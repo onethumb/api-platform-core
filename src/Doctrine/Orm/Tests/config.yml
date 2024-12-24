@@ -1,0 +1,27 @@
+doctrine:
+    dbal:
+        driver: 'pdo_sqlite'
+        charset: 'UTF8'
+        types:
+            uuid: Ramsey\Uuid\Doctrine\UuidType
+            symfony_uuid: Symfony\Bridge\Doctrine\Types\UuidType
+
+    orm:
+        auto_generate_proxy_classes: '%kernel.debug%'
+        controller_resolver: 
+            enabled: false
+            auto_mapping: false
+        enable_lazy_ghost_objects: true
+        mappings:
+            ApiPlatform\Doctrine\Orm\Tests\Fixtures\Entity:
+                type: attribute
+                dir: '%kernel.project_dir%/Fixtures/Entity'
+                is_bundle: false
+                prefix: ApiPlatform\Doctrine\Orm\Tests\Fixtures\Entity
+                alias: App
+
+services:
+    test.property_accessor:
+        alias: property_accessor
+        public: true
+

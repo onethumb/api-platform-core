@@ -13,8 +13,27 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Tests\JsonSchema\Command;
 
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Animal;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\AnimalObservation;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\BackedEnumIntegerResource;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\BackedEnumStringResource;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue5501\BrokenDocs;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue6299\Issue6299;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue6317\Issue6317;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue6800\TestApiDocHashmapArrayObjectIssue;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\ResourceWithEnumProperty;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Species;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\Dummy as DocumentDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Answer;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Dummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5793\BagOfTests;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5998\Issue5998Product;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5998\ProductCode;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5998\SaveProduct;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue6212\Nest;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Question;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedDummy;
+use ApiPlatform\Tests\SetupClassResourcesTrait;
 use Symfony\Bundle\FrameworkBundle\Console\Application;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 use Symfony\Component\Console\Tester\ApplicationTester;
@@ -24,8 +43,8 @@ use Symfony\Component\Console\Tester\ApplicationTester;
  */
 class JsonSchemaGenerateCommandTest extends KernelTestCase
 {
+    use SetupClassResourcesTrait;
     private ApplicationTester $tester;
-
     private string $entityClass;
 
     protected function setUp(): void
@@ -38,6 +57,32 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
 
         $this->entityClass = 'mongodb' === $kernel->getEnvironment() ? DocumentDummy::class : Dummy::class;
         $this->tester = new ApplicationTester($application);
+    }
+
+    /**
+     * @return class-string[]
+     */
+    public static function getResources(): array
+    {
+        return [
+            Dummy::class,
+            BrokenDocs::class,
+            Nest::class,
+            BagOfTests::class,
+            ResourceWithEnumProperty::class,
+            Issue6299::class,
+            RelatedDummy::class,
+            Question::class,
+            Answer::class,
+            AnimalObservation::class,
+            Animal::class,
+            Species::class,
+            Issue6317::class,
+            ProductCode::class,
+            Issue5998Product::class,
+            BackedEnumIntegerResource::class,
+            BackedEnumStringResource::class,
+        ];
     }
 
     public function testExecuteWithoutOption(): void
@@ -88,7 +133,7 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
      */
     public function testExecuteWithNotExposedResourceAndReadableLink(): void
     {
-        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue5501\BrokenDocs', '--type' => 'output']);
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => BrokenDocs::class, '--type' => 'output']);
         $result = $this->tester->getDisplay();
 
         $this->assertStringContainsString('Related.jsonld-location.read_collection', $result);
@@ -97,9 +142,10 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
     /**
      * When serializer groups are present the Schema should have an embed resource. #5470 breaks array references when serializer groups are present.
      */
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
     public function testArraySchemaWithReference(): void
     {
-        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5793\BagOfTests', '--type' => 'input']);
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => BagOfTests::class, '--type' => 'input']);
         $result = $this->tester->getDisplay();
         $json = json_decode($result, associative: true);
 
@@ -120,23 +166,56 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
         ]);
 
         $this->assertEquals($json['definitions']['BagOfTests.jsonld-write']['properties']['type'], [
-            'owl:maxCardinality' => 1,
             '$ref' => '#/definitions/TestEntity.jsonld-write',
         ]);
     }
 
-    /**
-     * TODO: add deprecation (TypeFactory will be deprecated in api platform 3.3).
-     *
-     * @group legacy
-     */
-    public function testArraySchemaWithTypeFactory(): void
+    public function testArraySchemaWithMultipleUnionTypesJsonLd(): void
     {
-        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue5896\Foo', '--type' => 'output']);
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Nest::class, '--type' => 'output', '--format' => 'jsonld']);
         $result = $this->tester->getDisplay();
         $json = json_decode($result, associative: true);
 
-        $this->assertEquals($json['definitions']['Foo.jsonld']['properties']['expiration'], ['type' => 'string', 'format' => 'date']);
+        $this->assertEquals($json['definitions']['Nest.jsonld']['properties']['owner']['anyOf'], [
+            ['$ref' => '#/definitions/Wren.jsonld'],
+            ['$ref' => '#/definitions/Robin.jsonld'],
+            ['type' => 'null'],
+        ]);
+
+        $this->assertArrayHasKey('Wren.jsonld', $json['definitions']);
+        $this->assertArrayHasKey('Robin.jsonld', $json['definitions']);
+    }
+
+    public function testArraySchemaWithMultipleUnionTypesJsonApi(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Nest::class, '--type' => 'output', '--format' => 'jsonapi']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+
+        $this->assertEquals($json['definitions']['Nest.jsonapi']['properties']['data']['properties']['attributes']['properties']['owner']['anyOf'], [
+            ['$ref' => '#/definitions/Wren.jsonapi'],
+            ['$ref' => '#/definitions/Robin.jsonapi'],
+            ['type' => 'null'],
+        ]);
+
+        $this->assertArrayHasKey('Wren.jsonapi', $json['definitions']);
+        $this->assertArrayHasKey('Robin.jsonapi', $json['definitions']);
+    }
+
+    public function testArraySchemaWithMultipleUnionTypesJsonHal(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Nest::class, '--type' => 'output', '--format' => 'jsonhal']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+
+        $this->assertEquals($json['definitions']['Nest.jsonhal']['properties']['owner']['anyOf'], [
+            ['$ref' => '#/definitions/Wren.jsonhal'],
+            ['$ref' => '#/definitions/Robin.jsonhal'],
+            ['type' => 'null'],
+        ]);
+
+        $this->assertArrayHasKey('Wren.jsonhal', $json['definitions']);
+        $this->assertArrayHasKey('Robin.jsonhal', $json['definitions']);
     }
 
     /**
@@ -144,7 +223,7 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
      */
     public function testWritableNonResourceRef(): void
     {
-        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue5998\SaveProduct', '--type' => 'input']);
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => SaveProduct::class, '--type' => 'input']);
         $result = $this->tester->getDisplay();
         $json = json_decode($result, associative: true);
 
@@ -152,14 +231,204 @@ class JsonSchemaGenerateCommandTest extends KernelTestCase
     }
 
     /**
+     * Test issue #6299.
+     */
+    public function testOpenApiResourceRefIsNotOverwritten(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Issue6299::class, '--type' => 'output']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+
+        $this->assertEquals('#/definitions/DummyFriend', $json['definitions']['Issue6299.Issue6299OutputDto.jsonld']['properties']['itemDto']['$ref']);
+        $this->assertEquals('#/definitions/DummyDate', $json['definitions']['Issue6299.Issue6299OutputDto.jsonld']['properties']['collectionDto']['items']['$ref']);
+    }
+
+    /**
      * Test related Schema keeps json-ld context.
      */
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
     public function testSubSchemaJsonLd(): void
     {
-        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedDummy', '--type' => 'output', '--format' => 'jsonld']);
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => RelatedDummy::class, '--type' => 'output', '--format' => 'jsonld']);
         $result = $this->tester->getDisplay();
         $json = json_decode($result, associative: true);
 
         $this->assertArrayHasKey('@id', $json['definitions']['ThirdLevel.jsonld-friends']['properties']);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testJsonApiIncludesSchema(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Question::class, '--type' => 'output', '--format' => 'jsonapi']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['Question.jsonapi']['properties']['data']['properties'];
+        $included = $json['definitions']['Question.jsonapi']['properties']['included'];
+
+        $this->assertArrayHasKey('answer', $properties['relationships']['properties']);
+        $this->assertArrayHasKey('anyOf', $included['items']);
+        $this->assertCount(1, $included['items']['anyOf']);
+        $this->assertArrayHasKey('$ref', $included['items']['anyOf'][0]);
+        $this->assertSame('#/definitions/Answer.jsonapi', $included['items']['anyOf'][0]['$ref']);
+
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => AnimalObservation::class, '--type' => 'output', '--format' => 'jsonapi']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['AnimalObservation.jsonapi']['properties']['data']['properties'];
+        $included = $json['definitions']['AnimalObservation.jsonapi']['properties']['included'];
+
+        $this->assertArrayHasKey('individuals', $properties['relationships']['properties']);
+        $this->assertArrayNotHasKey('individuals', $properties['attributes']['properties']);
+        $this->assertArrayHasKey('anyOf', $included['items']);
+        $this->assertCount(1, $included['items']['anyOf']);
+        $this->assertSame('#/definitions/Animal.jsonapi', $included['items']['anyOf'][0]['$ref']);
+
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Animal::class, '--type' => 'output', '--format' => 'jsonapi']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['Animal.jsonapi']['properties']['data']['properties'];
+        $included = $json['definitions']['Animal.jsonapi']['properties']['included'];
+
+        $this->assertArrayHasKey('species', $properties['relationships']['properties']);
+        $this->assertArrayNotHasKey('species', $properties['attributes']['properties']);
+        $this->assertArrayHasKey('anyOf', $included['items']);
+        $this->assertCount(1, $included['items']['anyOf']);
+        $this->assertSame('#/definitions/Species.jsonapi', $included['items']['anyOf'][0]['$ref']);
+
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Species::class, '--type' => 'output', '--format' => 'jsonapi']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['Species.jsonapi']['properties']['data']['properties'];
+
+        $this->assertArrayHasKey('kingdom', $properties['attributes']['properties']);
+        $this->assertArrayHasKey('phylum', $properties['attributes']['properties']);
+    }
+
+    /**
+     * Test issue #6317.
+     */
+    public function testBackedEnumExamplesAreNotLost(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => Issue6317::class, '--type' => 'output', '--format' => 'jsonld']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['Issue6317.jsonld']['properties'];
+
+        $this->assertArrayHasKey('example', $properties['id']);
+        $this->assertArrayHasKey('example', $properties['name']);
+        // jsonldContext
+        $this->assertArrayNotHasKey('example', $properties['ordinal']);
+        // openapiContext
+        $this->assertArrayNotHasKey('example', $properties['cardinal']);
+    }
+
+    public function testResourceWithEnumPropertiesSchema(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => ResourceWithEnumProperty::class, '--type' => 'output', '--format' => 'jsonld']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $properties = $json['definitions']['ResourceWithEnumProperty.jsonld']['properties'];
+
+        $this->assertSame(
+            [
+                'type' => ['string', 'null'],
+                'format' => 'iri-reference',
+                'example' => 'https://example.com/',
+            ],
+            $properties['intEnum']
+        );
+        $this->assertSame(
+            [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'string',
+                    'format' => 'iri-reference',
+                    'example' => 'https://example.com/',
+                ],
+            ],
+            $properties['stringEnum']
+        );
+        $this->assertSame(
+            [
+                'type' => ['string', 'null'],
+                'enum' => ['male', 'female', null],
+            ],
+            $properties['gender']
+        );
+        $this->assertSame(
+            [
+                'type' => 'array',
+                'items' => [
+                    'type' => 'string',
+                    'enum' => ['male', 'female'],
+                ],
+            ],
+            $properties['genders']
+        );
+    }
+
+    /**
+     * Test feature #6716.
+     */
+    public function testGenId(): void
+    {
+        $this->tester->run(['command' => 'api:json-schema:generate', 'resource' => 'ApiPlatform\Tests\Fixtures\TestBundle\Entity\DisableIdGeneration', '--type' => 'output', '--format' => 'jsonld']);
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, associative: true);
+        $this->assertArrayNotHasKey('@id', $json['definitions']['DisableIdGenerationItem.jsonld']['properties']);
+    }
+
+    /**
+     * @dataProvider arrayPropertyTypeSyntaxProvider
+     */
+    public function testOpenApiSchemaGenerationForArrayProperty(string $propertyName, array $expectedProperties): void
+    {
+        $this->tester->run([
+            'command' => 'api:json-schema:generate',
+            'resource' => TestApiDocHashmapArrayObjectIssue::class,
+            '--operation' => '_api_/test_api_doc_hashmap_array_object_issues{._format}_get',
+            '--type' => 'output',
+            '--format' => 'jsonld',
+        ]);
+
+        $result = $this->tester->getDisplay();
+        $json = json_decode($result, true);
+        $definitions = $json['definitions'];
+        $ressourceDefinitions = $definitions['TestApiDocHashmapArrayObjectIssue.jsonld'];
+
+        $this->assertArrayHasKey('TestApiDocHashmapArrayObjectIssue.jsonld', $definitions);
+        $this->assertEquals('object', $ressourceDefinitions['type']);
+        $this->assertEquals($expectedProperties, $ressourceDefinitions['properties'][$propertyName]);
+    }
+
+    public static function arrayPropertyTypeSyntaxProvider(): \Generator
+    {
+        yield 'Array of Foo objects using array<Foo> syntax' => [
+            'foos',
+            [
+                'type' => 'array',
+                'items' => [
+                    '$ref' => '#/definitions/Foo.jsonld',
+                ],
+            ],
+        ];
+        yield 'Array of Foo objects using Foo[] syntax' => [
+            'fooOtherSyntax',
+            [
+                'type' => 'array',
+                'items' => [
+                    '$ref' => '#/definitions/Foo.jsonld',
+                ],
+            ],
+        ];
+        yield 'Hashmap of Foo objects using array<string, Foo> syntax' => [
+            'fooHashmaps',
+            [
+                'type' => 'object',
+                'additionalProperties' => [
+                    '$ref' => '#/definitions/Foo.jsonld',
+                ],
+            ],
+        ];
     }
 }

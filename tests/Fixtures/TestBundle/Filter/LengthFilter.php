@@ -23,7 +23,7 @@ class LengthFilter extends AbstractFilter
 {
     use PropertyHelperTrait;
 
-    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, Operation $operation = null, array $context = []): void
+    protected function filterProperty(string $property, $value, QueryBuilder $queryBuilder, QueryNameGeneratorInterface $queryNameGenerator, string $resourceClass, ?Operation $operation = null, array $context = []): void
     {
     }
 
@@ -35,7 +35,7 @@ class LengthFilter extends AbstractFilter
                 'property' => 'max-length-3',
                 'type' => 'string',
                 'required' => false,
-                'swagger' => [
+                'schema' => [
                     'maxLength' => 3,
                 ],
             ],
@@ -43,7 +43,7 @@ class LengthFilter extends AbstractFilter
                 'property' => 'min-length-3',
                 'type' => 'string',
                 'required' => false,
-                'swagger' => [
+                'schema' => [
                     'minLength' => 3,
                 ],
             ],

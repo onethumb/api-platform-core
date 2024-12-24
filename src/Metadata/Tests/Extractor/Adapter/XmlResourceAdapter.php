@@ -62,10 +62,15 @@ final class XmlResourceAdapter implements ResourceAdapterInterface
         'securityPostValidation',
         'securityPostValidationMessage',
         'queryParameterValidationEnabled',
+        'strictQueryParameterValidation',
+        'hideHydraOperation',
         'stateOptions',
         'collectDenormalizationErrors',
         'links',
+        'parameters',
     ];
+
+    private const EXCLUDE = ['policy', 'middleware', 'rule'];
 
     /**
      * {@inheritdoc}
@@ -93,6 +98,10 @@ XML_WRAP
             $fixture['class'] = $resourceClass;
             foreach ($parameters as $parameter) {
                 $parameterName = $parameter->getName();
+                if (\in_array($parameterName, self::EXCLUDE, true)) {
+                    continue;
+                }
+
                 $value = \array_key_exists($parameterName, $fixture) ? $fixture[$parameterName] : null;
 
                 if ('compositeIdentifier' === $parameterName || 'provider' === $parameterName || 'processor' === $parameterName) {
@@ -109,7 +118,7 @@ XML_WRAP
                     continue;
                 }
 
-                throw new \LogicException(sprintf('Cannot adapt attribute or child "%s". Please add fixtures in '.ResourceMetadataCompatibilityTest::class.' and create a "%s" method in %s.', $parameterName, 'build'.ucfirst($parameterName), self::class));
+                throw new \LogicException(\sprintf('Cannot adapt attribute or child "%s". Please add fixtures in '.ResourceMetadataCompatibilityTest::class.' and create a "%s" method in %s.', $parameterName, 'build'.ucfirst($parameterName), self::class));
             }
         }
 
@@ -219,16 +228,6 @@ XML_WRAP
     private function buildHydraContext(\SimpleXMLElement $resource, array $values): void
     {
         $this->buildValues($resource->addChild('hydraContext'), $values);
-    }
-
-    /**
-     * TODO Remove in 4.0.
-     *
-     * @deprecated
-     */
-    private function buildOpenapiContext(\SimpleXMLElement $resource, array $values): void
-    {
-        $this->buildValues($resource->addChild('openapiContext'), $values);
     }
 
     private function buildOpenapi(\SimpleXMLElement $resource, array $values): void
@@ -437,7 +436,7 @@ XML_WRAP
                     continue;
                 }
 
-                throw new \LogicException(sprintf('Cannot adapt graphQlOperation attribute or child "%s". Please create a "%s" method in %s.', $index, 'build'.ucfirst($index), self::class));
+                throw new \LogicException(\sprintf('Cannot adapt graphQlOperation attribute or child "%s". Please create a "%s" method in %s.', $index, 'build'.ucfirst($index), self::class));
             }
         }
     }
@@ -458,7 +457,7 @@ XML_WRAP
                     continue;
                 }
 
-                throw new \LogicException(sprintf('Cannot adapt operation attribute or child "%s". Please create a "%s" method in %s.', $index, 'build'.ucfirst($index), self::class));
+                throw new \LogicException(\sprintf('Cannot adapt operation attribute or child "%s". Please create a "%s" method in %s.', $index, 'build'.ucfirst($index), self::class));
             }
         }
     }
@@ -495,7 +494,7 @@ XML_WRAP
         }
     }
 
-    private function buildLinks(\SimpleXMLElement $resource, array $values = null): void
+    private function buildLinks(\SimpleXMLElement $resource, ?array $values = null): void
     {
         if (!$values) {
             return;
@@ -505,6 +504,40 @@ XML_WRAP
         $childNode = $node->addChild('link');
         $childNode->addAttribute('rel', $values[0]['rel']);
         $childNode->addAttribute('href', $values[0]['href']);
+    }
+
+    private function buildRules(\SimpleXMLElement $resource, ?array $values = null): void
+    {
+    }
+
+    private function buildHeaders(\SimpleXMLElement $resource, ?array $values = null): void
+    {
+        if (!$values) {
+            return;
+        }
+
+        $node = $resource->addChild('headers');
+        foreach ($values as $key => $value) {
+            $childNode = $node->addChild('header');
+            $childNode->addAttribute('key', $key);
+            $childNode->addAttribute('value', $value);
+        }
+    }
+
+    private function buildParameters(\SimpleXMLElement $resource, ?array $values = null): void
+    {
+        if (!$values) {
+            return;
+        }
+
+        $node = $resource->addChild('parameters');
+        foreach ($values as $key => $value) {
+            $childNode = $node->addChild('parameter');
+            $childNode->addAttribute('in', 'query');
+            $childNode->addAttribute('key', $key);
+            $childNode->addAttribute('required', $this->parse($value['required']));
+            $this->buildValues($childNode->addChild('schema'), $value['schema']);
+        }
     }
 
     private function parse($value): ?string

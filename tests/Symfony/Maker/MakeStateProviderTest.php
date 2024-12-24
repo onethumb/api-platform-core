@@ -25,7 +25,7 @@ class MakeStateProviderTest extends KernelTestCase
         (new Filesystem())->remove(self::tempDir());
     }
 
-    /** @dataProvider stateProviderDataProvider */
+    #[\PHPUnit\Framework\Attributes\DataProvider('stateProviderDataProvider')]
     public function testMakeStateProvider(bool $isInteractive): void
     {
         $inputs = ['name' => 'CustomStateProvider'];
@@ -74,6 +74,6 @@ class MakeStateProviderTest extends KernelTestCase
 
     private static function tempFile(string $path): string
     {
-        return sprintf('%s/%s', self::tempDir(), $path);
+        return \sprintf('%s/%s', self::tempDir(), $path);
     }
 }

@@ -1,0 +1,24 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+	parallel:
+		maximumNumberOfProcesses: 1
+	level: 7
+	paths:
+		- ApiResource
+		- config
+		- Controller
+		- Eloquent
+		- Exception
+		- Routing
+		- State
+		- Test
+		- Tests
+	ignoreErrors:
+	  - '#Cannot call method expectsQuestion#'
+#
+#    excludePaths:
+#        - ./*/*/FileToBeExcluded.php
+#
+#    checkMissingIterableValueType: false

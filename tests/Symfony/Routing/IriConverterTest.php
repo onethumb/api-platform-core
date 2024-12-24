@@ -13,21 +13,21 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Tests\Symfony\Routing;
 
-use ApiPlatform\Api\IdentifiersExtractorInterface;
-use ApiPlatform\Api\ResourceClassResolverInterface;
-use ApiPlatform\Api\UrlGeneratorInterface;
-use ApiPlatform\Exception\InvalidArgumentException;
-use ApiPlatform\Exception\RuntimeException;
 use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\HttpOperation;
+use ApiPlatform\Metadata\IdentifiersExtractorInterface;
 use ApiPlatform\Metadata\Link;
 use ApiPlatform\Metadata\NotExposed;
 use ApiPlatform\Metadata\Operation\Factory\OperationMetadataFactoryInterface;
 use ApiPlatform\Metadata\Operations;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Metadata\Resource\ResourceMetadataCollection;
+use ApiPlatform\Metadata\ResourceClassResolverInterface;
+use ApiPlatform\Metadata\UrlGeneratorInterface;
 use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\Symfony\Routing\IriConverter;
 use ApiPlatform\Symfony\Routing\SkolemIriConverter;
@@ -112,7 +112,7 @@ class IriConverterTest extends TestCase
 
     public function testGetIriFromItemWithNoOperations(): void
     {
-        $this->expectExceptionMessage(sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
+        $this->expectExceptionMessage(\sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
 
         $item = new Dummy();
         $item->setId(1);
@@ -131,7 +131,7 @@ class IriConverterTest extends TestCase
 
     public function testGetIriFromItemWithBadIdentifiers(): void
     {
-        $this->expectExceptionMessage(sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
+        $this->expectExceptionMessage(\sprintf('Unable to generate an IRI for the item of type "%s"', Dummy::class));
 
         $item = new Dummy();
         $item->setId(1);
@@ -323,7 +323,7 @@ class IriConverterTest extends TestCase
         return $resourceClassResolver->reveal();
     }
 
-    private function getIriConverter(ObjectProphecy $stateProviderProphecy = null, ObjectProphecy $routerProphecy = null, ObjectProphecy $identifiersExtractorProphecy = null, $resourceMetadataCollectionFactoryProphecy = null, $uriVariablesConverter = null, $decorated = null, ObjectProphecy $operationMetadataFactory = null): IriConverter
+    private function getIriConverter(?ObjectProphecy $stateProviderProphecy = null, ?ObjectProphecy $routerProphecy = null, ?ObjectProphecy $identifiersExtractorProphecy = null, $resourceMetadataCollectionFactoryProphecy = null, $uriVariablesConverter = null, $decorated = null, ?ObjectProphecy $operationMetadataFactory = null): IriConverter
     {
         if (!$stateProviderProphecy) {
             $stateProviderProphecy = $this->prophesize(ProviderInterface::class);

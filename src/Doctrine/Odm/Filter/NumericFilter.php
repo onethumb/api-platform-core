@@ -14,7 +14,9 @@ declare(strict_types=1);
 namespace ApiPlatform\Doctrine\Odm\Filter;
 
 use ApiPlatform\Doctrine\Common\Filter\NumericFilterTrait;
+use ApiPlatform\Metadata\JsonSchemaFilterInterface;
 use ApiPlatform\Metadata\Operation;
+use ApiPlatform\Metadata\Parameter;
 use Doctrine\ODM\MongoDB\Aggregation\Builder;
 use Doctrine\ODM\MongoDB\Types\Type as MongoDbType;
 
@@ -104,7 +106,7 @@ use Doctrine\ODM\MongoDB\Types\Type as MongoDbType;
  * @author Teoh Han Hui <teohhanhui@gmail.com>
  * @author Alan Poulain <contact@alanpoulain.eu>
  */
-final class NumericFilter extends AbstractFilter
+final class NumericFilter extends AbstractFilter implements JsonSchemaFilterInterface
 {
     use NumericFilterTrait;
 
@@ -120,7 +122,7 @@ final class NumericFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void
+    protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void
     {
         if (
             !$this->isPropertyEnabled($property, $resourceClass)
@@ -151,7 +153,7 @@ final class NumericFilter extends AbstractFilter
     /**
      * {@inheritdoc}
      */
-    protected function getType(string $doctrineType = null): string
+    protected function getType(?string $doctrineType = null): string
     {
         if (null === $doctrineType) {
             return 'string';
@@ -162,5 +164,10 @@ final class NumericFilter extends AbstractFilter
         }
 
         return 'int';
+    }
+
+    public function getSchema(Parameter $parameter): array
+    {
+        return ['type' => 'numeric'];
     }
 }

@@ -17,6 +17,7 @@ use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use ApiPlatform\Metadata\Extractor\XmlResourceExtractor;
 use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\QueryParameter;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\Comment;
 use ApiPlatform\Metadata\Tests\Fixtures\ApiResource\User;
 use PHPUnit\Framework\TestCase;
@@ -65,6 +66,8 @@ class XmlExtractorTest extends TestCase
                     'securityPostValidation' => null,
                     'securityPostValidationMessage' => null,
                     'queryParameterValidationEnabled' => null,
+                    'strictQueryParameterValidation' => null,
+                    'hideHydraOperation' => null,
                     'input' => null,
                     'output' => null,
                     'types' => null,
@@ -82,7 +85,6 @@ class XmlExtractorTest extends TestCase
                     'denormalizationContext' => null,
                     'collectDenormalizationErrors' => null,
                     'hydraContext' => null,
-                    'openapiContext' => null,
                     'openapi' => null,
                     'validationContext' => null,
                     'filters' => null,
@@ -94,13 +96,14 @@ class XmlExtractorTest extends TestCase
                     'extraProperties' => null,
                     'operations' => null,
                     'graphQlOperations' => null,
-                    'class' => Comment::class,
                     'processor' => null,
                     'provider' => null,
                     'read' => null,
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => null,
+                    'parameters' => null,
                 ],
                 [
                     'uriTemplate' => '/users/{author}/comments{._format}',
@@ -135,6 +138,8 @@ class XmlExtractorTest extends TestCase
                     'securityPostValidation' => null,
                     'securityPostValidationMessage' => null,
                     'queryParameterValidationEnabled' => null,
+                    'strictQueryParameterValidation' => null,
+                    'hideHydraOperation' => null,
                     'input' => null,
                     'output' => null,
                     'types' => ['someirischema', 'anotheririschema'],
@@ -165,7 +170,6 @@ class XmlExtractorTest extends TestCase
                     'hydraContext' => [
                         'foo' => ['bar' => 'baz'],
                     ],
-                    'openapiContext' => null,
                     'openapi' => null,
                     'validationContext' => null,
                     'filters' => ['comment.custom_filter'],
@@ -245,7 +249,6 @@ class XmlExtractorTest extends TestCase
                             'hydraContext' => [
                                 'foo' => ['bar' => 'baz'],
                             ],
-                            'openapiContext' => null,
                             'openapi' => null,
                             'validationContext' => null,
                             'filters' => ['comment.custom_filter'],
@@ -265,6 +268,8 @@ class XmlExtractorTest extends TestCase
                             'write' => null,
                             'serialize' => null,
                             'queryParameterValidate' => null,
+                            'strictQueryParameterValidation' => null,
+                            'hideHydraOperation' => null,
                             'collection' => null,
                             'method' => null,
                             'priority' => null,
@@ -273,6 +278,9 @@ class XmlExtractorTest extends TestCase
                             'itemUriTemplate' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => null,
+                            'routeName' => 'custom_route_name',
                         ],
                         [
                             'name' => null,
@@ -343,7 +351,6 @@ class XmlExtractorTest extends TestCase
                             'hydraContext' => [
                                 'foo' => ['bar' => 'baz'],
                             ],
-                            'openapiContext' => null,
                             'openapi' => null,
                             'validationContext' => null,
                             'filters' => ['comment.custom_filter'],
@@ -366,6 +373,8 @@ class XmlExtractorTest extends TestCase
                             'write' => null,
                             'serialize' => null,
                             'queryParameterValidate' => null,
+                            'strictQueryParameterValidation' => null,
+                            'hideHydraOperation' => null,
                             'collection' => null,
                             'method' => null,
                             'priority' => null,
@@ -373,24 +382,35 @@ class XmlExtractorTest extends TestCase
                             'provider' => null,
                             'stateOptions' => null,
                             'links' => null,
+                            'headers' => ['hello' => 'world'],
+                            'parameters' => [
+                                'author' => new QueryParameter(
+                                    key: 'author',
+                                    required: true,
+                                    schema: [
+                                        'type' => 'string',
+                                    ],
+                                    extraProperties: ['foo' => 'bar']
+                                ),
+                            ],
+                            'routeName' => null,
                         ],
                     ],
                     'graphQlOperations' => null,
-                    'class' => Comment::class,
                     'processor' => null,
                     'provider' => null,
                     'read' => null,
                     'write' => null,
                     'stateOptions' => null,
                     'links' => null,
+                    'headers' => ['hello' => 'world'],
+                    'parameters' => null,
                 ],
             ],
         ], $extractor->getResources());
     }
 
-    /**
-     * @dataProvider getInvalidPaths
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('getInvalidPaths')]
     public function testInvalidXML(string $path, string $error): void
     {
         $this->expectException(InvalidArgumentException::class);

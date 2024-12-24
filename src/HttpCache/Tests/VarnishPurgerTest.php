@@ -68,13 +68,11 @@ class VarnishPurgerTest extends TestCase
         $purger->purge([]);
     }
 
-    /**
-     * @dataProvider provideChunkHeaderCases
-     */
+    #[\PHPUnit\Framework\Attributes\DataProvider('provideChunkHeaderCases')]
     public function testItChunksHeaderToAvoidHittingVarnishLimit(int $maxHeaderLength, array $iris, array $regexesToSend): void
     {
         /** @var HttpClientInterface $client */
-        $client = new class() implements ClientInterface {
+        $client = new class implements ClientInterface {
             public array $sentRegexes = [];
 
             public function send(RequestInterface $request, array $options = []): ResponseInterface
@@ -171,8 +169,8 @@ class VarnishPurgerTest extends TestCase
             8000,
             array_fill(0, 3000, '/foo'),
             [
-                sprintf('(%s)($|\,)', implode('|', array_fill(0, 1598, '/foo'))),
-                sprintf('(%s)($|\,)', implode('|', array_fill(0, 1402, '/foo'))),
+                \sprintf('(%s)($|\,)', implode('|', array_fill(0, 1598, '/foo'))),
+                \sprintf('(%s)($|\,)', implode('|', array_fill(0, 1402, '/foo'))),
             ],
         ];
     }

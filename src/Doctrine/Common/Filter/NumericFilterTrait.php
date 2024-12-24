@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace ApiPlatform\Doctrine\Common\Filter;
 
 use ApiPlatform\Doctrine\Common\PropertyHelperTrait;
-use ApiPlatform\Exception\InvalidArgumentException;
+use ApiPlatform\Metadata\Exception\InvalidArgumentException;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -63,7 +63,7 @@ trait NumericFilterTrait
     /**
      * Gets the PHP type corresponding to this Doctrine type.
      */
-    abstract protected function getType(string $doctrineType = null): string;
+    abstract protected function getType(?string $doctrineType = null): string;
 
     abstract protected function getProperties(): ?array;
 
@@ -83,7 +83,7 @@ trait NumericFilterTrait
     {
         if (!is_numeric($value) && (!\is_array($value) || !$this->isNumericArray($value))) {
             $this->getLogger()->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('Invalid numeric value for "%s" property', $property)),
+                'exception' => new InvalidArgumentException(\sprintf('Invalid numeric value for "%s" property', $property)),
             ]);
 
             return null;
@@ -102,7 +102,7 @@ trait NumericFilterTrait
 
         if (empty($values)) {
             $this->getLogger()->notice('Invalid filter ignored', [
-                'exception' => new InvalidArgumentException(sprintf('At least one value is required, multiple values should be in "%1$s[]=firstvalue&%1$s[]=secondvalue" format', $property)),
+                'exception' => new InvalidArgumentException(\sprintf('At least one value is required, multiple values should be in "%1$s[]=firstvalue&%1$s[]=secondvalue" format', $property)),
             ]);
 
             return null;

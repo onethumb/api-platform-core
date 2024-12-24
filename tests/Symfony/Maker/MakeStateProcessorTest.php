@@ -25,7 +25,7 @@ class MakeStateProcessorTest extends KernelTestCase
         (new Filesystem())->remove(self::tempDir());
     }
 
-    /** @dataProvider stateProcessorProvider */
+    #[\PHPUnit\Framework\Attributes\DataProvider('stateProcessorProvider')]
     public function testMakeStateProcessor(bool $isInteractive): void
     {
         $inputs = ['name' => 'CustomStateProcessor'];
@@ -74,6 +74,6 @@ class MakeStateProcessorTest extends KernelTestCase
 
     private static function tempFile(string $path): string
     {
-        return sprintf('%s/%s', self::tempDir(), $path);
+        return \sprintf('%s/%s', self::tempDir(), $path);
     }
 }

@@ -13,8 +13,11 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Doctrine\Odm\Filter;
 
+use ApiPlatform\Doctrine\Common\Filter\ManagerRegistryAwareInterface;
+use ApiPlatform\Doctrine\Common\Filter\PropertyAwareFilterInterface;
 use ApiPlatform\Doctrine\Common\PropertyHelperTrait;
 use ApiPlatform\Doctrine\Odm\PropertyHelperTrait as MongoDbOdmPropertyHelperTrait;
+use ApiPlatform\Metadata\Exception\RuntimeException;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ODM\MongoDB\Aggregation\Builder;
 use Doctrine\Persistence\ManagerRegistry;
@@ -29,21 +32,25 @@ use Symfony\Component\Serializer\NameConverter\NameConverterInterface;
  *
  * @author Alan Poulain <contact@alanpoulain.eu>
  */
-abstract class AbstractFilter implements FilterInterface
+abstract class AbstractFilter implements FilterInterface, PropertyAwareFilterInterface, ManagerRegistryAwareInterface
 {
     use MongoDbOdmPropertyHelperTrait;
     use PropertyHelperTrait;
     protected LoggerInterface $logger;
 
-    public function __construct(protected ManagerRegistry $managerRegistry, LoggerInterface $logger = null, protected ?array $properties = null, protected ?NameConverterInterface $nameConverter = null)
-    {
+    public function __construct(
+        protected ?ManagerRegistry $managerRegistry = null,
+        ?LoggerInterface $logger = null,
+        protected ?array $properties = null,
+        protected ?NameConverterInterface $nameConverter = null,
+    ) {
         $this->logger = $logger ?? new NullLogger();
     }
 
     /**
      * {@inheritdoc}
      */
-    public function apply(Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void
+    public function apply(Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void
     {
         foreach ($context['filters'] as $property => $value) {
             $this->filterProperty($this->denormalizePropertyName($property), $value, $aggregationBuilder, $resourceClass, $operation, $context);
@@ -53,16 +60,41 @@ abstract class AbstractFilter implements FilterInterface
     /**
      * Passes a property through the filter.
      */
-    abstract protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, Operation $operation = null, array &$context = []): void;
+    abstract protected function filterProperty(string $property, $value, Builder $aggregationBuilder, string $resourceClass, ?Operation $operation = null, array &$context = []): void;
 
-    protected function getManagerRegistry(): ManagerRegistry
+    public function hasManagerRegistry(): bool
     {
+        return $this->managerRegistry instanceof ManagerRegistry;
+    }
+
+    public function getManagerRegistry(): ManagerRegistry
+    {
+        if (!$this->hasManagerRegistry()) {
+            throw new RuntimeException('ManagerRegistry must be initialized before accessing it.');
+        }
+
         return $this->managerRegistry;
     }
 
-    protected function getProperties(): ?array
+    public function setManagerRegistry(ManagerRegistry $managerRegistry): void
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    public function getProperties(): ?array
     {
         return $this->properties;
+    }
+
+    /**
+     * @param array<string, mixed> $properties
+     */
+    public function setProperties(array $properties): void
+    {
+        $this->properties = $properties;
     }
 
     protected function getLogger(): LoggerInterface
@@ -86,7 +118,7 @@ abstract class AbstractFilter implements FilterInterface
     protected function denormalizePropertyName(string|int $property): string
     {
         if (!$this->nameConverter instanceof NameConverterInterface) {
-            return $property;
+            return (string) $property;
         }
 
         return implode('.', array_map($this->nameConverter->denormalize(...), explode('.', (string) $property)));

@@ -11,6 +11,12 @@
 
 declare(strict_types=1);
 
+use ApiPlatform\Metadata\Delete;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\Put;
 use ApiPlatform\Symfony\Bundle\ApiPlatformBundle;
 use ApiPlatform\Tests\Behat\DoctrineContext;
 use ApiPlatform\Tests\Fixtures\TestBundle\Document\User as UserDocument;
@@ -20,8 +26,6 @@ use Doctrine\Bundle\DoctrineBundle\ConnectionFactory;
 use Doctrine\Bundle\DoctrineBundle\DoctrineBundle;
 use Doctrine\Bundle\MongoDBBundle\Command\TailCursorDoctrineODMCommand;
 use Doctrine\Bundle\MongoDBBundle\DoctrineMongoDBBundle;
-use Doctrine\Common\Inflector\Inflector;
-use Doctrine\Inflector\InflectorFactory;
 use FriendsOfBehat\SymfonyExtension\Bundle\FriendsOfBehatSymfonyExtensionBundle;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -57,12 +61,6 @@ class AppKernel extends Kernel
 
         // patch for behat/symfony2-extension not supporting %env(APP_ENV)%
         $this->environment = $_SERVER['APP_ENV'] ?? $environment;
-
-        // patch for old versions of Doctrine Inflector, to delete when we'll drop support for v1
-        // see https://github.com/doctrine/inflector/issues/147#issuecomment-628807276
-        if (!class_exists(InflectorFactory::class)) { // @phpstan-ignore-next-line
-            Inflector::rules('plural', ['/taxon/i' => 'taxa']);
-        }
     }
 
     public function registerBundles(): array
@@ -74,10 +72,13 @@ class AppKernel extends Kernel
             new MercureBundle(),
             new SecurityBundle(),
             new WebProfilerBundle(),
-            new FriendsOfBehatSymfonyExtensionBundle(),
             new FrameworkBundle(),
             new MakerBundle(),
         ];
+
+        if (null === ($_ENV['APP_PHPUNIT'] ?? null)) {
+            $bundles[] = new FriendsOfBehatSymfonyExtensionBundle();
+        }
 
         if (class_exists(DoctrineMongoDBBundle::class)) {
             $bundles[] = new DoctrineMongoDBBundle();
@@ -86,6 +87,12 @@ class AppKernel extends Kernel
         $bundles[] = new TestBundle();
 
         return $bundles;
+    }
+
+    public function shutdown(): void
+    {
+        parent::shutdown();
+        restore_exception_handler();
     }
 
     public function getProjectDir(): string
@@ -236,10 +243,7 @@ class AppKernel extends Kernel
         }
         $c->prependExtensionConfig('twig', $twigConfig);
 
-        $metadataBackwardCompatibilityLayer = (bool) ($_SERVER['EVENT_LISTENERS_BACKWARD_COMPATIBILITY_LAYER'] ?? false);
-        $rfc7807CompliantErrors = (bool) ($_SERVER['RFC_7807_COMPLIANT_ERRORS'] ?? true);
-
-        extra_properties:
+        $useSymfonyListeners = (bool) ($_SERVER['USE_SYMFONY_LISTENERS'] ?? false);
 
         $c->prependExtensionConfig('api_platform', [
             'mapping' => [
@@ -247,8 +251,9 @@ class AppKernel extends Kernel
             ],
             'graphql' => [
                 'graphql_playground' => false,
+                'max_query_depth' => 200,
             ],
-            'event_listeners_backward_compatibility_layer' => $metadataBackwardCompatibilityLayer,
+            'use_symfony_listeners' => $useSymfonyListeners,
             'defaults' => [
                 'pagination_client_enabled' => true,
                 'pagination_client_items_per_page' => true,
@@ -261,10 +266,17 @@ class AppKernel extends Kernel
                     'public' => true,
                 ],
                 'normalization_context' => ['skip_null_values' => false],
-                'extra_properties' => [
-                    'rfc_7807_compliant_errors' => $rfc7807CompliantErrors,
-                    'standard_put' => true,
+                'operations' => [
+                    Get::class,
+                    GetCollection::class,
+                    Post::class,
+                    Put::class,
+                    Patch::class,
+                    Delete::class,
                 ],
+            ],
+            'serializer' => [
+                'hydra_prefix' => true,
             ],
         ]);
 
@@ -273,12 +285,18 @@ class AppKernel extends Kernel
             $c->prependExtensionConfig('doctrine', [
                 'orm' => [
                     'report_fields_where_declared' => true,
+                    'controller_resolver' => ['auto_mapping' => false],
                     'enable_lazy_ghost_objects' => true,
                 ],
             ]);
         }
 
         $loader->load(__DIR__.'/config/config_swagger.php');
+
+        // We reduce the amount of resources to the strict minimum to speed up tests
+        if (null !== ($_ENV['APP_PHPUNIT'] ?? null)) {
+            $loader->load(__DIR__.'/config/phpunit.yml');
+        }
 
         if ('mongodb' === $this->environment) {
             $c->prependExtensionConfig('api_platform', [
@@ -299,7 +317,7 @@ class AppKernel extends Kernel
 
     protected function build(ContainerBuilder $container): void
     {
-        $container->addCompilerPass(new class() implements CompilerPassInterface {
+        $container->addCompilerPass(new class implements CompilerPassInterface {
             public function process(ContainerBuilder $container): void
             {
                 if ($container->hasDefinition(TailCursorDoctrineODMCommand::class)) { // @phpstan-ignore-line

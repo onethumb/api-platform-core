@@ -13,6 +13,7 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Symfony\Bundle\Test;
 
+use ApiPlatform\JsonSchema\BackwardCompatibleSchemaFactory;
 use ApiPlatform\JsonSchema\Schema;
 use ApiPlatform\JsonSchema\SchemaFactoryInterface;
 use ApiPlatform\Metadata\Get;
@@ -20,6 +21,7 @@ use ApiPlatform\Metadata\GetCollection;
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
 use ApiPlatform\Symfony\Bundle\Test\Constraint\ArraySubset;
 use ApiPlatform\Symfony\Bundle\Test\Constraint\MatchesJsonSchema;
+use PHPUnit\Framework\Constraint\JsonMatches;
 use PHPUnit\Framework\ExpectationFailedException;
 use Symfony\Bundle\FrameworkBundle\Test\BrowserKitAssertionsTrait;
 use Symfony\Component\DependencyInjection\Exception\ServiceNotFoundException;
@@ -70,14 +72,18 @@ trait ApiTestAssertionsTrait
      */
     public static function assertJsonEquals(array|string $json, string $message = ''): void
     {
-        if (\is_string($json)) {
-            $json = json_decode($json, true, 512, \JSON_THROW_ON_ERROR);
-        }
-        if (!\is_array($json)) {
-            throw new \InvalidArgumentException('$json must be array or string (JSON array or JSON object)');
+        if (\is_array($json)) {
+            $json = json_encode(
+                $json,
+                \JSON_UNESCAPED_UNICODE
+                | \JSON_UNESCAPED_SLASHES
+                | \JSON_PRESERVE_ZERO_FRACTION
+                | \JSON_THROW_ON_ERROR);
         }
 
-        static::assertEqualsCanonicalizing($json, self::getHttpResponse()->toArray(false), $message);
+        $constraint = new JsonMatches($json);
+
+        static::assertThat(self::getHttpResponse()->getContent(false), $constraint, $message);
     }
 
     /**
@@ -91,7 +97,6 @@ trait ApiTestAssertionsTrait
      * @see https://github.com/sebastianbergmann/phpunit/issues/3494
      *
      * @throws ExpectationFailedException
-     * @throws \SebastianBergmann\RecursionContext\InvalidArgumentException
      * @throws \Exception
      */
     public static function assertArraySubset(iterable $subset, iterable $array, bool $checkForObjectIdentity = false, string $message = ''): void
@@ -101,14 +106,14 @@ trait ApiTestAssertionsTrait
         static::assertThat($array, $constraint, $message);
     }
 
-    public static function assertMatchesJsonSchema(object|array|string $jsonSchema, int $checkMode = null, string $message = ''): void
+    public static function assertMatchesJsonSchema(object|array|string $jsonSchema, ?int $checkMode = null, string $message = ''): void
     {
         $constraint = new MatchesJsonSchema($jsonSchema, $checkMode);
 
         static::assertThat(self::getHttpResponse()->toArray(false), $constraint, $message);
     }
 
-    public static function assertMatchesResourceCollectionJsonSchema(string $resourceClass, string $operationName = null, string $format = 'jsonld', array $serializationContext = null): void
+    public static function assertMatchesResourceCollectionJsonSchema(string $resourceClass, ?string $operationName = null, string $format = 'jsonld', ?array $serializationContext = null): void
     {
         $schemaFactory = self::getSchemaFactory();
 
@@ -118,12 +123,14 @@ trait ApiTestAssertionsTrait
             $operation = $operationName ? (new GetCollection())->withName($operationName) : new GetCollection();
         }
 
-        $schema = $schemaFactory->buildSchema($resourceClass, $format, Schema::TYPE_OUTPUT, $operation, null, $serializationContext);
+        $serializationContext = $serializationContext ?? $operation->getNormalizationContext();
+
+        $schema = $schemaFactory->buildSchema($resourceClass, $format, Schema::TYPE_OUTPUT, $operation, null, ($serializationContext ?? []) + [BackwardCompatibleSchemaFactory::SCHEMA_DRAFT4_VERSION => true]);
 
         static::assertMatchesJsonSchema($schema->getArrayCopy());
     }
 
-    public static function assertMatchesResourceItemJsonSchema(string $resourceClass, string $operationName = null, string $format = 'jsonld', array $serializationContext = null): void
+    public static function assertMatchesResourceItemJsonSchema(string $resourceClass, ?string $operationName = null, string $format = 'jsonld', ?array $serializationContext = null): void
     {
         $schemaFactory = self::getSchemaFactory();
 
@@ -133,7 +140,9 @@ trait ApiTestAssertionsTrait
             $operation = $operationName ? (new Get())->withName($operationName) : new Get();
         }
 
-        $schema = $schemaFactory->buildSchema($resourceClass, $format, Schema::TYPE_OUTPUT, $operation, null, $serializationContext);
+        $serializationContext = $serializationContext ?? $operation->getNormalizationContext();
+
+        $schema = $schemaFactory->buildSchema($resourceClass, $format, Schema::TYPE_OUTPUT, $operation, null, ($serializationContext ?? []) + [BackwardCompatibleSchemaFactory::SCHEMA_DRAFT4_VERSION => true]);
 
         static::assertMatchesJsonSchema($schema->getArrayCopy());
     }
@@ -141,12 +150,12 @@ trait ApiTestAssertionsTrait
     /**
      * @return Update[]
      */
-    public static function getMercureMessages(string $hubName = null): array
+    public static function getMercureMessages(?string $hubName = null): array
     {
         return array_map(fn (array $update) => $update['object'], self::getMercureHub($hubName)->getMessages());
     }
 
-    public static function getMercureMessage(int $index = 0, string $hubName = null): ?Update
+    public static function getMercureMessage(int $index = 0, ?string $hubName = null): ?Update
     {
         return static::getMercureMessages($hubName)[$index] ?? null;
     }
@@ -154,7 +163,7 @@ trait ApiTestAssertionsTrait
     /**
      * @throws \JsonException
      */
-    public static function assertMercureUpdateMatchesJsonSchema(Update $update, array $topics, array|object|string $jsonSchema = '', bool $private = false, string $id = null, string $type = null, int $retry = null, string $message = ''): void
+    public static function assertMercureUpdateMatchesJsonSchema(Update $update, array $topics, array|object|string $jsonSchema = '', bool $private = false, ?string $id = null, ?string $type = null, ?int $retry = null, string $message = ''): void
     {
         static::assertSame($topics, $update->getTopics(), $message);
         static::assertThat(json_decode($update->getData(), true, \JSON_THROW_ON_ERROR), new MatchesJsonSchema($jsonSchema), $message);
@@ -174,7 +183,7 @@ trait ApiTestAssertionsTrait
         static::fail('A client must have Mercure enabled to make update assertions. Did you forget to require symfony/mercure?');
     }
 
-    public static function getMercureHub(string $name = null): TraceableHub
+    public static function getMercureHub(?string $name = null): TraceableHub
     {
         $hub = self::getMercureRegistry()->getHub($name);
         if (!$hub instanceof TraceableHub) {
@@ -184,7 +193,7 @@ trait ApiTestAssertionsTrait
         return $hub;
     }
 
-    private static function getHttpClient(Client $newClient = null): ?Client
+    private static function getHttpClient(?Client $newClient = null): ?Client
     {
         static $client;
 
@@ -193,7 +202,7 @@ trait ApiTestAssertionsTrait
         }
 
         if (!$client instanceof Client) {
-            static::fail(sprintf('A client must be set to make assertions on it. Did you forget to call "%s::createClient()"?', self::class));
+            static::fail(\sprintf('A client must be set to make assertions on it. Did you forget to call "%s::createClient()"?', self::class));
         }
 
         return $client;

@@ -36,6 +36,11 @@ services:
         arguments: [ { 'dummyFloat': ~, 'dummyPrice': ~ } ]
         tags:      [ { name: 'api_platform.filter', id: 'my_dummy.range' } ]
 
+    app.my_dummy_resource.backed_enum_filter:
+        parent:    'api_platform.doctrine.orm.backed_enum_filter'
+        arguments: [ { 'dummyBackedEnum': ~, 'embeddedDummy.dummyBackedEnum': ~, 'relatedDummy.embeddedDummy.dummyBackedEnum': ~ } ]
+        tags:      [ { name: 'api_platform.filter', id: 'my_dummy.backed_enum' } ]
+
     app.my_dummy_resource.boolean_filter:
         parent:    'api_platform.doctrine.orm.boolean_filter'
         arguments: [ { 'dummyBoolean': ~, 'embeddedDummy.dummyBoolean': ~, 'relatedDummy.embeddedDummy.dummyBoolean': ~ } ]
@@ -116,7 +121,7 @@ services:
     ApiPlatform\Tests\Fixtures\TestBundle\State\EntityClassAndCustomProviderResourceProvider:
         class: 'ApiPlatform\Tests\Fixtures\TestBundle\State\EntityClassAndCustomProviderResourceProvider'
         tags:
-            -  { name: 'api_platform.state_provider' }
+            - name: 'api_platform.state_provider'
         arguments:
             $itemProvider: '@ApiPlatform\Doctrine\Orm\State\ItemProvider'
             $collectionProvider: '@ApiPlatform\Doctrine\Orm\State\CollectionProvider'
@@ -135,3 +140,16 @@ services:
             - name: 'api_platform.state_provider'
         arguments:
             $itemProvider: '@ApiPlatform\Doctrine\Orm\State\ItemProvider'
+
+    app_search_filter_via_parameter:
+        parent:    'api_platform.doctrine.orm.search_filter'
+        arguments: [ { foo: 'exact' } ]
+        tags:      [ { name: 'api_platform.filter', id: 'app_search_filter_via_parameter' } ]
+ 
+    app_search_filter_via_parameter.order_filter:
+        parent: 'api_platform.doctrine.orm.order_filter'
+        arguments: [ { id: 'ASC', foo: 'DESC' } ]
+        tags:  [ 'api_platform.filter' ]
+
+    ApiPlatform\Tests\Fixtures\TestBundle\Filter\QueryParameterFilter:
+        tags:  [ 'api_platform.filter' ]

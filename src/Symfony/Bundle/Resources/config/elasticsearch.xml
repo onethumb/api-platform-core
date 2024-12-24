@@ -20,6 +20,8 @@
             <argument type="service" id="serializer.property_accessor" />
             <argument type="service" id="property_info" on-invalid="ignore" />
             <argument type="service" id="serializer.mapping.class_discriminator_resolver" on-invalid="ignore" />
+            <argument>null</argument>
+            <argument>%api_platform.serializer.default_context%</argument>
 
             <!-- Run after serializer.normalizer.data_uri but before serializer.normalizer.object -->
             <tag name="serializer.normalizer" priority="-922" />
@@ -72,8 +74,8 @@
 
         <service id="api_platform.elasticsearch.state.item_provider" class="ApiPlatform\Elasticsearch\State\ItemProvider" public="false">
             <argument type="service" id="api_platform.elasticsearch.client" />
-            <argument type="service" id="api_platform.elasticsearch.metadata.document.metadata_factory" on-invalid="null" />
             <argument type="service" id="serializer" />
+            <argument type="service" id="api_platform.inflector" on-invalid="null" />
 
             <tag name="api_platform.state_provider" priority="-100" key="ApiPlatform\Elasticsearch\State\ItemProvider"/>
             <tag name="api_platform.state_provider" priority="-100" />
@@ -82,10 +84,10 @@
 
         <service id="api_platform.elasticsearch.state.collection_provider" class="ApiPlatform\Elasticsearch\State\CollectionProvider" public="false">
             <argument type="service" id="api_platform.elasticsearch.client" />
-            <argument type="service" id="api_platform.elasticsearch.metadata.document.metadata_factory" on-invalid="null" />
             <argument type="service" id="serializer" />
             <argument type="service" id="api_platform.pagination" />
-            <argument type="tagged" tag="api_platform.elasticsearch.request_body_search_extension.collection" />
+            <argument type="tagged_iterator" tag="api_platform.elasticsearch.request_body_search_extension.collection" />
+            <argument type="service" id="api_platform.inflector" on-invalid="null" />
 
             <tag name="api_platform.state_provider" priority="-100" key="ApiPlatform\Elasticsearch\State\CollectionProvider"/>
             <tag name="api_platform.state_provider" priority="-100" />
@@ -93,9 +95,7 @@
         <service id="ApiPlatform\Elasticsearch\State\CollectionProvider" alias="api_platform.elasticsearch.state.collection_provider"/>
 
         <service id="api_platform.elasticsearch.metadata.resource.metadata_collection_factory" class="ApiPlatform\Elasticsearch\Metadata\Resource\Factory\ElasticsearchProviderResourceMetadataCollectionFactory" decorates="api_platform.metadata.resource.metadata_collection_factory" decoration-priority="40">
-            <argument type="service" id="api_platform.elasticsearch.client_for_metadata" on-invalid="null" />
             <argument type="service" id="api_platform.elasticsearch.metadata.resource.metadata_collection_factory.inner" />
-            <argument>false</argument>
         </service>
 
     </services>

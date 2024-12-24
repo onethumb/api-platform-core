@@ -1,5 +1,939 @@
 # Changelog
 
+## v4.0.13
+
+### Bug fixes
+
+* [3a694624b](https://github.com/api-platform/core/commit/3a694624bdd6c82df756ff04682b5f90fd625f59) fix(laravel): eloquent BelongsToMany relation (#6862)
+* [c8db7aef0](https://github.com/api-platform/core/commit/c8db7aef05557675940c3e610c94c6a2184d90ba) fix(laravel): jsonapi query parameters (page, sort, fields and include) (#6876)
+* [f2c998158](https://github.com/api-platform/core/commit/f2c998158a70632a26efcdd29a17d7f3a2cb859c) fix(jsonld): anonymous context hydra_prefix value (#6873)
+
+Also contains [v3.4.10 changes](#v3410).
+
+### Features
+
+## v4.0.12
+
+### Bug fixes
+
+* [4db72f55f](https://github.com/api-platform/core/commit/4db72f55fa9dcd48518dc62b5bf472895b6a966b) fix: filter may not use FilterInterface (#6858)
+* [c899a3da1](https://github.com/api-platform/core/commit/c899a3da14eb2dff49095d28855ef8f2a1c4072a) fix(laravel): use tagged resolvers as graphql resolvers
+ (#6855)
+* [e0f8c38b9](https://github.com/api-platform/core/commit/e0f8c38b98a05f29ad36b37725e54a036209a859) fix(laravel): graphql currentPage (#6857)
+
+Also contains [v3.4.9 changes](#v349).
+
+### Features
+
+## v4.0.11
+
+### Bug fixes
+
+* [af66075fd](https://github.com/api-platform/core/commit/af66075fdd6b83bdebc1c4ca33cc0ab7e1a7f8af) fix(laravel): fix foregin keys (relations) beeing in attributes (#6843)
+
+### Features
+
+* [2d59c6369](https://github.com/api-platform/core/commit/2d59c63699b4602cfe4d62504896c6d4121c1be4) feat(laravel): belongs to many relations (#6818)
+
+Also contains [v3.4.8 changes](#v348).
+
+## v4.0.10
+
+### Bug fixes
+
+* [774590069](https://github.com/api-platform/core/commit/77459006912d9162fdae9eadd496a62858ac990e) fix(laravel): add contact & license options to fix swagger UI issues (#6804)
+* [7ff9790c8](https://github.com/api-platform/core/commit/7ff9790c8e326de8152c653974fd523770dc6501) fix(laravel): allow boolean cast (#6808)
+* [f19dd9446](https://github.com/api-platform/core/commit/f19dd9446f5722d243e82b1e7bc34ebdab95719d) fix(laravel): graphQl type locator indexes (#6815)
+
+Also contains [v3.4.7 changes](#v347).
+
+### Features
+
+## v4.0.9
+
+### Bug fixes
+
+* [417fef5da](https://github.com/api-platform/core/commit/417fef5da9b1f3f16e323a193dec141f13b1ebc5) fix(laravel): overlaping route format (#6782)
+* [81099065e](https://github.com/api-platform/core/commit/81099065e30eb0356881907bd52095b85b9cae3d) fix(laravel): declare normalizer list as a service (#6786)
+* [dc8c09b1e](https://github.com/api-platform/core/commit/dc8c09b1e1ac15a7bcd4961fc3e80b06bec82e77) fix(laravel) graphQl Relationship loading (#6792)
+
+Also contains [v3.4.6 changes](#v346).
+
+### Features
+
+## v4.0.8
+
+### Bug fixes
+
+* [dddb97075](https://github.com/api-platform/core/commit/dddb97075af9c6e2517e1881b803c9d31a1913cf) fix(symfony): default formats order (#6780)
+
+### Features
+
+## v4.0.7
+
+### Bug fixes
+
+* [17c916c3a](https://github.com/api-platform/core/commit/17c916c3a1bcc837c9bc842dc48390dbeb043450) fix(symfony): BackedEnumProvider typo fix (#6769)
+* [216d9ccaa](https://github.com/api-platform/core/commit/216d9ccaacf7845daaaeab30f3a58bb5567430fe) fix(serializer): fetch type on normalization error when possible (#6761)
+* [2f967d934](https://github.com/api-platform/core/commit/2f967d9345004779f409b9ce1b5d0cbba84c7132) fix(doctrine): throw an exception when a filter is not found in a parameter (#6767)
+* [6c9b508b0](https://github.com/api-platform/core/commit/6c9b508b030976741a68f84e226502e6c218e896) fix(laravel): remove link header when jsonld is not enabled (#6768)
+* [736ca045e](https://github.com/api-platform/core/commit/736ca045e6832f04aaa002ddd7b85c55df4696bb) fix(validator): allow to pass both a ConstraintViolationList and a previous exception (#6762)
+* [9ac3661b6](https://github.com/api-platform/core/commit/9ac3661b6a75255832203b87a9ba7994add64061) fix(hydra): store and use hydra context in a local variable (#6765)
+
+### Features
+
+## v4.0.6
+
+### Bug fixes
+
+* [195c4e788](https://github.com/api-platform/core/commit/195c4e7883520416e042ac78143b18652a216fbf) fix(hydra): hydra context changed (#6710)
+* [4f65ef2d0](https://github.com/api-platform/core/commit/4f65ef2d061215df348e3505856f0f41c7c909ed) fix(metadata): providing parameter constraints skips automatic ones (#6756)
+* [5a8ef115a](https://github.com/api-platform/core/commit/5a8ef115a90791992a6c1325fb6d1ac458b22153) fix(symfony): ECMA-262 pattern with RegExp validator (#6733)
+* [67c5a2a24](https://github.com/api-platform/core/commit/67c5a2a2463bca94f0997b4fab1248a08994465b) fix(laravel): jsonapi error serialization (#6755)
+* [ac6f667f3](https://github.com/api-platform/core/commit/ac6f667f301f6c4c399a707faf00567239bd98d8) fix(laravel): collection relations other than HasMany (#6737)
+
+### Features
+
+* [cecd77149](https://github.com/api-platform/core/commit/cecd77149795c1a455ac72bc3ed0606413e69900) feat(laravel): use laravel cache setting (#6751)
+
+## v4.0.5
+
+### Bug fixes
+
+* [4171d5f9c](https://github.com/api-platform/core/commit/4171d5f9cd41731b857c53a186270ba0626baedf) fix(graphql): register query parameter arguments with filters (#6726)
+* [48ab53816](https://github.com/api-platform/core/commit/48ab53816c55e6116aa64ac81f522f4b7b9bb9f6) fix(laravel): make command writes to app instead of src (#6723)
+
+### Features
+
+## v4.0.4
+
+### Bug fixes
+
+* [2e8287dad](https://github.com/api-platform/core/commit/2e8287dad0c0315dd6527279a6359c0a22f40d93) fix(laravel): allow serializer attributes through ApiProperty (#6680)
+* [439c188ea](https://github.com/api-platform/core/commit/439c188ea1685676d5e705a49a4b835f35a84d72) fix(laravel): match integer type (#6715)
+* [4ad7a50aa](https://github.com/api-platform/core/commit/4ad7a50aaabf0d85e2eb5bb3a6d4ef8d5b7b39a7) fix(laravel): openapi Options binding (#6714)
+* [ec6e64512](https://github.com/api-platform/core/commit/ec6e6451299a50fcab397e86fafe6db132ce7519) fix(laravel): skip resource path when not available (#6697)
+
+### Features
+
+* [5aa799321](https://github.com/api-platform/core/commit/5aa7993219a6fb55f11476a031963a542b2d3586) feat(laravel): command to generate state providers/processors (#6708)
+
+## v4.0.3
+
+### Bug fixes
+
+* [025f63e69](https://github.com/api-platform/core/commit/025f63e69c2ec655a828559ed78c49a365ca043b) fix(laravel): route registration of EntrypointController should be last (#6667)
+* [2b4937a3e](https://github.com/api-platform/core/commit/2b4937a3e09fb891b99fd8499b597190a4b740e0) fix(laravel): eloquent accessors (#6668)
+* [4312a1f55](https://github.com/api-platform/core/commit/4312a1f55f4f80152be93734cb5cf73c70dee53a) fix(metadata): register parameters on graphql operations
+* [6d4e24883](https://github.com/api-platform/core/commit/6d4e24883767f1c58dff5e52f57b0422110fa38f) fix(laravel): hiding/showing relationships (#6679)
+* [85306f2f5](https://github.com/api-platform/core/commit/85306f2f5a7d480b1570471689d1d3ca4e9846a3) fix(laravel): swagger ui authentication (#6661)
+* [a6e37068e](https://github.com/api-platform/core/commit/a6e37068ea49d1b5a4ee098a62a287d62fba1c35) fix(laravel): use Model::qualifyColumn instead of hardcoding $table.$column (#6658)
+* [b0d5a2ade](https://github.com/api-platform/core/commit/b0d5a2adedb583074aa93d4f641bdda419d31ffa) fix(laravel): register global middleware to secure non-rest routes
+* [f9d96e546](https://github.com/api-platform/core/commit/f9d96e546a37121244ab98d65c2d91f48b1bb112) fix(metadata): graphql can be disabled but with an existing operation
+
+
+### Features
+
+* [df701da05](https://github.com/api-platform/core/commit/df701da05620a847f529ebabaee97f8cf5ecb37f) feat(laravel): graphql policies
+
+## v4.0.2
+
+### Bug fixes
+
+* [219199db3](https://github.com/api-platform/core/commit/219199db386cab05f1c1225b889c0a9609b36699) fix(symfony): missing alias to serializer context builder interface (#6643)
+* [5f943e3bb](https://github.com/api-platform/core/commit/5f943e3bb56934ba5d0b858f6b4c20a2985b6b6b) fix(graphql): wrong exception namespace (#6647)
+* [72a0b669a](https://github.com/api-platform/core/commit/72a0b669a426ca4bbbf14cf80a6ced683b947e8c) fix(serializer): remove serializer context builder interface
+* [88bd8c3e1](https://github.com/api-platform/core/commit/88bd8c3e151c843649bcac3feefc2cb956212410) fix(laravel): installation command, fix config overwrites (#6649)
+* [93314b08d](https://github.com/api-platform/core/commit/93314b08de1e6f0505af9e3a3ba3d9971f1ef09c) fix(serializer): allow state's SerializerFilterContextBuilderInterface (#6632)
+* [9a0afc917](https://github.com/api-platform/core/commit/9a0afc917a4bfa824ffbb640af9bb1114a5d31b4) fix(serializer): remove unnecessary dependency
+* [c47e2996e](https://github.com/api-platform/core/commit/c47e2996e51c587c998fde88903703bd6ac9a43c) fix: default format and standard_put values
+* [e327f5f69](https://github.com/api-platform/core/commit/e327f5f69c823c1ed674eefc0eb2551e30fb36bd) fix(symfony): namespace of path segment name generator services (#6642)
+
+Notes: 
+
+`standard_put=true` is now the default, you can set it to `false` using `extra_properties.defaults`
+
+## v4.0.1
+
+### Bug fixes
+
+* [eb80a1a56](https://github.com/api-platform/core/commit/eb80a1a5651b81cab13b018662a0d21e05facbfe) fix(state): precise format on content-location (#6627)
+
+### Features
+
+* [4a2271670](https://github.com/api-platform/core/commit/4a2271670a88c318ab38bd7eb2a1c0b93a5c0ea0) feat: api-platform/json-hal component (#6621)
+
+## v4.0.0
+
+### Bug fixes
+
+* [7c5689626](https://github.com/api-platform/core/commit/7c568962634691892fe1057b3c982765a1c20ba2) fix(laravel): call authorize on delete but not validation (#6618)
+* [d74b2b5fa](https://github.com/api-platform/core/commit/d74b2b5fa939a9f5ca11d3538e358070047a6c3d) fix: swagger ui with route identifier (#6616)
+* [de6e3f546](https://github.com/api-platform/core/commit/de6e3f546a26c5ad5444d8e2448d81faec36bd73) fix(laravel): validate enum schema within filter (#6615)
+* [0a461d749](https://github.com/api-platform/core/commit/0a461d749b7b4ac706f3b7b6138a13cb6e4a9d2d) fix(symfony): allow schema restriction for collection like property from choice constraint (#6520)
+* [0c66a494d](https://github.com/api-platform/core/commit/0c66a494d3bda5817e59da2e43f0232e2e8fea15) fix(laravel): cache metadata, add trace on debug mode (#6555)
+* [1b6e7c6cc](https://github.com/api-platform/core/commit/1b6e7c6ccf3d2c61816a7dceb35f1d5980ea0565) fix(laravel): disable GraphQL by default and fix provider
+* [290944103](https://github.com/api-platform/core/commit/290944103039a4a6d64904d1a89264b800c809d5) fix(laravel): SwaggerUI title (#6527)
+* [2df0860b5](https://github.com/api-platform/core/commit/2df0860b577bb1ae0882096436f3eaeb91281901) fix(laravel): Eloquent date and datetime type detection (#6529)
+* [2fc74f2e6](https://github.com/api-platform/core/commit/2fc74f2e651f229e982343c1cb0c6a2c5d5eee64) fix: remove PUT from default operations (#6570)
+* [3b42c9ff2](https://github.com/api-platform/core/commit/3b42c9ff235de5feac555d0283c513a6e4643953) fix: deserialization path for not denormalizable relations collected errors (#6537)
+* [3c554a605](https://github.com/api-platform/core/commit/3c554a605ec9d5f36dfd852c4f93f0ce582064c9) fix(laravel): docs _format and open swagger ui (#6595)
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [4ee209eff](https://github.com/api-platform/core/commit/4ee209effb0fd11789db9f016d6e90aa3cb942a9) fix(laravel): visible and hidden fields support (#6538)
+* [6e15eb95f](https://github.com/api-platform/core/commit/6e15eb95fffb2deec3d381f5d6fd87e189772270) fix(laravel): register HydraPartialCollectionViewNormalizer (#6588)
+* [86365be2a](https://github.com/api-platform/core/commit/86365be2a5b8e8d0050e09d4e401bb758aa8b7a8) fix(laravel): Eloquent PropertyAccessor (#6536)
+* [a1dd0b54d](https://github.com/api-platform/core/commit/a1dd0b54d137d70f2163fa03690c1f4c74a549c0) fix(laravel): entrypoint with doc formats (#6552)
+* [a4a53ab48](https://github.com/api-platform/core/commit/a4a53ab4838f4d17d3677952157b44ec165e3e3a) fix(laravel): identitifer is not writable unless marked as writable (#6531)
+* [a6f355358](https://github.com/api-platform/core/commit/a6f355358a88e7cf7759db0dee41e185157ddc68) fix(laravel): do not normalize exception originalTrace (#6533)
+* [bd6a57c4c](https://github.com/api-platform/core/commit/bd6a57c4c0b38d6f880a5bd79031a87033f707e6) fix(laravel): snake case props (#6532)
+* [c31566602](https://github.com/api-platform/core/commit/c315666022185839742b8c5ef81601d85d8c3f4b) fix(laravel): api_doc route regex
+* [ebc61d59d](https://github.com/api-platform/core/commit/ebc61d59d60eda3a020593cf4cb46c5d30548e46) fix(laravel): entrypoint serialization (#6541)
+
+### Features
+
+* [00787f32d](https://github.com/api-platform/core/commit/00787f32da54418de7d869cff218e22d8ae2ae1d) feat(laravel): automatically register policies (#6623)
+* [06a647a80](https://github.com/api-platform/core/commit/06a647a80d4c6b7bfb3474d0685bcb445b56a5a8) feat(laravel): add CSV support (#6617)
+* [a49bde1ea](https://github.com/api-platform/core/commit/a49bde1ea79ae4226b70c20f9bf967ac77e9ab89)  feat(laravel): filter validations rules
+* [03357fb90](https://github.com/api-platform/core/commit/03357fb90ac0003f0cec2002df01711d0fb99a1e) feat(laravel): supports more Eloquent types (#6544)
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [538648840](https://github.com/api-platform/core/commit/538648840dc7439b12033ed6f413f3167705da4d) feat(laravel): enable graphQl support (#6550)
+* [5b9767be2](https://github.com/api-platform/core/commit/5b9767be215afdf61fccf8490d0a3a7018078ce5) feat(laravel): policy, auth and gate (#6523)
+* [5e1233c57](https://github.com/api-platform/core/commit/5e1233c57a497d00a7c4bd3e3ad0cac25aeac014) feat(laravel): search filter (#6534)
+* [9c461626f](https://github.com/api-platform/core/commit/9c461626f7d02f8d15487134b636f11966c19a5e) feat(laravel): provide a trait in addition to the annotation (#6543)
+* [c9f18d4fb](https://github.com/api-platform/core/commit/c9f18d4fb833ea0b89ef18021cad491cf0600ef1)  feat(laravel): eloquent filters (search, date, equals, or) (#6593)
+* [e09e73efc](https://github.com/api-platform/core/commit/e09e73efc5b4a39ab33d00c5d5422d8d9f7b5e89) feat: remove hydra prefix (#6418)
+
+## v4.0.0-alpha.5
+
+### Bug fixes
+
+* [0a461d749](https://github.com/api-platform/core/commit/0a461d749b7b4ac706f3b7b6138a13cb6e4a9d2d) fix(symfony): allow schema restriction for collection like property from choice constraint (#6520)
+* [0c66a494d](https://github.com/api-platform/core/commit/0c66a494d3bda5817e59da2e43f0232e2e8fea15) fix(laravel): cache metadata, add trace on debug mode (#6555)
+* [1b6e7c6cc](https://github.com/api-platform/core/commit/1b6e7c6ccf3d2c61816a7dceb35f1d5980ea0565) fix(laravel): disable GraphQL by default and fix provider
+* [290944103](https://github.com/api-platform/core/commit/290944103039a4a6d64904d1a89264b800c809d5) fix(laravel): SwaggerUI title (#6527)
+* [2df0860b5](https://github.com/api-platform/core/commit/2df0860b577bb1ae0882096436f3eaeb91281901) fix(laravel): Eloquent date and datetime type detection (#6529)
+* [2fc74f2e6](https://github.com/api-platform/core/commit/2fc74f2e651f229e982343c1cb0c6a2c5d5eee64) fix: remove PUT from default operations (#6570)
+* [3b42c9ff2](https://github.com/api-platform/core/commit/3b42c9ff235de5feac555d0283c513a6e4643953) fix: deserialization path for not denormalizable relations collected errors (#6537)
+* [3c554a605](https://github.com/api-platform/core/commit/3c554a605ec9d5f36dfd852c4f93f0ce582064c9) fix(laravel): docs _format and open swagger ui (#6595)
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [4ee209eff](https://github.com/api-platform/core/commit/4ee209effb0fd11789db9f016d6e90aa3cb942a9) fix(laravel): visible and hidden fields support (#6538)
+* [6e15eb95f](https://github.com/api-platform/core/commit/6e15eb95fffb2deec3d381f5d6fd87e189772270) fix(laravel): register HydraPartialCollectionViewNormalizer (#6588)
+* [86365be2a](https://github.com/api-platform/core/commit/86365be2a5b8e8d0050e09d4e401bb758aa8b7a8) fix(laravel): Eloquent PropertyAccessor (#6536)
+* [a1dd0b54d](https://github.com/api-platform/core/commit/a1dd0b54d137d70f2163fa03690c1f4c74a549c0) fix(laravel): entrypoint with doc formats (#6552)
+* [a4a53ab48](https://github.com/api-platform/core/commit/a4a53ab4838f4d17d3677952157b44ec165e3e3a) fix(laravel): identitifer is not writable unless marked as writable (#6531)
+* [a6f355358](https://github.com/api-platform/core/commit/a6f355358a88e7cf7759db0dee41e185157ddc68) fix(laravel): do not normalize exception originalTrace (#6533)
+* [bd6a57c4c](https://github.com/api-platform/core/commit/bd6a57c4c0b38d6f880a5bd79031a87033f707e6) fix(laravel): snake case props (#6532)
+* [c31566602](https://github.com/api-platform/core/commit/c315666022185839742b8c5ef81601d85d8c3f4b) fix(laravel): api_doc route regex
+* [ebc61d59d](https://github.com/api-platform/core/commit/ebc61d59d60eda3a020593cf4cb46c5d30548e46) fix(laravel): entrypoint serialization (#6541)
+
+
+### Features
+
+* [03357fb90](https://github.com/api-platform/core/commit/03357fb90ac0003f0cec2002df01711d0fb99a1e) feat(laravel): supports more Eloquent types (#6544)
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [538648840](https://github.com/api-platform/core/commit/538648840dc7439b12033ed6f413f3167705da4d) feat(laravel): enable graphQl support (#6550)
+* [5b9767be2](https://github.com/api-platform/core/commit/5b9767be215afdf61fccf8490d0a3a7018078ce5) feat(laravel): policy, auth and gate (#6523)
+* [5e1233c57](https://github.com/api-platform/core/commit/5e1233c57a497d00a7c4bd3e3ad0cac25aeac014) feat(laravel): search filter (#6534)
+* [9c461626f](https://github.com/api-platform/core/commit/9c461626f7d02f8d15487134b636f11966c19a5e) feat(laravel): provide a trait in addition to the annotation (#6543)
+* [c9f18d4fb](https://github.com/api-platform/core/commit/c9f18d4fb833ea0b89ef18021cad491cf0600ef1)  feat(laravel): eloquent filters (search, date, equals, or) (#6593)
+* [e09e73efc](https://github.com/api-platform/core/commit/e09e73efc5b4a39ab33d00c5d5422d8d9f7b5e89) feat: remove hydra prefix (#6418)
+
+## v4.0.0-alpha.1
+
+### Bug fixes
+
+* [f7f9f5427](https://github.com/api-platform/core/commit/f7f9f542719ad43d6e0fe74024a2fa05c11cb6fa) fix(laravel): phpstan/doc-parser is mandatory
+
+### Features
+
+* [0d5f35683](https://github.com/api-platform/core/commit/0d5f356839eb6aa9f536044abe4affa736553e76) feat(laravel): laravel component (#5882)
+
+## v3.4.10
+
+### Bug fixes
+
+* [2ee5eb496](https://github.com/api-platform/core/commit/2ee5eb4967f507d04ae07280914bea3c712d8cad) fix(symfony): mercure exception formatting by calling array_keys() (#6879)
+
+## v3.4.9
+
+### Bug fixes
+
+* [22cbd0147](https://github.com/api-platform/core/commit/22cbd0147ef6f817093533d62dc8279add67a647) fix(metadata): various parameter improvements (#6867)
+* [978975ef0](https://github.com/api-platform/core/commit/978975ef01d7b9d230291676527aa1140a7e552f) fix(jsonschema): hashmaps produces invalid openapi schema (#6830)
+* [a209dd440](https://github.com/api-platform/core/commit/a209dd440957176099247acf35b82611073352b1) fix: add missing error normalizer trait and remove deprecated interface (#6853)
+* [abbc031ee](https://github.com/api-platform/core/commit/abbc031eece83b54781502cd6373b47a09e109f4) fix: test empty parameter against null (#6852)
+
+### Notes
+
+- `Parameter::getValue()` now takes a default value as argument `getValue(mixed $default = new ParameterNotFound()): mixed`
+- `Parametes::get(string $key, string $parameterClass = QueryParameter::class)` (but also `has` and `remove`) now has a default value as second argument to `QueryParameter::class`
+- Constraint violation had the wrong message when using `property`, fixed by using the `key` instead
+
+## v3.4.8
+
+### Bug fixes
+
+* [4d7deeaf7](https://github.com/api-platform/core/commit/4d7deeaf794178b5496ae989520095831a86df8a) fix(jsonld): check if supportedTypes exists (#6825)
+* [5111935d4](https://github.com/api-platform/core/commit/5111935d4f917920c6f3d24b828f9d59fd0e3520) fix(symfony): object typed property schema collection restriction (#6823)
+* [6bf894f6f](https://github.com/api-platform/core/commit/6bf894f6f0ead0751936aeddcfc527f017498bb3) fix(serializer): use attribute denormalization context for constructor arguments (#6821)
+* [86c97cac3](https://github.com/api-platform/core/commit/86c97cac3b8d45b6190e2999b99a02e88dd4e527) fix(symfony): symfony 7.2 deprecations (#6835)
+* [d312eae7e](https://github.com/api-platform/core/commit/d312eae7ef590ec05139c09bfaf2d3c7668a3f22) fix(doctrine): fixed orm datefilter applying inner join when no filtering values have been provided (#6849)
+
+## v3.4.7
+
+### Bug fixes
+
+* [2d25e79e0](https://github.com/api-platform/core/commit/2d25e79e0e04ce549fb67ecc2017798a8deb7458) fix(symfony): unset item_uri_template when serializing an error (#6816)
+
+## v3.4.6
+
+### Bug fixes
+
+* [17c916c3a](https://github.com/api-platform/core/commit/17c916c3a1bcc837c9bc842dc48390dbeb043450) fix(symfony): service typo fix BackedEnumProvider for autowiring (#6769)
+* [216d9ccaa](https://github.com/api-platform/core/commit/216d9ccaacf7845daaaeab30f3a58bb5567430fe) fix(serializer): fetch type on normalization error when possible (#6761)
+* [2f967d934](https://github.com/api-platform/core/commit/2f967d9345004779f409b9ce1b5d0cbba84c7132) fix(doctrine): throw an exception when a filter is not found in a parameter (#6767)
+* [736ca045e](https://github.com/api-platform/core/commit/736ca045e6832f04aaa002ddd7b85c55df4696bb) fix(validator): allow to pass both a ConstraintViolationList and a previous exception (#6762)
+* [a98332d99](https://github.com/api-platform/core/commit/a98332d99a43338fa3bc0fd6b20f82ac58d1c397) fix(metadata): name convert parameter property (#6766)
+* [aa1667de1](https://github.com/api-platform/core/commit/aa1667de116fa9a40842f1480fc90ab49c7c2784) fix(state): empty result when the array paginator is out of bound (#6785)
+* [ab88353a3](https://github.com/api-platform/core/commit/ab88353a32f94146b01c34bae377ec5a735846db) fix(hal): detecting and handling circular reference (#6752)
+* [bba030614](https://github.com/api-platform/core/commit/bba030614b96887fea4f5c177e3137378ccae8a5) fix: properly support phpstan/phpdoc-parser 2 (#6789)
+* [bec147b91](https://github.com/api-platform/core/commit/bec147b916c29e346a698b28ddd4493bf305d9a0) fix(state): do not check content type if no input (#6794)
+
+## v3.4.5
+
+### Bug fixes
+
+* [fc8fa00a1](https://github.com/api-platform/core/commit/fc8fa00a19320b65547a60537261959c11f8e6a8) fix(hydra): iri template when using query parameter (#6742)
+
+## v3.4.4
+
+### Bug fixes
+
+* [550347867](https://github.com/api-platform/core/commit/550347867f30611b673d8df99f65186d013919dd) fix(graphql): register query parameter arguments with filters (#6727)
+* [99262dce7](https://github.com/api-platform/core/commit/99262dce739800bd841c95e026848b587ba25801) fix(jsonschema): handle @id when genId is false (#6716)
+* [ad5efa535](https://github.com/api-platform/core/commit/ad5efa535a4dcbaad64ecff89514eaa6e07f5b7c) fix: multiple parameter provider #6673 (#6732)
+* [d34cd7be8](https://github.com/api-platform/core/commit/d34cd7be8e7a12fd08a8b10270a614c06c10aa89) fix: use stateOptions when retrieving a Parameter filter (#6728)
+* [e7fb04fab](https://github.com/api-platform/core/commit/e7fb04fab05bc077e2dbeb0fa0fc2c1d28c96105) fix(symfony): fetch api-platform/symfony version debug bar (#6722)
+* [e96623ebf](https://github.com/api-platform/core/commit/e96623ebfd8691ba943bdb56a4d91e160497a311) fix(jsonld): prefix error @type with hydra: (#6721)
+
+## v3.4.3
+
+### Bug fixes
+
+* [3ca599158](https://github.com/api-platform/core/commit/3ca599158139d56fbd6ee66f2de3e586120d735c) fix(hydra): hydra_prefix on errors (#6704)
+* [f7f605dc8](https://github.com/api-platform/core/commit/f7f605dc8b798b975d2286c970c9091436d7f890) fix: check that api-platform/ramsey-uuid is installed before registering related services (#6696)
+* [fbb53e5e3](https://github.com/api-platform/core/commit/fbb53e5e35ca0ec3de26ddc7de7ea4d1dda5c20b) fix(symfony): metadata aware name converter has 0 arguments by default (#6711)
+
+## v3.4.2
+
+### Bug fixes
+
+* [0ca76fc89](https://github.com/api-platform/core/commit/0ca76fc898d2d1a679a490a5dea85473bf680901) fix(elasticsearch): allow elasticsearch 7 (#6689)
+* [15d61c4b7](https://github.com/api-platform/core/commit/15d61c4b75fea2b365e0852a923fed8efbae6ab8) fix(metadata): using parameters in fromClass and toClass uriVariables' options (#6663)
+* [2e2044636](https://github.com/api-platform/core/commit/2e204463675939903128037f82916d68f0016719) fix(metadata): parameter provider in a long running http worker (#6683)
+* [4c58b33e8](https://github.com/api-platform/core/commit/4c58b33e8c5a90f9377543bd068288dcf84e3236) fix(jsonapi): fixed definition name to allow using the same class names in different namespaces (#6676)
+* [4f5f56756](https://github.com/api-platform/core/commit/4f5f5675629fe52ea415a6bd91f3625eedea9c87) fix: remove hydra prefix on errors (#6624)
+* [afe7d47d7](https://github.com/api-platform/core/commit/afe7d47d7b7ba6c8591bfb60137a65d1fa1fe38f) fix(metadata): passing class as parameter in XML ApiResource's definition (#6659)
+* [b93ee467c](https://github.com/api-platform/core/commit/b93ee467c69253e0cfe60e75b48a5c7aa683474a) fix(metadata): overwriting XML ApiResource definition by YAML ApiResource definition (#6660)
+
+## v3.4.1
+
+### Bug fixes
+
+* [219199db3](https://github.com/api-platform/core/commit/219199db386cab05f1c1225b889c0a9609b36699) fix(symfony): missing alias to serializer context builder interface (#6643)
+* [5f943e3bb](https://github.com/api-platform/core/commit/5f943e3bb56934ba5d0b858f6b4c20a2985b6b6b) fix(graphql): wrong exception namespace (#6647)
+* [93314b08d](https://github.com/api-platform/core/commit/93314b08de1e6f0505af9e3a3ba3d9971f1ef09c) fix(serializer): allow state's SerializerFilterContextBuilderInterface (#6632)
+* [9a0afc917](https://github.com/api-platform/core/commit/9a0afc917a4bfa824ffbb640af9bb1114a5d31b4) fix(serializer): remove unnecessary dependency
+* [e327f5f69](https://github.com/api-platform/core/commit/e327f5f69c823c1ed674eefc0eb2551e30fb36bd) fix(symfony): namespace of path segment name generator services (#6642)
+
+## v3.4.0
+
+### Deprecations:
+
+Namespaces like `ApiPlatform/Api` or `ApiPlatform/Util` are deprecated and will be removed in 4.0.
+You should now install `api-platform/symfony` instead of `api-platform/core`.
+
+Read the [upgrade guide](https://api-platform.com/docs/core/upgrade-guide/) for detailed steps.
+
+### Bug fixes
+
+* [56153b755](https://github.com/api-platform/core/commit/56153b755151ee11c8c17fdc3fd919d544f078ac) fix(hydra): error hydra prefix (#6599)
+* [7c89f66a5](https://github.com/api-platform/core/commit/7c89f66a534cc1100c3dab0a129381d307d9d8b4) fix: replace ApiPlatform\\Exception use by ApiPlatform\Metadata\\Exception (#6597)
+* [a3a4a990d](https://github.com/api-platform/core/commit/a3a4a990d527136f093b022782a82e1d5b04c0b5) fix(metadata): loop on operations can be null
+* [ef0ee6427](https://github.com/api-platform/core/commit/ef0ee6427f8056bcb2617c228a7cf9ffd9d29ccd) fix(doctrine): use parameter.property for filter value (#6572)
+* [17c6b586c](https://github.com/api-platform/core/commit/17c6b586c5ab49437ac11dd092efdd5f0baf569b) fix(state): log on missing provider (#6519)
+* [601ccfb42](https://github.com/api-platform/core/commit/601ccfb4243803f40a7fa7179e0661da59c88b86) fix(doctrine): move event listeners to doctrine/common (#6573)
+* [6499e0aa5](https://github.com/api-platform/core/commit/6499e0aa5dd61fdff7706e7940cdf8c1fc3e18ef) fix: deprecate url generator interface namespace (#6575)
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [61af0cc90](https://github.com/api-platform/core/commit/61af0cc90c1e095edb12e32ef433a742ef46637e) fix(doctrine): allow doctrine/dbal:^4
+* [e063b80af](https://github.com/api-platform/core/commit/e063b80afe012ca4a6c8999de55b59193e8ae0ae) fix: parameter context for filters (#6535)
+* [e22392193](https://github.com/api-platform/core/commit/e22392193bb1fc71ece5abf393fa54b0745fc287) fix(state): security parameter with listeners (#6457)
+
+Various fixes for components isolation.
+
+### Features
+
+* [130fb5a8c](https://github.com/api-platform/core/commit/130fb5a8c833430e5e09624b06f296e0bcb7ceed) feat: better path sorting for openapi UIs (#6583)
+* [26d700e06](https://github.com/api-platform/core/commit/26d700e06035eaf4d04ddd52f3101dae690734d8) feat(symfony): add error page (#6389)
+* [48267c9b6](https://github.com/api-platform/core/commit/48267c9b6a942b1fb54f0efcfa5b2d2ac47c93bf) feat(openapi): add error resources schemes (#6332)
+* [e91c783a2](https://github.com/api-platform/core/commit/e91c783a2abf51bf2bdcf1230826108632c44a0d) feat(state): "deserializer_type" context (#6429)
+* [17c6b586c](https://github.com/api-platform/core/commit/17c6b586c5ab49437ac11dd092efdd5f0baf569b) feat(state): log on missing provider (#6519)
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [0b985ae76](https://github.com/api-platform/core/commit/0b985ae760bc4689d3f5bbacebb21b35b334d0be) feat(state): add security to parameters (#6435)
+* [63ccfd58c](https://github.com/api-platform/core/commit/63ccfd58c95b5aa4aa0353eb122d96ef35187222) feat: BackedEnum resources (#6309)
+* [65296eaf1](https://github.com/api-platform/core/commit/65296eaf1eb18dc725e9316e9ab49b191aae43a3) feat(openapi): allow optional request body content (#6374)
+* [7399fcf7e](https://github.com/api-platform/core/commit/7399fcf7eaf28cd649d137da1fdd54f69093e275) feat(symfony): skip error handler (#6463)
+* [74986cb55](https://github.com/api-platform/core/commit/74986cb552182dc645bd1fc967faa0954dd59e0a) feat: inflector as service (#6447)
+* [b47edb2a4](https://github.com/api-platform/core/commit/b47edb2a499c34e79c167f963e3a626a3e9d040a) feat(serializer): context IRI in HAL or JsonApi format (#6215)
+* [db1241c66](https://github.com/api-platform/core/commit/db1241c66a08d226f57d8d61e0ec519071c6afdb) feat(openapi): make open_api_override_responses act on default 404 response generation (#6551)
+* [e09e73efc](https://github.com/api-platform/core/commit/e09e73efc5b4a39ab33d00c5d5422d8d9f7b5e89) feat: remove hydra prefix (#6418)
+
+## v3.4.0-alpha.5
+
+### Deprecations:
+
+Namespaces like `ApiPlatform/Api` or `ApiPlatform/Util` are deprecated and will be removed in 4.0.
+You should now install `api-platform/symfony` instead of `api-platform/core`.
+
+### Bug fixes
+
+* [17c6b586c](https://github.com/api-platform/core/commit/17c6b586c5ab49437ac11dd092efdd5f0baf569b) fix(state): log on missing provider (#6519)
+* [601ccfb42](https://github.com/api-platform/core/commit/601ccfb4243803f40a7fa7179e0661da59c88b86) fix(doctrine): move event listeners to doctrine/common (#6573)
+* [6499e0aa5](https://github.com/api-platform/core/commit/6499e0aa5dd61fdff7706e7940cdf8c1fc3e18ef) fix: deprecate url generator interface namespace (#6575)
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [61af0cc90](https://github.com/api-platform/core/commit/61af0cc90c1e095edb12e32ef433a742ef46637e) fix(doctrine): allow doctrine/dbal:^4
+* [e063b80af](https://github.com/api-platform/core/commit/e063b80afe012ca4a6c8999de55b59193e8ae0ae) fix: parameter context for filters (#6535)
+* [e22392193](https://github.com/api-platform/core/commit/e22392193bb1fc71ece5abf393fa54b0745fc287) fix(state): security parameter with listeners (#6457)
+
+Various fixes for components isolation.
+
+### Features
+
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [0b985ae76](https://github.com/api-platform/core/commit/0b985ae760bc4689d3f5bbacebb21b35b334d0be) feat(state): add security to parameters (#6435)
+* [26d5cbb9b](https://github.com/api-platform/core/commit/26d5cbb9ba996f793e50eff3eab578ea0753d243) feat: deprecate query parameter validator (#6454)
+* [63ccfd58c](https://github.com/api-platform/core/commit/63ccfd58c95b5aa4aa0353eb122d96ef35187222) feat: BackedEnum resources (#6309)
+* [65296eaf1](https://github.com/api-platform/core/commit/65296eaf1eb18dc725e9316e9ab49b191aae43a3) feat(openapi): allow optional request body content (#6374)
+* [7399fcf7e](https://github.com/api-platform/core/commit/7399fcf7eaf28cd649d137da1fdd54f69093e275) feat(symfony): skip error handler (#6463)
+* [74986cb55](https://github.com/api-platform/core/commit/74986cb552182dc645bd1fc967faa0954dd59e0a) feat: inflector as service (#6447)
+* [b47edb2a4](https://github.com/api-platform/core/commit/b47edb2a499c34e79c167f963e3a626a3e9d040a) feat(serializer): context IRI in HAL or JsonApi format (#6215)
+* [db1241c66](https://github.com/api-platform/core/commit/db1241c66a08d226f57d8d61e0ec519071c6afdb) feat(openapi): make open_api_override_responses act on default 404 response generation (#6551)
+* [e09e73efc](https://github.com/api-platform/core/commit/e09e73efc5b4a39ab33d00c5d5422d8d9f7b5e89) feat: remove hydra prefix (#6418)
+
+## v3.4.0-alpha.4
+
+### Deprecations:
+
+Namespaces like `ApiPlatform/Api` or `ApiPlatform/Util` are deprecated and will be removed in 4.0.
+You should now install `api-platform/symfony` instead of `api-platform/core`.
+
+### Bug fixes
+
+* [17c6b586c](https://github.com/api-platform/core/commit/17c6b586c5ab49437ac11dd092efdd5f0baf569b) fix(state): log on missing provider (#6519)
+* [601ccfb42](https://github.com/api-platform/core/commit/601ccfb4243803f40a7fa7179e0661da59c88b86) fix(doctrine): move event listeners to doctrine/common (#6573)
+* [6499e0aa5](https://github.com/api-platform/core/commit/6499e0aa5dd61fdff7706e7940cdf8c1fc3e18ef) fix: deprecate url generator interface namespace (#6575)
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [61af0cc90](https://github.com/api-platform/core/commit/61af0cc90c1e095edb12e32ef433a742ef46637e) fix(doctrine): allow doctrine/dbal:^4
+* [e063b80af](https://github.com/api-platform/core/commit/e063b80afe012ca4a6c8999de55b59193e8ae0ae) fix: parameter context for filters (#6535)
+* [e22392193](https://github.com/api-platform/core/commit/e22392193bb1fc71ece5abf393fa54b0745fc287) fix(state): security parameter with listeners (#6457)
+
+### Features
+
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [0b985ae76](https://github.com/api-platform/core/commit/0b985ae760bc4689d3f5bbacebb21b35b334d0be) feat(state): add security to parameters (#6435)
+* [26d5cbb9b](https://github.com/api-platform/core/commit/26d5cbb9ba996f793e50eff3eab578ea0753d243) feat: deprecate query parameter validator (#6454)
+* [63ccfd58c](https://github.com/api-platform/core/commit/63ccfd58c95b5aa4aa0353eb122d96ef35187222) feat: BackedEnum resources (#6309)
+* [65296eaf1](https://github.com/api-platform/core/commit/65296eaf1eb18dc725e9316e9ab49b191aae43a3) feat(openapi): allow optional request body content (#6374)
+* [7399fcf7e](https://github.com/api-platform/core/commit/7399fcf7eaf28cd649d137da1fdd54f69093e275) feat(symfony): skip error handler (#6463)
+* [74986cb55](https://github.com/api-platform/core/commit/74986cb552182dc645bd1fc967faa0954dd59e0a) feat: inflector as service (#6447)
+* [b47edb2a4](https://github.com/api-platform/core/commit/b47edb2a499c34e79c167f963e3a626a3e9d040a) feat(serializer): context IRI in HAL or JsonApi format (#6215)
+* [db1241c66](https://github.com/api-platform/core/commit/db1241c66a08d226f57d8d61e0ec519071c6afdb) feat(openapi): make open_api_override_responses act on default 404 response generation (#6551)
+
+## v3.4.0-alpha.2
+
+### Deprecations:
+
+Namespaces like `ApiPlatform/Api` or `ApiPlatform/Util` are deprecated and will be removed in 4.0.
+You should now install `api-platform/symfony` instead of `api-platform/core`.
+
+### Bug fixes
+
+* [3c5aea80f](https://github.com/api-platform/core/commit/3c5aea80fdbed20216764f6d721fe4f37cf2889d) fix(symfony): load isApiResource metadata (#6562)
+* [61af0cc90](https://github.com/api-platform/core/commit/61af0cc90c1e095edb12e32ef433a742ef46637e) fix(doctrine): allow doctrine/dbal:^4
+* [e063b80af](https://github.com/api-platform/core/commit/e063b80afe012ca4a6c8999de55b59193e8ae0ae) fix: parameter context for filters (#6535)
+* [e22392193](https://github.com/api-platform/core/commit/e22392193bb1fc71ece5abf393fa54b0745fc287) fix(state): security parameter with listeners (#6457)
+
+### Features
+
+* [05e75be83](https://github.com/api-platform/core/commit/05e75be834c629e0487caaaedfe9fdf0bd5a7226) feat(doctrine): add new filter for filtering an entity using PHP backed enum, resolves #6506 (#6547) (#6560)
+* [0b985ae76](https://github.com/api-platform/core/commit/0b985ae760bc4689d3f5bbacebb21b35b334d0be) feat(state): add security to parameters (#6435)
+* [26d5cbb9b](https://github.com/api-platform/core/commit/26d5cbb9ba996f793e50eff3eab578ea0753d243) feat: deprecate query parameter validator (#6454)
+* [63ccfd58c](https://github.com/api-platform/core/commit/63ccfd58c95b5aa4aa0353eb122d96ef35187222) feat: BackedEnum resources (#6309)
+* [65296eaf1](https://github.com/api-platform/core/commit/65296eaf1eb18dc725e9316e9ab49b191aae43a3) feat(openapi): allow optional request body content (#6374)
+* [7399fcf7e](https://github.com/api-platform/core/commit/7399fcf7eaf28cd649d137da1fdd54f69093e275) feat(symfony): skip error handler (#6463)
+* [74986cb55](https://github.com/api-platform/core/commit/74986cb552182dc645bd1fc967faa0954dd59e0a) feat: inflector as service (#6447)
+* [b47edb2a4](https://github.com/api-platform/core/commit/b47edb2a499c34e79c167f963e3a626a3e9d040a) feat(serializer): context IRI in HAL or JsonApi format (#6215)
+* [db1241c66](https://github.com/api-platform/core/commit/db1241c66a08d226f57d8d61e0ec519071c6afdb) feat(openapi): make open_api_override_responses act on default 404 response generation (#6551)
+
+## v3.4.0-alpha.1
+
+### Bug fixes
+
+* [41deeb4e4](https://github.com/api-platform/core/commit/41deeb4e49c35d27cd902ea41ddaa3c8c492d8e4) fix(symfony): fix debug:api-resource command for class with multiple resources with same uriTemplate (#6505)
+* [52fd9818b](https://github.com/api-platform/core/commit/52fd9818b1d02dd89cac578e0762530079b5b42d) fix(elasticsearch): change normalize return type to compatible with other normalizers (#6493)
+* [61af0cc90](https://github.com/api-platform/core/commit/61af0cc90c1e095edb12e32ef433a742ef46637e) fix(doctrine): allow doctrine/dbal:^4
+* [e22392193](https://github.com/api-platform/core/commit/e22392193bb1fc71ece5abf393fa54b0745fc287) fix(state): security parameter with listeners (#6457)
+
+
+### Features
+
+* [0b985ae76](https://github.com/api-platform/core/commit/0b985ae760bc4689d3f5bbacebb21b35b334d0be) feat(state): add security to parameters (#6435)
+* [26d5cbb9b](https://github.com/api-platform/core/commit/26d5cbb9ba996f793e50eff3eab578ea0753d243) feat: deprecate query parameter validator (#6454)
+* [63ccfd58c](https://github.com/api-platform/core/commit/63ccfd58c95b5aa4aa0353eb122d96ef35187222) feat: BackedEnum resources (#6309)
+* [65296eaf1](https://github.com/api-platform/core/commit/65296eaf1eb18dc725e9316e9ab49b191aae43a3) feat(openapi): allow optional request body content (#6374)
+* [7399fcf7e](https://github.com/api-platform/core/commit/7399fcf7eaf28cd649d137da1fdd54f69093e275) feat(symfony): skip error handler (#6463)
+* [74986cb55](https://github.com/api-platform/core/commit/74986cb552182dc645bd1fc967faa0954dd59e0a) feat: inflector as service (#6447)
+* [b47edb2a4](https://github.com/api-platform/core/commit/b47edb2a499c34e79c167f963e3a626a3e9d040a) feat(serializer): context IRI in HAL or JsonApi format (#6215)
+
+## v3.3.14
+
+### Bug fixes
+
+* [4c58b33e8](https://github.com/api-platform/core/commit/4c58b33e8c5a90f9377543bd068288dcf84e3236) fix(jsonapi): fixed definition name to allow using the same class names in different namespaces (#6676)
+
+## v3.3.13
+
+### Bug fixes
+
+* [1b9dfccc8](https://github.com/api-platform/core/commit/1b9dfccc8d64be2b04e48490905771a77aefdd96) fix: count TraversablePaginator (#6611)
+* [4c58b33e8](https://github.com/api-platform/core/commit/4c58b33e8c5a90f9377543bd068288dcf84e3236) fix(jsonapi): fixed definition name to allow using the same class names in different namespaces (#6676)
+* [ef0ee6427](https://github.com/api-platform/core/commit/ef0ee6427f8056bcb2617c228a7cf9ffd9d29ccd) fix(doctrine): use parameter.property for filter value (#6572)
+
+## v3.3.12
+
+### Bug fixes
+
+* [0a461d749](https://github.com/api-platform/core/commit/0a461d749b7b4ac706f3b7b6138a13cb6e4a9d2d) fix(symfony): allow schema restriction for collection like property from choice constraint (#6520)
+* [0e91b0451](https://github.com/api-platform/core/commit/0e91b045168fa74603a093b301546d604e7997ad) fix: use correct class in FilterValidationException deprecation message (#6549)
+* [2da8dd326](https://github.com/api-platform/core/commit/2da8dd32681fe9d51b0bdb343f60b98b4e9033d2) fix(symfony): replace tagged by tagged_iterator
+* [3b42c9ff2](https://github.com/api-platform/core/commit/3b42c9ff235de5feac555d0283c513a6e4643953) fix: deserialization path for not denormalizable relations collected errors (#6537)
+* [41deeb4e4](https://github.com/api-platform/core/commit/41deeb4e49c35d27cd902ea41ddaa3c8c492d8e4) fix(symfony): fix debug:api-resource command for class with multiple resources with same uriTemplate (#6505)
+* [52fd9818b](https://github.com/api-platform/core/commit/52fd9818b1d02dd89cac578e0762530079b5b42d) fix(elasticsearch): change normalize return type to compatible with other normalizers (#6493)
+* [b3d7c0768](https://github.com/api-platform/core/commit/b3d7c07682366cc387ceee904cadbdd85bad0c09) fix(openapi): allow null return type parameter
+
+## v3.3.11
+
+### Features
+
+* [344b8b245](https://github.com/api-platform/core/commit/344b8b245ac2a77e0b22b69e7976456c024a5dcb) Revert "feat(jsonschema): make JSON-LD specific properties required (#6366)" (#6484)
+
+## v3.3.10
+
+### Bug fixes
+
+* [6776231ed](https://github.com/api-platform/core/commit/6776231eddebb8dbb9efdc66dec29247172cf0ea) fix: remove useless deprecation (#6481)
+* [71dbfb1af](https://github.com/api-platform/core/commit/71dbfb1af029b4c9e7d53d9e5c2b38ff97ac68a7) fix: property called default in ApiProperty has incorrect type (#6471) (#6472)
+* [c3e2e5b82](https://github.com/api-platform/core/commit/c3e2e5b8298f187f34e091af0f0a58e671ae853c) fix(symfony): securityPostValidation when use_symfony_listeners (#6479)
+* [e3013d40d](https://github.com/api-platform/core/commit/e3013d40dc601ff580d2d69d3228c36af3f457b6) Revert "fix(jsonschema): make all required properties optional in PATCH opera…" (#6476)
+* [aeca0149d](https://github.com/api-platform/core/commit/aeca0149dc488ac0fefd90adaae4a65df49bab1a) fix(jsonschema): make JSON-LD specific properties required in the output schema (#6366)
+
+## v3.3.9
+
+### Bug fixes
+
+* [84df46786](https://github.com/api-platform/core/commit/84df4678618869f439a7995a2534440c031e10f3) fix(jsonld): remove request uri variables when denormalizing output (#6467)
+* [ffb4ad31f](https://github.com/api-platform/core/commit/ffb4ad31f30b531a5102da8cd92235e070f43b86) fix(jsonld): mitigate #6465 (#6469)
+
+## v3.3.8
+
+### Bug fixes
+
+* [0edc73806](https://github.com/api-platform/core/commit/0edc73806c047b04c452a1cd7bc1132106906d02) fix(state): allow to skip parameter validator provider (#6452)
+* [25c5f222d](https://github.com/api-platform/core/commit/25c5f222dbe24ff111d2ba2b19556112a50ed87a) fix(graphql): security after resolver (#6444)
+* [32ef3d4e2](https://github.com/api-platform/core/commit/32ef3d4e24f14b361e2c67efb2494b8494a87b12) fix(jsonld): allow @id, @context and @type on denormalization 2 (#6451)
+* [4de43bab9](https://github.com/api-platform/core/commit/4de43bab9fbcafcd79ceac9bbe3a1293b56303c4) fix: swagger ui provider accept html (#6449)
+* [65ac0d228](https://github.com/api-platform/core/commit/65ac0d22885c8c9b68df9f3becd1b004746ce019) fix(symfony): property info with doctrine collections
+* [7926dc68d](https://github.com/api-platform/core/commit/7926dc68d1d0e9df7ff6439487beb782dd124671) fix: parameter not found when no value (#6458)
+* [93e4b3d70](https://github.com/api-platform/core/commit/93e4b3d709a6a9bbfb4fd0722f7aa5b01efa57d7) fix(state): store parameter value without its key (#6456)
+* [c086dfe9d](https://github.com/api-platform/core/commit/c086dfe9dd516e5fa26e1a819ba0477c50b4ffda) fix(openapi): optional yaml component (#6445)
+* [c473b2efe](https://github.com/api-platform/core/commit/c473b2efec4e53929fbe2832452894d489002455) fix(state): query and header parameter with the same name (#6453)
+
+
+### Features
+
+These are enhancement to the experimental Parameter feature:
+
+* [9ac50d294](https://github.com/api-platform/core/commit/9ac50d294f95a0c34baf67aebf3ea5623bc1be4c) feat(state): review validation for required parameters (#6441)
+* [c2d3aeb91](https://github.com/api-platform/core/commit/c2d3aeb91764e5fa1f8f56de3a800cc69364a9b0) feat(state): list all violations during query parameters validation (#6442)
+
+## v3.3.7
+
+### Bug fixes
+
+* [0ed1b637a](https://github.com/api-platform/core/commit/0ed1b637a84d0860c2e014e2473b52d17de9276b) fix(metadata): wrong schema generated if openapicontext set on array (#6431)
+* [57f930c65](https://github.com/api-platform/core/commit/57f930c65cb067b1727488ba6db6188c6c5a01c6) fix(openapi): parameters can disable openapi (#6440)
+* [69b4d35b9](https://github.com/api-platform/core/commit/69b4d35b9764e36dab0484e1a7332886e1de9b2c) fix(state): provider as ParameterProviderInterface (#6430)
+* [842091ddf](https://github.com/api-platform/core/commit/842091ddf5b41c7a0d76bfbcddccff2920a84c35) fix(jsonschema): make all required properties optional in PATCH operation with 'json' format (#6394)
+* [af34e72ed](https://github.com/api-platform/core/commit/af34e72ed6bb0d5f7235fcc9c2a6c7810ba4f9c2) fix(openapi): yaml openapi export should have numeric keys as string (#6436)
+* [b42e25f2d](https://github.com/api-platform/core/commit/b42e25f2dcb5e0c1759c9482c08c9929ef86dc90) fix(state): parameter decorates main chain (#6434)
+* [c922ba3f5](https://github.com/api-platform/core/commit/c922ba3f5cf6117e85548697a982fb1cbe3dde2e) fix(symfony): check method for readonly routes (#6437)
+
+## v3.3.6
+
+### Bug fixes
+
+* [8e253d4d7](https://github.com/api-platform/core/commit/8e253d4d76c25c27c233b3cf4fd2314b13c1e193) fix(graphql): validate after resolver (#6426)
+* [d66769069](https://github.com/api-platform/core/commit/d66769069fda051e4ddc7be50764c3f34d055ad0) fix(symfony): load swagger_ui when enabled (#6424)
+* [e06c88b71](https://github.com/api-platform/core/commit/e06c88b7149da4e5b691d432f11ec3d27e41750a) fix(metadata): add some phpdoc annotations to ORM (#6387)
+* [fb7c4658c](https://github.com/api-platform/core/commit/fb7c4658c327c9628bcc86d42e85c3546a74d993) fix(test): canonicalizing json arrays (#6386)
+* [ff533565d](https://github.com/api-platform/core/commit/ff533565d9b976fcda818ab4f79a5a2642f14a32) fix(doctrine): use null-safe operator when retrieving parameters (#6423)
+
+Notes:
+
+The patch at #6426 introduces a new `validateAfterResolver` option to mitigate the BC-break introduced in 3.3 that does the validation before calling the resolver:
+
+```php
+new Mutation(
+    resolver: 'app.graphql.mutation_resolver.activity_log',
+    name: 'create',
+    validateAfterResolver: true,
+    validate: false
+)
+```
+
+## v3.3.5
+
+### Bug fixes
+
+* [55f27dc7a](https://github.com/api-platform/core/commit/55f27dc7adbf2456ec7700dd57e10c036eb260c0) fix(symfony): documentation request _format (#6390)
+
+## v3.3.4
+
+### Bug fixes
+
+* [002d8e514](https://github.com/api-platform/core/commit/002d8e51490dbe9f5d8e5551226d70db8a33c706) fix(validation): ValidationException causes TypeError exception when called with $code=null (#6375)
+* [77a917f2a](https://github.com/api-platform/core/commit/77a917f2a51b50af84bdc96c1a32ff671b3951db) fix(metadata): resource class php doc (#6381)
+* [d809315fb](https://github.com/api-platform/core/commit/d809315fbb3822dbc6fe50d5c908183f4428f0f2) fix(symfony): store original data without clone (#6367)
+* [fb7c4658c](https://github.com/api-platform/core/commit/fb7c4658c327c9628bcc86d42e85c3546a74d993) fix(test): canonicalizing json arrays (#6386)
+
+## v3.3.3
+
+### Bug fixes
+
+* [10f24f7a1](https://github.com/api-platform/core/commit/10f24f7a18649f5d463ce0a99759e9b514707e92) fix(state): no location header without output (#6356)
+* [20c9165f2](https://github.com/api-platform/core/commit/20c9165f240e0457d1f5c9e2760b980e7d61f777) fix(symfony): no read should not throw on wrong uri variables (#6359)
+* [4cd359d40](https://github.com/api-platform/core/commit/4cd359d400608340b09597d24e03f9ff1dc2f9ec) fix(graphql): resolver before validation (#6363)
+* [9d159f4fa](https://github.com/api-platform/core/commit/9d159f4fa2d411f00911cfc5679b81585907d053) fix(symfony): no read shouldn't throw InvalidIdentifiers (#6357)
+
+## v3.3.2
+
+### Bug fixes
+
+* [6f806f4ee](https://github.com/api-platform/core/commit/6f806f4eeec3d120da7a4c145f9dbda9bd4be2ed) fix(state): read without output (#6347)
+* [735e1509e](https://github.com/api-platform/core/commit/735e1509ef67deb1c4c837ff86b445f40e2f7c8b) fix(symfony): set normalization context in request attributes (#6345)
+* [b4984126a](https://github.com/api-platform/core/commit/b4984126a109ec7951012614616035035978b255) fix(symfony): use_symfony_listeners before registering services (#6350)
+* [f63fd8101](https://github.com/api-platform/core/commit/f63fd8101f8211707806e013668f50dafab2865d) fix(symfony): define use_symfony_listeners (#6344)
+
+### Notes
+
+You can remove the `event_listeners_backward_compatibility_layer` flag and set `use_symfony_listeners` instead. The `use_symfony_listeners` should be `true` if you use controllers or if you rely on Symfony event listeners. Note that now flags like `read` can be forced to `true` if you want to call a Provider even on `POST` operations. These are the rules we set up on runtime if no value has been set:
+
+```php
+if (null === $operation->canValidate()) {
+    $operation = $operation->withValidate(!$request->isMethodSafe() && !$request->isMethod('DELETE'));
+}
+
+if (null === $operation->canRead()) {
+    $operation = $operation->withRead($operation->getUriVariables() || $request->isMethodSafe());
+}
+
+if (null === $operation->canDeserialize()) {
+    $operation = $operation->withDeserialize(\in_array($operation->getMethod(), ['POST', 'PUT', 'PATCH'], true));
+}
+```
+
+Previously listeners did the checks before reading our flags and you could not force the values.
+
+When using GraphQl, with `event_listeners_backward_compatibility_layer: true`, mutation resolver gets called before validation, when using `false` (the future default) validation occurs on the user's input.
+
+## v3.3.1 (pre-release)
+
+### Bug fixes
+
+* [6f806f4ee](https://github.com/api-platform/core/commit/6f806f4eeec3d120da7a4c145f9dbda9bd4be2ed) fix(state): read without output (#6347)
+* [735e1509e](https://github.com/api-platform/core/commit/735e1509ef67deb1c4c837ff86b445f40e2f7c8b) fix(symfony): set normalization context in request attributes (#6345)
+* [f63fd8101](https://github.com/api-platform/core/commit/f63fd8101f8211707806e013668f50dafab2865d) fix(symfony): define use_symfony_listeners (#6344)
+
+## v3.3.0
+
+### Bug fixes
+
+* [629da787b](https://github.com/api-platform/core/commit/629da787bc49fe06db02933d41dc550aee87b429) fix(symfony): use non deprecated validator exception (#6297)
+* [8a232a474](https://github.com/api-platform/core/commit/8a232a474466f4fbcf2001d6894fa0fec272ae6e) fix: add legacy FilterInterface as return type of getFilter function (#6311)
+* [97c8ae26e](https://github.com/api-platform/core/commit/97c8ae26eb5eb4cfaafadcc36b7d497b9fa2cb9e) fix(jsonapi): handle multiple relation classes, unrelated unions (#6320)
+* [af61482c2](https://github.com/api-platform/core/commit/af61482c21618e8abcbe7486df05e30a961bc5b6) fix(symfony)!: context stamp not serializable because of request object (#6323)
+* [fce42e0e7](https://github.com/api-platform/core/commit/fce42e0e783f3eb0331afad702d553f3bd63a2b3) fix(jsonapi): re-add continue once relation is determined (#6325)
+
+
+### Features
+
+* [57fe13615](https://github.com/api-platform/core/commit/57fe13615dfda724fd17d18658a1cdb062d261e5) feat(serializer): update MissingConstructorArgumentsException message (#5902)
+* [e867d07f5](https://github.com/api-platform/core/commit/e867d07f59b82d5f1bdca69e096ddf452dd7efc8) feat(parametervalidator): parameter validation (#6296)
+
+## v3.3.0-beta.2
+
+### Bug fixes
+
+* [50f4f0eeb](https://github.com/api-platform/core/commit/50f4f0eeb55c29c57d8ca63dedb0534f86f07055) fix: change deprecated ValidationException (#6295)
+* [5e908c898](https://github.com/api-platform/core/commit/5e908c898dd6dca3a6abfd3f083e4d7b4fc4e85a) fix: reorder early return QueryParameterValidateListener (#6300)
+* [678eb4f84](https://github.com/api-platform/core/commit/678eb4f8474edc29b2fc806c85aaf203540e23ab) fix(jsonapi): add missing "included" schema parts (#6277)
+* [8f8121865](https://github.com/api-platform/core/commit/8f8121865aca950b64559c6aa6acad9d8bef6bda) fix(graphql): query nullish ManyToOne-Relation
+* [90c9fb31a](https://github.com/api-platform/core/commit/90c9fb31a322a2c7891fbbafb75d60b09fd67772) fix(symfony): register api_error route (#6281)
+* [93f8b5f39](https://github.com/api-platform/core/commit/93f8b5f39727ee5aa48d78d56fd7e3376b7a813a) fix(jsonapi): return empty data array for empty relation (#6270)
+* [9ac0062a2](https://github.com/api-platform/core/commit/9ac0062a2d30776b94994e419b9bcc39832540b7) fix(symfony): context not serializable when session (#6302)
+* [da324e457](https://github.com/api-platform/core/commit/da324e45783c425b5165a3429464efe53e6f6094) fix(metadata): index operations (#6272)
+
+## v3.3.0-beta.1
+
+### Bug fixes
+
+* [23a9f2a7f](https://github.com/api-platform/core/commit/23a9f2a7f6b868c1eaaa3ec967bd718790f6caa6) fix(openapi): webhook has pathItem
+* [54638d3ca](https://github.com/api-platform/core/commit/54638d3ca6d497ff829a6978dd1db9137b5bcf3a) fix: fix PHPUnit 11 compatibility (#6202)
+* [bc96751e0](https://github.com/api-platform/core/commit/bc96751e040406de65a690f53003c3db5626a013) fix(graphql): nested collection for mongo (#6174)
+* [ca6be326d](https://github.com/api-platform/core/commit/ca6be326d533282a4a1c1284a289c2f1e3f92219) fix(doctrine): fix case on Mercure ExpressionLanguage (#6207)
+* [dad8b7df3](https://github.com/api-platform/core/commit/dad8b7df3ce47189925dad2106bb4d6477ce8f45) fix(validation): move validation exception resource (#6204)
+
+
+### Features
+
+* [0b724d93b](https://github.com/api-platform/core/commit/0b724d93b7585ce1f49fc97971840c986ecc495b) feat(openapi): document parameter
+* [125f2cef4](https://github.com/api-platform/core/commit/125f2cef42e6584c219fd21982a7999d141a2f9d) feat: add webhook - openapi (#5873)
+* [31d24aca4](https://github.com/api-platform/core/commit/31d24aca4b8d45f9838546954b61a55f25c39799) feat(hydra): read hydra:property from ApiProperty::jsonLdContext (#6240)
+* [3ad3836d5](https://github.com/api-platform/core/commit/3ad3836d5427951ff2519380738f6c423f697742) feat(metadata): attribute Parameter (#6246)
+* [52322048c](https://github.com/api-platform/core/commit/52322048cfccdb68ddf2df6a7952efb3e23ffece) feat(state): provide parameter values
+* [5523bf5df](https://github.com/api-platform/core/commit/5523bf5df93783582bed5591ff35c71e0942a978) feat(openapi): disable response override (#6221)
+* [683c34c6f](https://github.com/api-platform/core/commit/683c34c6f5721caede4f739e11c944b77b2243dc) feat(hydra): parameter documentation
+* [732d4aa8c](https://github.com/api-platform/core/commit/732d4aa8c32e6b3ec01a713b032a2c01adf66e5d) feat(symfony): parameter DI for metadata state serializer
+* [842030d55](https://github.com/api-platform/core/commit/842030d55737e8eb15ce575c89f5449493a157d8) feat(doctrine): parameter filter extension (#6248)
+* [b79c7ae0e](https://github.com/api-platform/core/commit/b79c7ae0e88b6dee9d97d73ce16f6ff2a974b272) feat(metadata): allow \Stringable for security parameters (#6095)
+* [e427bba70](https://github.com/api-platform/core/commit/e427bba70e1ecdcfe76dbe9926153156323cb371) feat(jsonschema): JSON:API schema factory (#6250)
+
+The v3.3.0-beta.1 introduces a new `QueryParameter` attribute to improve [the filtering system](https://github.com/api-platform/core/blob/main/docs/adr/0006-filtering-system-and-parameters.md).
+
+## v3.3.0-alpha.2
+
+### Bug fixes
+
+* [bc8d57b88](https://github.com/api-platform/core/commit/bc8d57b885e3b1db42269a29e887ecca17f2a99c) fix(symfony): reduce json-problem dependencies (#6169)
+* [bfd759b62](https://github.com/api-platform/core/commit/bfd759b627990926fddd11c6737af8f993af7bb5) fix: components split dependencies (#6186)
+* [c01e10ff3](https://github.com/api-platform/core/commit/c01e10ff323fac6f6e3549e7e90d8ee01d9285f3) fix(hydra): remove dependency from ApiPlatform/Api dependency (#6154)
+
+### Features
+
+* [24a1a18cb](https://github.com/api-platform/core/commit/24a1a18cbe706c5a3bb4d5602b70c0a68ff8a757) feat: improve ApiProperty::security using property name (#5853)
+* [3d1428e4d](https://github.com/api-platform/core/commit/3d1428e4d2e4342918becf098da8832ac50fef1b) feat(symfony): add get_operation Expression Language function on Mercure topics (#5854)
+* [6b00cea91](https://github.com/api-platform/core/commit/6b00cea914dc5f9c42ca237a3ff498d629a0efb8) feat(graphql): partial pagination for page based pagination (#6120)
+* [79fe01b97](https://github.com/api-platform/core/commit/79fe01b970d90e3c80880f54fc0446b5294173f0) feat(doctrine): paginators for Doctrine Collection & Selectable (#6153)
+* [89c9229f4](https://github.com/api-platform/core/commit/89c9229f484cb409ef3eb2bd88cccc6ddc856378) feat(graphql): support nullable embedded relations in GraphQL types (#6100)
+
+## v3.3.0-alpha.1
+
+### Bug fixes
+
+* [2828157f6](https://github.com/api-platform/core/commit/2828157f61e43783d49375dae689e898cc7f91bb) fix(doctrine): constants case sensitive values
+* [bbc99cfbe](https://github.com/api-platform/core/commit/bbc99cfbe7b0ed20e38178ee9bff15c71289f059) fix(serializer): improve TagCollector context (JSONAPI HAL) (#6076)
+* [e10cc5ecf](https://github.com/api-platform/core/commit/e10cc5ecf88b98f862222b2e3fea0f4ace94c515) fix(graphql): use normalization context to get item from IRI (#5915)
+
+### Features
+
+* [4f59677d4](https://github.com/api-platform/core/commit/4f59677d4e55bfdfb66620592a5ab7ffd57c8d8e) feat(parametervalidator): create api-platform/parameter-validator component
+* [670e7fbea](https://github.com/api-platform/core/commit/670e7fbeae3276373fa1a5805a74997091a5428c) feat(serializer): collect cache tags using a TagCollector (#5758)
+* [6b79b6f47](https://github.com/api-platform/core/commit/6b79b6f47fa498bdc6c92b574c176f3897e07ec2) feat(elasticsearch): filtering on nested fields (#5835)
+* [8e3a48810](https://github.com/api-platform/core/commit/8e3a488103a51becd9c900ec5a3849b806121fbf) feat: enable Swagger UI deep linking (#6051)
+* [9083765b0](https://github.com/api-platform/core/commit/9083765b0175aabe8e0043889383f4a0697ec098) feat(graphql): support enum collection as property (#5955)
+* [a749fe849](https://github.com/api-platform/core/commit/a749fe8494a5b3ca41139a418ed1e29c3e7b33a6) feat(doctrine): allow to extend link handling (#6061)
+* [b48836690](https://github.com/api-platform/core/commit/b488366901635dc665f1bb95a4a059aaa30cefd3) feat(symfony): Link security (#5290)
+* [cc9f6a518](https://github.com/api-platform/core/commit/cc9f6a518222598d20556fc1ec62b7c4be52bf52) feat(symfony): request and view kernel listeners (#6102)
+* [ce9ab8226](https://github.com/api-platform/core/commit/ce9ab8226934bfac45e3408e9468bf32a02aa2e9) feat(metadata): headers configuration (#6074)
+
+Components:
+  - `api-platform/parametervalidator`
+  - `api-platform/doctrine-common`
+  - `api-platform/doctrine-orm`
+  - `api-platform/doctrine-odm`
+
+A new interface `ApiPlatform\Serializer\TagCollectorInterface` allows to collect cache tags (IRIs) during serialization instead of using API Platform defaults.
+An experimental feature (#5290) gives the ability to use `security` on sub resource links.
+
+If you use controllers you should use:
+
+```yaml
+api_platform:
+    use_symfony_listeners: true
+```
+
+The default is `false` you can get rid of the `event_listeners_backward_compatibility_layer` flag. You can now force an operation state, for example:
+
+```php
+<?php
+
+#[Delete(validate: true)]
+#[Post(read: true)]
+class Book {}
+```
+
+These namespaces are deprecated:
+
+- `ApiPlatform\Api`
+- `ApiPlatform\Exception`
+- `ApiPlatform\Problem`
+- `ApiPlatform\Action`
+- `ApiPlatform\Util`
+
+Most of the classes have moved to `ApiPlatform\Metadata`.
+
+If a format is not specified in either the global configuration or the `outputFormats` of an operation, you'll get a 406 Not Acceptable error:
+
+```yaml
+api_platform:
+    formats:
+        jsonld: ['application/ld+json']
+        form: ['multipart/form-data']
+```
+
+## v3.2.26
+
+### Bug fixes
+
+* [6776231ed](https://github.com/api-platform/core/commit/6776231eddebb8dbb9efdc66dec29247172cf0ea) fix: remove useless deprecation (#6481)
+
+## v3.2.25
+
+### Bug fixes
+
+* [0ed1b637a](https://github.com/api-platform/core/commit/0ed1b637a84d0860c2e014e2473b52d17de9276b) fix(metadata): wrong schema generated if openapicontext set on array (#6431)
+
+## v3.2.24
+
+### Bug fixes
+
+* [451d50e53](https://github.com/api-platform/core/commit/451d50e538a4f7aac67d47601fee5474af99c870) fix(symfony): deprecations 7.1
+* [93e71eb82](https://github.com/api-platform/core/commit/93e71eb822aa06db2b6de303039f9b8c65cad7a8) fix(graphql): name converter with class (#6396)
+* [99314bf80](https://github.com/api-platform/core/commit/99314bf80e7c61147fb311da6403b37be5eab5b2) fix(state): handle empty request in read provider (#6403)
+
+## v3.2.23
+
+### Bug fixes
+
+* [fb7c4658c](https://github.com/api-platform/core/commit/fb7c4658c327c9628bcc86d42e85c3546a74d993) fix(test): canonicalizing json arrays (#6386)
+
+## v3.2.22
+
+### Bug fixes
+
+* [50c738cf6](https://github.com/api-platform/core/commit/50c738cf6b31bb7f2ddcd74037c12315c8bcac6d) fix(graphql): check inheritance in ResolverProvider (#6314)
+* [9cd597f80](https://github.com/api-platform/core/commit/9cd597f80d9eecafb28b4229a313ba9b9618bf8c) fix(doctrine): remove usage of deprecated ClassUtils in PurgeHttpCacheListener for Doctrine ORM 3 (#6331)
+* [a59fbee97](https://github.com/api-platform/core/commit/a59fbee97dc09b7cb7e12ee3bef9451f0fbea957) fix(serializer): uriTemplate wrong cache usage in hal format (#6313)
+* [c083af346](https://github.com/api-platform/core/commit/c083af3461a926ea68837f216eacc67ca43a6fc3) fix(metadata): allow extracting routeName from XML config (#6329)
+
+## v3.2.21
+
+### Bug fixes
+
+* [2a8767108](https://github.com/api-platform/core/commit/2a8767108690c35d873a936f9e2383365fdb4f00) revert: fix(graphql): increment graphql normalizer priority
+* [6c3d58c28](https://github.com/api-platform/core/commit/6c3d58c287650e32ae0d68e9197424b04acdab5a) fix(jsonschema): don't try to define $ref if set in attributes (#6303)
+* [9ac0062a2](https://github.com/api-platform/core/commit/9ac0062a2d30776b94994e419b9bcc39832540b7) fix(symfony): context not serializable when session (#6302)
+
+## v3.2.20
+
+### Bug fixes
+
+* [90c9fb31a](https://github.com/api-platform/core/commit/90c9fb31a322a2c7891fbbafb75d60b09fd67772) fix(symfony): register api_error route (#6281)
+* [d061c3811](https://github.com/api-platform/core/commit/d061c381120b858c471157dbdccbb5084a39fb04) fix(graphql): increment graphql normalizer priority (#6283)
+
+## v3.2.19
+
+### Bug fixes
+
+* [0154fbf00](https://github.com/api-platform/core/commit/0154fbf00635b46e151c917378e5fe4d76dc1a83) fix(elasticsearch): wrong namespace for stateOptions (#6260)
+* [4adc07524](https://github.com/api-platform/core/commit/4adc0752471910a1dca104c1ac8d9c1dbebf268e) fix: multiple error routes #6214 (#6263)
+* [88d88ed2c](https://github.com/api-platform/core/commit/88d88ed2c41cca89da4ef2185d58adb2ea91d20c) fix(doctrine): wrong return type without name converter #6079 (#6254)
+* [db50a46c1](https://github.com/api-platform/core/commit/db50a46c16689b7fb4db79b1d4ef7e1ad094d358) fix(doctrine): stateOptions force resource class on collection (#6255)
+
+## v3.2.18
+
+### Bug fixes
+
+* [0073a2a1b](https://github.com/api-platform/core/commit/0073a2a1b752001c9bff666ad350e248b725a80a) fix(serializer): json non-resource intermittent class (HAL & JSON:API) (#6231)
+* [3689ae5f4](https://github.com/api-platform/core/commit/3689ae5f47e68e77f6938b71e9e355c13623dbdb) fix(hydra): owl:maxCardinality should be an int (#6235)
+* [4b70b7405](https://github.com/api-platform/core/commit/4b70b74054658f9d1c704b56f940ec9742e4482f) fix(jsonschema): generation of non-LD+JSON distinct schema formats (#6236)
+* [818b9cd62](https://github.com/api-platform/core/commit/818b9cd625f56c77c9f1fd0286672973d817bb3b) fix(jsonschema): don't skip remaining multiple union types (#6223)
+* [874e4d670](https://github.com/api-platform/core/commit/874e4d6707ecdd48b27ed91b0b66ea5e33691e7c) fix(serializer): collection property in an output dto (#6239)
+
+## v3.2.17
+
+### Bug fixes
+
+* [2819d56c8](https://github.com/api-platform/core/commit/2819d56c80f39a53f2e3d5fd7119566ad96b4075) fix(hydra): hydra:view with absolute iris (#6208)
+* [98f4b8fca](https://github.com/api-platform/core/commit/98f4b8fcab39b1d09110cc133206e27782ea4791) fix(metadata): Operations priority sort (#6206)
+* [a1309bbf2](https://github.com/api-platform/core/commit/a1309bbf2f678081a82290818a91f0a376b3c94c) fix(serializer): skip symfony validation exception (#6220)
+
+## v3.2.16
+
+### Bug fixes
+
+* [56744dcfa](https://github.com/api-platform/core/commit/56744dcfa07f79ca58926cb199356e849ddb3a93) fix(serializer): fix union types on collection denormalization (#6192)
+* [d8e2d0c5e](https://github.com/api-platform/core/commit/d8e2d0c5e9b48c15d60a734086b0102b6ecf95c8) fix(doctrine): doctrine/orm:^3.0 support (#6193)
+* [f891f16d5](https://github.com/api-platform/core/commit/f891f16d50b665f25e4699291526161e16ce0fa7) fix(doctrine): isAssociationInverseSide before getMappedBy (#6197)
+
+## v3.2.15
+
+### Bug fixes
+
+* [09aacf98a](https://github.com/api-platform/core/commit/09aacf98a2e4d0ffa00fbefa59cb2b31f35fbb54) fix(symfony): revert breaking change on attributes extractor (#6170)
+* [4138cb7c0](https://github.com/api-platform/core/commit/4138cb7c031b38731162d99b3d43754251fc5913) fix(openapi): resource name parameter description (#6178)
+* [5e4b6312a](https://github.com/api-platform/core/commit/5e4b6312a057ba4d1f45c395c7a215dc393acd80) fix(jsonschema): multiple type support (draft4) (#6171)
+* [8535f9def](https://github.com/api-platform/core/commit/8535f9def6fbd2baff9cedc79c34103940eb4fca) fix(doctrine): read parent class properties on PUT (#6176)
+* [a188c9473](https://github.com/api-platform/core/commit/a188c947396e0400ba6e1aadaa262d2e785fd941) fix(symfony): autoconfigure legacy alias fixes #6177 (#6181)
+* [e7b442149](https://github.com/api-platform/core/commit/e7b4421496b58f7c3db414d11dd357a8dc759323) fix(validator): stop considering properties marked with NotBlank(allowNull=true) as required (#6184)
+
+## v3.2.14
+
+### Bug fixes
+
+* [26295392d](https://github.com/api-platform/core/commit/26295392d5e70075b2951d27c633cf29d6fdf542) fix: use normalisation context when none is provided in ApiTestAssertionsTrait (#6157)
+* [2999d9ef1](https://github.com/api-platform/core/commit/2999d9ef14416b4cb8728ad713a9edd367df9816) fix: return null instead of exception for GraphQL Query operation (#6118)
+* [30f3f353e](https://github.com/api-platform/core/commit/30f3f353e2022ad6ec80733e90f209f326dc3225) fix(openapi): skip requestBody if input is false (#6163)
+* [507edba82](https://github.com/api-platform/core/commit/507edba822d80005345794cec1a946f9a7e0c12c) fix(symfony): autoconfiguration on UriVariableTransformerInterface (#6159)
+* [643cff2db](https://github.com/api-platform/core/commit/643cff2db8dbab050aa125eb32a347ad37a95e08) fix(symfony): throw metadata exception (#6164)
+* [a987469e0](https://github.com/api-platform/core/commit/a987469e09608d91afd4507ec1f6ceacbd8653b2) fix(openapi): method OpenApi::getComponents must always return a Components object (#6158)
+* [c08f1e164](https://github.com/api-platform/core/commit/c08f1e1642f4427269a7f684f0b3def34ba4c433) fix(doctrine): test array type existence before using it (#6161)
+
+## v3.2.13
+
+### Bug fixes
+
+* [05713bfc8](https://github.com/api-platform/core/commit/05713bfc8ca4e749d408aaf870a4880e6c8fa74f) fix(hydra): move owl:maxCardinality from JsonSchema to Hydra (#6136)
+
+## v3.2.12
+
+### Bug fixes
+
+* [1c1023a71](https://github.com/api-platform/core/commit/1c1023a71dd6ea9302c6065aade72f3e93deb6b6) fix: better generics support for State\ProcessorInterface (#6103)
+* [dcab6c79e](https://github.com/api-platform/core/commit/dcab6c79e96ccf8351d855013474d32d5cf129e5) fix(jsonschema): keep integer and number properties draft 4 compliant (#6098)
+* [ef4b261f1](https://github.com/api-platform/core/commit/ef4b261f1e4d67d064be9745d2b9e0c68d3032aa) fix(graphql): remove count query if paginationInfo is not requested (#6068)
+
+## v3.2.11
+
+### Bug fixes
+
+* [5de077e7d](https://github.com/api-platform/core/commit/5de077e7de94f2e07ca615efc5ecf1b32b37a10e) fix(symfony): use Type constraint violation code instead of exception code (#6064)
+* [804da1be7](https://github.com/api-platform/core/commit/804da1be73991e7c5efffb495345499943802102) fix(openapi): compatibility with OpenAPI 3.0 (#6065)
+* [cd01e043a](https://github.com/api-platform/core/commit/cd01e043a17f4092bf302a415bba777fab3a9cfc) fix(symfony): handle empty content-type as set by Symfony (#6078)
+* [d3484b0f1](https://github.com/api-platform/core/commit/d3484b0f1bf06e518c83cd15e67ed10e9a75fe03) fix(serializer): integrate root_resource_class to cache key (#6073)
+
+For OpenAPI 3.0, the `spec_version=3.0.0` query parameter will force OpenAPI to the 3.0 version. This option is also available through the command line.
+
 ## v3.2.10
 
 ### Bug fixes
@@ -48,7 +982,7 @@ Symfony 7 support.
 
 ### Bug fixes
 
-To have errors backward compatible with 3.1, use: 
+To have errors backward compatible with 3.1, use:
 
 ```yaml
 api_platform:
@@ -176,6 +1110,13 @@ Listeners will not get removed in API Platform 4 but will rather use our new Pro
 #[Post(read: true)] // to force reading even though it's a POST
 ```
 
+- `ApiPlatform\Api` got moved to `ApiPlatform\Metadata`
+
+- Adds `assertMercureUpdateMatchesJsonSchema(Update $update, array $topics, array|object|string $jsonSchema = '', bool $private = false, string $id = null, string $type = null, int $retry = null, string $message = '')`
+- The handle links feature is experimental
+
+When using GraphQl, with `event_listeners_backward_compatibility_layer: true`, mutation resolver gets called before validation, when using `false` (the future default) validation occurs on the user's input.
+
 ## v3.2.0-beta.2
 
 ### Bug fixes
@@ -255,6 +1196,13 @@ Notes:
 * [851aa3778](https://github.com/api-platform/core/commit/851aa3778ef8a6f959a44b759fc343e9f8cfc8bf) feat(graphql)!: add extra args for custom queries or mutations (#5359)
 * [92a81f024](https://github.com/api-platform/core/commit/92a81f024541054b9322e7457b75c721261e14e0) feat(graphql): allow to disable the introspection query (#5711)
 * [d793ffb92](https://github.com/api-platform/core/commit/d793ffb9228a21655ee35f0b90a959f93281a4cf) feat: union/intersect types (#5470)
+
+## v3.1.25
+
+### Bug fixes
+
+* [5de077e7d](https://github.com/api-platform/core/commit/5de077e7de94f2e07ca615efc5ecf1b32b37a10e) fix(symfony): use Type constraint violation code instead of exception code (#6064)
+* [d3484b0f1](https://github.com/api-platform/core/commit/d3484b0f1bf06e518c83cd15e67ed10e9a75fe03) fix(serializer): integrate root_resource_class to cache key (#6073)
 
 ## v3.1.24
 

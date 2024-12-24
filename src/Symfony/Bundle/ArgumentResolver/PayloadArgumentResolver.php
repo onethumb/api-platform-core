@@ -14,9 +14,9 @@ declare(strict_types=1);
 namespace ApiPlatform\Symfony\Bundle\ArgumentResolver;
 
 use ApiPlatform\Metadata\Resource\Factory\ResourceMetadataCollectionFactoryInterface;
-use ApiPlatform\Serializer\SerializerContextBuilderInterface;
+use ApiPlatform\State\SerializerContextBuilderInterface;
 use ApiPlatform\State\Util\OperationRequestInitiatorTrait;
-use ApiPlatform\Symfony\Util\RequestAttributesExtractor;
+use ApiPlatform\State\Util\RequestAttributesExtractor;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -27,7 +27,7 @@ final class PayloadArgumentResolver implements CompatibleValueResolverInterface
 
     public function __construct(
         ResourceMetadataCollectionFactoryInterface $resourceMetadataCollectionFactory,
-        private readonly SerializerContextBuilderInterface $serializationContextBuilder
+        private readonly SerializerContextBuilderInterface $serializationContextBuilder,
     ) {
         $this->resourceMetadataCollectionFactory = $resourceMetadataCollectionFactory;
     }

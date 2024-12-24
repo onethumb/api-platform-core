@@ -14,21 +14,53 @@ declare(strict_types=1);
 namespace ApiPlatform\Tests\Symfony\Bundle\Test;
 
 use ApiPlatform\Symfony\Bundle\Test\ApiTestCase;
-use ApiPlatform\Tests\Fixtures\TestBundle\Document\Dummy as DummyDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\Issue5921\ExceptionResource;
+use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\OperationPriorities;
+use ApiPlatform\Tests\Fixtures\TestBundle\Document\DirectMercure as DirectMercureDocument;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Address;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DirectMercure;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Dummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\DummyDtoInputOutput;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue6041\NumericValidated;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue6146\Issue6146Child;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\Issue6146\Issue6146Parent;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\JsonSchemaContextDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedDummy;
+use ApiPlatform\Tests\Fixtures\TestBundle\Entity\RelatedOwnedDummy;
 use ApiPlatform\Tests\Fixtures\TestBundle\Entity\User;
 use ApiPlatform\Tests\Fixtures\TestBundle\Model\ResourceInterface;
+use ApiPlatform\Tests\RecreateSchemaTrait;
+use ApiPlatform\Tests\SetupClassResourcesTrait;
 use Doctrine\ORM\EntityManagerInterface;
-use Doctrine\ORM\Mapping\ClassMetadata;
-use Doctrine\ORM\Tools\SchemaTool;
 use PHPUnit\Framework\ExpectationFailedException;
-use Symfony\Bridge\PhpUnit\ExpectDeprecationTrait;
 
 class ApiTestCaseTest extends ApiTestCase
 {
-    use ExpectDeprecationTrait;
+    use RecreateSchemaTrait;
+    use SetupClassResourcesTrait;
+
+    /**
+     * @return class-string[]
+     */
+    public static function getResources(): array
+    {
+        return [
+            Address::class,
+            DirectMercure::class,
+            Dummy::class,
+            DummyDtoInputOutput::class,
+            NumericValidated::class,
+            Issue6146Child::class,
+            Issue6146Parent::class,
+            JsonSchemaContextDummy::class,
+            RelatedDummy::class,
+            RelatedOwnedDummy::class,
+            User::class,
+            ResourceInterface::class,
+            OperationPriorities::class,
+            ExceptionResource::class,
+        ];
+    }
 
     public function testAssertJsonContains(): void
     {
@@ -86,18 +118,6 @@ JSON
         );
     }
 
-    public function testAssertJsonEqualsWithJsonScalarString(): void
-    {
-        $this->expectException(\InvalidArgumentException::class);
-        $this->expectExceptionMessage('$json must be array or string (JSON array or JSON object)');
-
-        self::createClient()->request('GET', '/contexts/Address');
-        $this->assertJsonEquals(<<<JSON
-"Address/name"
-JSON
-        );
-    }
-
     public function testAssertMatchesJsonSchema(): void
     {
         $jsonSchema = <<<JSON
@@ -119,21 +139,59 @@ JSON;
         $this->assertMatchesJsonSchema(json_decode($jsonSchema, true));
     }
 
-    public function testAssertMatchesResourceCollectionJsonSchema(): void
+    public static function providerFormats(): iterable
     {
-        self::createClient()->request('GET', '/resource_interfaces');
-        $this->assertMatchesResourceCollectionJsonSchema(ResourceInterface::class);
+        yield 'jsonapi' => ['jsonapi', 'application/vnd.api+json'];
+        yield 'jsonhal' => ['jsonhal', 'application/hal+json'];
+        yield 'jsonld' => ['jsonld', 'application/ld+json'];
     }
 
-    public function testAssertMatchesResourceItemJsonSchema(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    public function testAssertMatchesResourceCollectionJsonSchema(string $format, string $mimeType): void
     {
-        self::createClient()->request('GET', '/resource_interfaces/some-id');
-        $this->assertMatchesResourceItemJsonSchema(ResourceInterface::class);
+        self::createClient()->request('GET', '/resource_interfaces', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceCollectionJsonSchema(ResourceInterface::class, format: $format);
     }
 
-    public function testAssertMatchesResourceItemJsonSchemaWithCustomJson(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testAssertMatchesResourceCollectionJsonSchemaKeepSerializationContext(string $format, string $mimeType): void
     {
-        $this->recreateSchema();
+        $this->recreateSchema([Issue6146Parent::class, Issue6146Child::class]);
+
+        /** @var EntityManagerInterface $manager */
+        $manager = static::getContainer()->get('doctrine')->getManager();
+
+        $parent = new Issue6146Parent();
+        $manager->persist($parent);
+
+        $child = new Issue6146Child();
+        $child->setParent($parent);
+        $parent->addChild($child);
+        $manager->persist($child);
+
+        $manager->persist($child);
+        $manager->flush();
+
+        self::createClient()->request('GET', "issue-6146-parents/{$parent->getId()}", ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceItemJsonSchema(Issue6146Parent::class, format: $format);
+
+        self::createClient()->request('GET', '/issue-6146-parents', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceCollectionJsonSchema(Issue6146Parent::class, format: $format);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    public function testAssertMatchesResourceItemJsonSchema(string $format, string $mimeType): void
+    {
+        self::createClient()->request('GET', '/resource_interfaces/some-id', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceItemJsonSchema(ResourceInterface::class, format: $format);
+    }
+
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testAssertMatchesResourceItemJsonSchemaWithCustomJson(string $format, string $mimeType): void
+    {
+        $this->recreateSchema([JsonSchemaContextDummy::class]);
 
         /** @var EntityManagerInterface $manager */
         $manager = static::getContainer()->get('doctrine')->getManager();
@@ -141,13 +199,15 @@ JSON;
         $manager->persist($jsonSchemaContextDummy);
         $manager->flush();
 
-        self::createClient()->request('GET', '/json_schema_context_dummies/1');
-        $this->assertMatchesResourceItemJsonSchema(JsonSchemaContextDummy::class);
+        self::createClient()->request('GET', '/json_schema_context_dummies/1', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceItemJsonSchema(JsonSchemaContextDummy::class, format: $format);
     }
 
-    public function testAssertMatchesResourceItemJsonSchemaOutput(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testAssertMatchesResourceItemJsonSchemaOutput(string $format, string $mimeType): void
     {
-        $this->recreateSchema();
+        $this->recreateSchema([DummyDtoInputOutput::class]);
 
         /** @var EntityManagerInterface $manager */
         $manager = static::getContainer()->get('doctrine')->getManager();
@@ -156,13 +216,15 @@ JSON;
         $dummyDtoInputOutput->num = 54;
         $manager->persist($dummyDtoInputOutput);
         $manager->flush();
-        self::createClient()->request('GET', '/dummy_dto_input_outputs/1');
-        $this->assertMatchesResourceItemJsonSchema(DummyDtoInputOutput::class);
+        self::createClient()->request('GET', '/dummy_dto_input_outputs/1', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceItemJsonSchema(DummyDtoInputOutput::class, format: $format);
     }
 
-    public function testAssertMatchesResourceItemAndCollectionJsonSchemaOutputWithContext(): void
+    #[\PHPUnit\Framework\Attributes\DataProvider('providerFormats')]
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testAssertMatchesResourceItemAndCollectionJsonSchemaOutputWithContext(string $format, string $mimeType): void
     {
-        $this->recreateSchema();
+        $this->recreateSchema([User::class]);
 
         /** @var EntityManagerInterface $manager */
         $manager = static::getContainer()->get('doctrine')->getManager();
@@ -173,11 +235,39 @@ JSON;
         $manager->persist($user);
         $manager->flush();
 
-        self::createClient()->request('GET', "/users-with-groups/{$user->getId()}");
-        $this->assertMatchesResourceItemJsonSchema(User::class, null, 'jsonld', ['groups' => ['api-test-case-group']]);
+        self::createClient()->request('GET', "/users-with-groups/{$user->getId()}", ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceItemJsonSchema(User::class, null, $format, ['groups' => ['api-test-case-group']]);
 
-        self::createClient()->request('GET', '/users-with-groups');
-        $this->assertMatchesResourceCollectionJsonSchema(User::class, null, 'jsonld', ['groups' => ['api-test-case-group']]);
+        self::createClient()->request('GET', '/users-with-groups', ['headers' => ['Accept' => $mimeType]]);
+        $this->assertMatchesResourceCollectionJsonSchema(User::class, null, $format, ['groups' => ['api-test-case-group']]);
+    }
+
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
+    public function testAssertMatchesResourceItemAndCollectionJsonSchemaOutputWithRangeAssertions(): void
+    {
+        $this->recreateSchema([NumericValidated::class]);
+
+        /** @var EntityManagerInterface $manager */
+        $manager = static::getContainer()->get('doctrine')->getManager();
+        $numericValidated = new NumericValidated();
+        $numericValidated->range = 5;
+        $numericValidated->greaterThanMe = 11;
+        $numericValidated->greaterThanOrEqualToMe = 10.99;
+        $numericValidated->lessThanMe = 11;
+        $numericValidated->lessThanOrEqualToMe = 99.33;
+        $numericValidated->positive = 1;
+        $numericValidated->positiveOrZero = 0;
+        $numericValidated->negative = -1;
+        $numericValidated->negativeOrZero = 0;
+
+        $manager->persist($numericValidated);
+        $manager->flush();
+
+        self::createClient()->request('GET', "/numeric-validated/{$numericValidated->getId()}");
+        $this->assertMatchesResourceItemJsonSchema(NumericValidated::class);
+
+        self::createClient()->request('GET', '/numeric-validated');
+        $this->assertMatchesResourceCollectionJsonSchema(NumericValidated::class);
     }
 
     // Next tests have been imported from dms/phpunit-arraysubset-asserts, because the original constraint has been deprecated.
@@ -193,9 +283,10 @@ JSON;
         $this->assertArraySubset([1, 2], [1, 2, 3]);
     }
 
+    #[\PHPUnit\Framework\Attributes\Group('orm')]
     public function testFindIriBy(): void
     {
-        $this->recreateSchema();
+        $this->recreateSchema([Dummy::class, RelatedOwnedDummy::class, RelatedDummy::class]);
 
         self::createClient()->request('POST', '/dummies', [
             'headers' => [
@@ -206,19 +297,25 @@ JSON;
         ]);
         $this->assertResponseIsSuccessful();
 
-        $container = static::getContainer();
-        $resource = 'mongodb' === $container->getParameter('kernel.environment') ? DummyDocument::class : Dummy::class;
-        $this->assertMatchesRegularExpression('~^/dummies/\d+~', self::findIriBy($resource, ['name' => 'Kevin']));
-        $this->assertNull(self::findIriBy($resource, ['name' => 'not-exist']));
+        $this->assertMatchesRegularExpression('~^/dummies/\d+~', self::findIriBy(Dummy::class, ['name' => 'Kevin']));
+        $this->assertNull(self::findIriBy(Dummy::class, ['name' => 'not-exist']));
     }
 
-    /**
-     * @group mercure
-     */
+    public function testGetPrioritizedOperation(): void
+    {
+        $r = self::createClient()->request('GET', '/operation_priority/1', [
+            'headers' => [
+                'accept' => 'application/ld+json',
+            ],
+        ]);
+        $this->assertResponseIsSuccessful();
+    }
+
+    #[\PHPUnit\Framework\Attributes\Group('mercure')]
     public function testGetMercureMessages(): void
     {
-        // debug mode is required to get Mercure TraceableHub
-        $this->recreateSchema(['debug' => true, 'environment' => 'mercure']);
+        self::bootKernel(['environment' => 'mercure']);
+        $this->recreateSchema([$this->isMongoDB() ? DirectMercureDocument::class : DirectMercure::class]);
 
         self::createClient()->request('POST', '/direct_mercures', [
             'headers' => [
@@ -271,23 +368,6 @@ JSON
         );
     }
 
-    private function recreateSchema(array $options = []): void
-    {
-        self::bootKernel($options);
-
-        /** @var EntityManagerInterface $manager */
-        $manager = static::getContainer()->get('doctrine')->getManager();
-        /** @var ClassMetadata[] $classes */
-        $classes = $manager->getMetadataFactory()->getAllMetadata();
-        $schemaTool = new SchemaTool($manager);
-
-        @$schemaTool->dropSchema($classes);
-        @$schemaTool->createSchema($classes);
-    }
-
-    /**
-     * @group legacy
-     */
     public function testExceptionNormalizer(): void
     {
         $response = self::createClient()->request('GET', '/issue5921', [
@@ -303,7 +383,7 @@ JSON
 
     public function testMissingMethod(): void
     {
-        $response = self::createClient([], ['headers' => ['accept' => 'application/json']])->request('DELETE', '/something/that/does/not/exist/ever');
+        self::createClient([], ['headers' => ['accept' => 'application/json']])->request('DELETE', '/something/that/does/not/exist/ever');
         $this->assertResponseStatusCodeSame(404);
     }
 }

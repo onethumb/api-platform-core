@@ -15,8 +15,8 @@ namespace ApiPlatform\Tests\Fixtures\TestBundle\State;
 
 use ApiPlatform\Doctrine\Orm\State\CollectionProvider;
 use ApiPlatform\Doctrine\Orm\State\ItemProvider;
-use ApiPlatform\Exception\ItemNotFoundException;
 use ApiPlatform\Metadata\CollectionOperationInterface;
+use ApiPlatform\Metadata\Exception\ItemNotFoundException;
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
 use ApiPlatform\Tests\Fixtures\TestBundle\ApiResource\EntityClassAndCustomProviderResource;
@@ -29,7 +29,7 @@ class EntityClassAndCustomProviderResourceProvider implements ProviderInterface
      */
     public function __construct(
         private readonly ItemProvider $itemProvider,
-        private readonly CollectionProvider $collectionProvider
+        private readonly CollectionProvider $collectionProvider,
     ) {
     }
 

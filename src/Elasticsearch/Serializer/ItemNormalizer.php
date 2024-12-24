@@ -13,12 +13,9 @@ declare(strict_types=1);
 
 namespace ApiPlatform\Elasticsearch\Serializer;
 
-use ApiPlatform\Serializer\CacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\Exception\LogicException;
-use Symfony\Component\Serializer\Normalizer\CacheableSupportsMethodInterface as BaseCacheableSupportsMethodInterface;
 use Symfony\Component\Serializer\Normalizer\DenormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
-use Symfony\Component\Serializer\Serializer;
 use Symfony\Component\Serializer\SerializerAwareInterface;
 use Symfony\Component\Serializer\SerializerInterface;
 
@@ -28,7 +25,7 @@ use Symfony\Component\Serializer\SerializerInterface;
  *
  * @experimental
  */
-final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface, CacheableSupportsMethodInterface
+final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface, SerializerAwareInterface
 {
     public const FORMAT = 'elasticsearch';
 
@@ -37,35 +34,14 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
     }
 
     /**
-     * @throws LogicException
-     */
-    public function hasCacheableSupportsMethod(): bool
-    {
-        if (method_exists(Serializer::class, 'getSupportedTypes')) {
-            trigger_deprecation(
-                'api-platform/core',
-                '3.1',
-                'The "%s()" method is deprecated, use "getSupportedTypes()" instead.',
-                __METHOD__
-            );
-        }
-
-        if (!$this->decorated instanceof BaseCacheableSupportsMethodInterface) {
-            throw new LogicException(sprintf('The decorated normalizer must be an instance of "%s".', BaseCacheableSupportsMethodInterface::class));
-        }
-
-        return $this->decorated->hasCacheableSupportsMethod();
-    }
-
-    /**
      * {@inheritdoc}
      *
      * @throws LogicException
      */
-    public function denormalize(mixed $data, string $type, string $format = null, array $context = []): mixed
+    public function denormalize(mixed $data, string $type, ?string $format = null, array $context = []): mixed
     {
         if (!$this->decorated instanceof DenormalizerInterface) {
-            throw new LogicException(sprintf('The decorated normalizer must be an instance of "%s".', DenormalizerInterface::class));
+            throw new LogicException(\sprintf('The decorated normalizer must be an instance of "%s".', DenormalizerInterface::class));
         }
 
         return $this->decorated->denormalize($data, $type, $format, $context);
@@ -76,10 +52,10 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
      *
      * @throws LogicException
      */
-    public function supportsDenormalization(mixed $data, string $type, string $format = null, array $context = []): bool
+    public function supportsDenormalization(mixed $data, string $type, ?string $format = null, array $context = []): bool
     {
         if (!$this->decorated instanceof DenormalizerInterface) {
-            throw new LogicException(sprintf('The decorated normalizer must be an instance of "%s".', DenormalizerInterface::class));
+            throw new LogicException(\sprintf('The decorated normalizer must be an instance of "%s".', DenormalizerInterface::class));
         }
 
         return DocumentNormalizer::FORMAT !== $format && $this->decorated->supportsDenormalization($data, $type, $format, $context);
@@ -88,7 +64,7 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function normalize(mixed $object, string $format = null, array $context = []): array
+    public function normalize(mixed $object, ?string $format = null, array $context = []): \ArrayObject|array|string|int|float|bool|null
     {
         return $this->decorated->normalize($object, $format, $context);
     }
@@ -96,7 +72,7 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
     /**
      * {@inheritdoc}
      */
-    public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
+    public function supportsNormalization(mixed $data, ?string $format = null, array $context = []): bool
     {
         return DocumentNormalizer::FORMAT !== $format && $this->decorated->supportsNormalization($data, $format);
     }
@@ -107,7 +83,6 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
         if (!method_exists($this->decorated, 'getSupportedTypes')) {
             return [
                 DocumentNormalizer::FORMAT => null,
-                '*' => $this->decorated instanceof BaseCacheableSupportsMethodInterface && $this->decorated->hasCacheableSupportsMethod(),
             ];
         }
 
@@ -122,7 +97,7 @@ final class ItemNormalizer implements NormalizerInterface, DenormalizerInterface
     public function setSerializer(SerializerInterface $serializer): void
     {
         if (!$this->decorated instanceof SerializerAwareInterface) {
-            throw new LogicException(sprintf('The decorated normalizer must be an instance of "%s".', SerializerAwareInterface::class));
+            throw new LogicException(\sprintf('The decorated normalizer must be an instance of "%s".', SerializerAwareInterface::class));
         }
 
         $this->decorated->setSerializer($serializer);
